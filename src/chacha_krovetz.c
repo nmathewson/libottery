@@ -119,7 +119,7 @@ typedef unsigned vec __attribute__ ((vector_size (16)));
 *(vec *)(op + d +  8) = REVV_BE(v2);    \
 *(vec *)(op + d + 12) = REVV_BE(v3);
 
-int crypto_stream_xor(
+int crypto_stream(
         unsigned char *out,
         unsigned long long inlen,
         const unsigned char *n,
