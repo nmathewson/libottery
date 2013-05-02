@@ -128,13 +128,13 @@ int crypto_stream_xor(
 /* Assumes all pointers are aligned properly for vector reads */
 {
     unsigned iters, i, *op=(unsigned *)out, *kp, *np;
-    __attribute__ ((aligned (16))) unsigned key[8], nonce[2];
     __attribute__ ((aligned (16))) unsigned chacha_const[] =
                                 {0x61707865,0x3320646E,0x79622D32,0x6B206574};
     #if ( __ARM_NEON__ || __SSE2__)
     kp = (unsigned *)k;
     np = (unsigned *)n;
     #else
+    __attribute__ ((aligned (16))) unsigned key[8], nonce[2];
     ((vec *)key)[0] = REVV_BE(((vec *)k)[0]);
     ((vec *)key)[1] = REVV_BE(((vec *)k)[1]);
     nonce[0] = REVW_BE(((unsigned *)n)[0]);
