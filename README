@@ -1,0 +1,40 @@
+chacharand -- drop-in replacement for arc4random using the chacha cipher
+========================================================================
+
+This project is meant to provide a drop-in replacement for your horrible
+random number generator.
+
+Your RNG is horrible because:
+
+  - If it's fast, it's probably very insecure.  If you have ever gotten
+    bytes from random() or rand() or mt_rand() or whatever and exposed
+    them to the world, you have typically just let the world know what
+    bytes you're going to be using from now to the end of time.
+
+  - If it's secure, it's probably slow.  So you probably have an
+    insecure one that you use when you need random numbers fast.
+
+  - If it's arc4random, then you probably think it's secure, but it
+    isn't, really.  Even after you do the "discard the first N bytes"
+    trick, RC4 still has detectable statistical biases.
+
+This tool aims to be a speed-competitive replacement for arc4random, for
+your libc's random() or rand() function.  It aims to be so fast that you
+will never need to think "do I need to use a secure random number
+generator here, or can I use a fast one?"
+
+It uses Dan Bernstein's chacha stream cipher as its base.
+
+Intellectual Property Notices
+-----------------------------
+
+There are no known present or future claims by a copyright holder that the
+distribution of this software infringes the copyright. In particular, the author
+of the software is not making such claims and does not intend to make such
+claims.
+
+There are no known present or future claims by a patent holder that the use of
+this software infringes the patent. In particular, the author of the software is
+not making such claims and does not intend to make such claims.
+
+My code is in the public domain.
