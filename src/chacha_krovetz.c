@@ -108,10 +108,10 @@ typedef unsigned vec __attribute__ ((vector_size (16)));
   c = c+d; b ^= c; b = b<< 7 | b>>25;
 
 #define WRITE_XOR(in, op, d, v0, v1, v2, v3)                   \
-*(vec *)(op + d +  0) = *(vec *)(in + d +  0) ^ REVV_BE(v0);    \
-*(vec *)(op + d +  4) = *(vec *)(in + d +  4) ^ REVV_BE(v1);    \
-*(vec *)(op + d +  8) = *(vec *)(in + d +  8) ^ REVV_BE(v2);    \
-*(vec *)(op + d + 12) = *(vec *)(in + d + 12) ^ REVV_BE(v3);
+*(vec *)(op + d +  0) = REVV_BE(v0);    \
+*(vec *)(op + d +  4) = REVV_BE(v1);    \
+*(vec *)(op + d +  8) = REVV_BE(v2);    \
+*(vec *)(op + d + 12) = REVV_BE(v3);
 
 #define WRITE(op, d, v0, v1, v2, v3)                   \
 *(vec *)(op + d +  0) = REVV_BE(v0);    \
@@ -121,14 +121,13 @@ typedef unsigned vec __attribute__ ((vector_size (16)));
 
 int crypto_stream_xor(
         unsigned char *out,
-        const unsigned char *in,
         unsigned long long inlen,
         const unsigned char *n,
         const unsigned char *k
 )
 /* Assumes all pointers are aligned properly for vector reads */
 {
-    unsigned iters, i, *op=(unsigned *)out, *ip=(unsigned *)in, *kp, *np;
+    unsigned iters, i, *op=(unsigned *)out, *kp, *np;
     __attribute__ ((aligned (16))) unsigned key[8], nonce[2];
     __attribute__ ((aligned (16))) unsigned chacha_const[] =
                                 {0x61707865,0x3320646E,0x79622D32,0x6B206574};
@@ -203,27 +202,25 @@ int crypto_stream_xor(
         WRITE_XOR(ip, op, 48, v12+s0, v13+s1, v14+s2, v15+s3)
         s3 += ONE;
         #endif
-        ip += VBPI*16;
         op += VBPI*16;
         #if GPR_TOO
-        op[0]  = REVW_BE(REVW_BE(ip[0])  ^ (x0  + chacha_const[0]));
-        op[1]  = REVW_BE(REVW_BE(ip[1])  ^ (x1  + chacha_const[1]));
-        op[2]  = REVW_BE(REVW_BE(ip[2])  ^ (x2  + chacha_const[2]));
-        op[3]  = REVW_BE(REVW_BE(ip[3])  ^ (x3  + chacha_const[3]));
-        op[4]  = REVW_BE(REVW_BE(ip[4])  ^ (x4  + kp[0]));
-        op[5]  = REVW_BE(REVW_BE(ip[5])  ^ (x5  + kp[1]));
-        op[6]  = REVW_BE(REVW_BE(ip[6])  ^ (x6  + kp[2]));
-        op[7]  = REVW_BE(REVW_BE(ip[7])  ^ (x7  + kp[3]));
-        op[8]  = REVW_BE(REVW_BE(ip[8])  ^ (x8  + kp[4]));
-        op[9]  = REVW_BE(REVW_BE(ip[9])  ^ (x9  + kp[5]));
-        op[10] = REVW_BE(REVW_BE(ip[10]) ^ (x10 + kp[6]));
-        op[11] = REVW_BE(REVW_BE(ip[11]) ^ (x11 + kp[7]));
-        op[12] = REVW_BE(REVW_BE(ip[12]) ^ (x12 + BPI*iters+(BPI-1)));
-        op[13] = REVW_BE(REVW_BE(ip[13]) ^ (x13));
-        op[14] = REVW_BE(REVW_BE(ip[14]) ^ (x14 + np[0]));
-        op[15] = REVW_BE(REVW_BE(ip[15]) ^ (x15 + np[1]));
+        op[0]  = REVW_BE((x0  + chacha_const[0]));
+        op[1]  = REVW_BE((x1  + chacha_const[1]));
+        op[2]  = REVW_BE((x2  + chacha_const[2]));
+        op[3]  = REVW_BE((x3  + chacha_const[3]));
+        op[4]  = REVW_BE((x4  + kp[0]));
+        op[5]  = REVW_BE((x5  + kp[1]));
+        op[6]  = REVW_BE((x6  + kp[2]));
+        op[7]  = REVW_BE((x7  + kp[3]));
+        op[8]  = REVW_BE((x8  + kp[4]));
+        op[9]  = REVW_BE((x9  + kp[5]));
+        op[10] = REVW_BE((x10 + kp[6]));
+        op[11] = REVW_BE((x11 + kp[7]));
+        op[12] = REVW_BE((x12 + BPI*iters+(BPI-1)));
+        op[13] = REVW_BE((x13));
+        op[14] = REVW_BE((x14 + np[0]));
+        op[15] = REVW_BE((x15 + np[1]));
         s3 += ONE;
-        ip += 16;
         op += 16;
         #endif
     }
@@ -234,7 +231,6 @@ int crypto_stream_xor(
         }
         WRITE_XOR(ip, op, 0, v0+s0, v1+s1, v2+s2, v3+s3)
         s3 += ONE;
-        ip += 16;
         op += 16;
     }
     inlen = inlen % 64;
@@ -246,28 +242,18 @@ int crypto_stream_xor(
             DQROUND_VECTORS(v0,v1,v2,v3)
         }
         if (inlen >= 16) {
-            *(vec *)(op +   0) = *(vec *)(ip +   0) ^ REVV_BE(v0 + s0);
+            *(vec *)(op +   0) = REVV_BE(v0 + s0);
             if (inlen >= 32) {
-                *(vec *)(op +  4) = *(vec *)(ip + 4) ^ REVV_BE(v1 + s1);
+                *(vec *)(op +  4) = REVV_BE(v1 + s1);
                 if (inlen >= 48) {
-                    *(vec *)(op +  8) = *(vec *)(ip +  8) ^ REVV_BE(v2 + s2);
+                    *(vec *)(op +  8) = REVV_BE(v2 + s2);
                     buf[3] = REVV_BE(v3 + s3);
                 } else { buf[2] = REVV_BE(v2 + s2); }
             } else { buf[1] = REVV_BE(v1 + s1); }
         } else buf[0] = REVV_BE(v0 + s0);
         for (i=inlen & ~15; i<inlen; i++)
-            ((char *)op)[i] = ((char *)ip)[i] ^ ((char *)buf)[i];
+            ((char *)op)[i] = ((char *)buf)[i];
     }
     return 0;
 }
 
-int crypto_stream(
-                                  unsigned char *out,
-                                  unsigned long long outlen,
-                                  const unsigned char *n,
-                                  const unsigned char *k
-                                  )
-{
-    memset(out,0,outlen);
-    return crypto_stream_xor(out,out,outlen,n,k);
-}

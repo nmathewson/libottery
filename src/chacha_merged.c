@@ -56,7 +56,7 @@ void ECRYPT_ivsetup(ECRYPT_ctx *x,const u8 *iv)
   x->input[15] = U8TO32_LITTLE(iv + 4);
 }
 
-void ECRYPT_encrypt_bytes(ECRYPT_ctx *x,const u8 *m,u8 *c,u32 bytes)
+void ECRYPT_keystream_bytes(ECRYPT_ctx *x,u8 *c,u32 bytes)
 {
   u32 x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15;
   u32 j0, j1, j2, j3, j4, j5, j6, j7, j8, j9, j10, j11, j12, j13, j14, j15;
@@ -85,8 +85,6 @@ void ECRYPT_encrypt_bytes(ECRYPT_ctx *x,const u8 *m,u8 *c,u32 bytes)
 
   for (;;) {
     if (bytes < 64) {
-      for (i = 0;i < bytes;++i) tmp[i] = m[i];
-      m = tmp;
       ctarget = c;
       c = tmp;
     }
@@ -133,23 +131,6 @@ void ECRYPT_encrypt_bytes(ECRYPT_ctx *x,const u8 *m,u8 *c,u32 bytes)
     x14 = PLUS(x14,j14);
     x15 = PLUS(x15,j15);
 
-    x0 = XOR(x0,U8TO32_LITTLE(m + 0));
-    x1 = XOR(x1,U8TO32_LITTLE(m + 4));
-    x2 = XOR(x2,U8TO32_LITTLE(m + 8));
-    x3 = XOR(x3,U8TO32_LITTLE(m + 12));
-    x4 = XOR(x4,U8TO32_LITTLE(m + 16));
-    x5 = XOR(x5,U8TO32_LITTLE(m + 20));
-    x6 = XOR(x6,U8TO32_LITTLE(m + 24));
-    x7 = XOR(x7,U8TO32_LITTLE(m + 28));
-    x8 = XOR(x8,U8TO32_LITTLE(m + 32));
-    x9 = XOR(x9,U8TO32_LITTLE(m + 36));
-    x10 = XOR(x10,U8TO32_LITTLE(m + 40));
-    x11 = XOR(x11,U8TO32_LITTLE(m + 44));
-    x12 = XOR(x12,U8TO32_LITTLE(m + 48));
-    x13 = XOR(x13,U8TO32_LITTLE(m + 52));
-    x14 = XOR(x14,U8TO32_LITTLE(m + 56));
-    x15 = XOR(x15,U8TO32_LITTLE(m + 60));
-
     j12 = PLUSONE(j12);
     if (!j12) {
       j13 = PLUSONE(j13);
@@ -183,18 +164,6 @@ void ECRYPT_encrypt_bytes(ECRYPT_ctx *x,const u8 *m,u8 *c,u32 bytes)
     }
     bytes -= 64;
     c += 64;
-    m += 64;
   }
 }
 
-void ECRYPT_decrypt_bytes(ECRYPT_ctx *x,const u8 *c,u8 *m,u32 bytes)
-{
-  ECRYPT_encrypt_bytes(x,c,m,bytes);
-}
-
-void ECRYPT_keystream_bytes(ECRYPT_ctx *x,u8 *stream,u32 bytes)
-{
-  u32 i;
-  for (i = 0;i < bytes;++i) stream[i] = 0;
-  ECRYPT_encrypt_bytes(x,stream,stream,bytes);
-}
