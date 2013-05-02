@@ -3,8 +3,7 @@ chacha-merged.c version 20080118
 D. J. Bernstein
 Public domain.
 */
-
-#include "ecrypt-sync.h"
+#include "src/chacha_merged_ecrypt.h"
 
 #define ROTATE(v,c) (ROTL32(v,c))
 #define XOR(v,w) ((v) ^ (w))

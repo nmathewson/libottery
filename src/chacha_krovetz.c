@@ -3,7 +3,6 @@
  * Chacha is an improvement on the stream cipher Salsa, described at
  * http://cr.yp.to/papers.html#chacha
  */
-#include "crypto_stream.h"
 #include <string.h>
 
 #ifndef CHACHA_RNDS
