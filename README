@@ -1,10 +1,10 @@
 chacharand -- drop-in replacement for arc4random using the chacha cipher
 ========================================================================
 
-This project is meant to provide a drop-in replacement for your horrible
-random number generator.
+This project is meant to provide a drop-in replacement for the horrible
+random number generator you are using today.
 
-Your RNG is horrible because:
+The RNG you are using today is probably horrible because:
 
   - If it's fast, it's probably very insecure.  If you have ever gotten
     bytes from random() or rand() or mt_rand() or whatever and exposed
