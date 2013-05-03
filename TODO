@@ -1,0 +1,21 @@
+
+Hey, it's a solo project! I get to use this TODO format again!
+
+  - Make both implementations work 64-bytes at a time, with
+    persistent state. Use that as a backend for the RNG.
+  - Code to clear the stack.
+  - Seed from the OS.  Facility to seed from extra stuff if
+    you're paranoid.
+  - Add a frontend that wraps the 64-bites backend into a
+    proper bytewise RNG.
+  - frontend that returns an unsigned.
+  - frontend that returns an unsigned within a range.
+  - Thread-safety: lock the thing.
+    - pthreads
+    - win32
+  - Handle fork() safely.
+  - Port to MSVC
+  - MAYBE, a high-security/low-security pair.
+    - Don't use less than chacha20 for the high-security one.
+  - A mixing feature
+
