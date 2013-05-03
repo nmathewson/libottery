@@ -14,8 +14,11 @@ Hey, it's a solo project! I get to use this TODO format again!
     - pthreads
     - win32
   - Handle fork() safely.
+    - getpid() on each call?
+    - mutex/state in a shared mmap?
   - Port to MSVC
   - MAYBE, a high-security/low-security pair.
     - Don't use less than chacha20 for the high-security one.
-  - A mixing feature
-
+  - A mixing/stirring feature
+  - Add a benchmarking/timing feature
+  - Drop endianness conversion; not needed for PRNG usage
