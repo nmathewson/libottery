@@ -139,8 +139,17 @@ int crypto_stream(
     np = (unsigned *)nonce;
     #endif
     vec s0 = *(vec *)chacha_const;
+#if 0
+    /* This gives a segfault with osx gcc, due to a bug in the the "tree-ter"
+     * optimization */
     vec s1 = ((vec *)kp)[0];
     vec s2 = ((vec *)kp)[1];
+#else
+    /* XXXX check peformance on this one */
+    vec s1, s2;
+    memcpy(&s1, kp, sizeof(vec));
+    memcpy(&s2, kp+4, sizeof(vec));
+#endif
 
     vec s3 = NONCE(np);
     for (iters = 0; iters < inlen/(BPI*64); iters++) {
