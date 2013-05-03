@@ -5,10 +5,6 @@
  */
 #include <string.h>
 
-#ifndef CHACHA_RNDS
-#define CHACHA_RNDS 8    /* 8 (high speed), 20 (conservative), 12 (middle) */
-#endif
-
 /* Architecture-neutral way to specify 16-byte vector of ints              */
 typedef unsigned vec __attribute__ ((vector_size (16)));
 
