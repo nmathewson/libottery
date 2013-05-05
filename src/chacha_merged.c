@@ -16,15 +16,10 @@ Public domain.
   a = PLUS(a,b); d = ROTATE(XOR(d,a), 8); \
   c = PLUS(c,d); b = ROTATE(XOR(b,c), 7);
 
-void ECRYPT_init(void)
-{
-  return;
-}
-
 static const char sigma[16] = "expand 32-byte k";
 static const char tau[16] = "expand 16-byte k";
 
-void ECRYPT_keysetup(ECRYPT_ctx *x,const u8 *k,u32 kbits,u32 ivbits)
+static void ECRYPT_keysetup(ECRYPT_ctx *x,const u8 *k,u32 kbits,u32 ivbits)
 {
   const char *constants;
 
@@ -48,7 +43,7 @@ void ECRYPT_keysetup(ECRYPT_ctx *x,const u8 *k,u32 kbits,u32 ivbits)
   x->input[3] = U8TO32_LITTLE(constants + 12);
 }
 
-void ECRYPT_ivsetup(ECRYPT_ctx *x,const u8 *iv)
+static void ECRYPT_ivsetup(ECRYPT_ctx *x,const u8 *iv)
 {
   x->input[12] = 0;
   x->input[13] = 0;
@@ -57,7 +52,7 @@ void ECRYPT_ivsetup(ECRYPT_ctx *x,const u8 *iv)
 }
 
 /*XXXX u32 bytes should be u64. */
-void ECRYPT_keystream_bytes(ECRYPT_ctx *x,u8 *c, u32 bytes)
+static void ECRYPT_keystream_bytes(ECRYPT_ctx *x,u8 *c, u32 bytes)
 {
   u32 x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15;
   u32 j0, j1, j2, j3, j4, j5, j6, j7, j8, j9, j10, j11, j12, j13, j14, j15;
@@ -168,7 +163,17 @@ void ECRYPT_keystream_bytes(ECRYPT_ctx *x,u8 *c, u32 bytes)
   }
 }
 
-int crypto_stream(
+#if CHACHA_RNDS == 8
+#define FN_NAME crypto_stream_8
+#elif CHACHA_RNDS == 12
+#define FN_NAME crypto_stream_12
+#elif CHACHA_RNDS == 20
+#define FN_NAME crypto_stream_20
+#else
+#error
+#endif
+
+int FN_NAME (
         unsigned char *out,
         unsigned long long inlen,
         const unsigned char *n,

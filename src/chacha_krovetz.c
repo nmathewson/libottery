@@ -115,7 +115,17 @@ typedef unsigned vec __attribute__ ((vector_size (16)));
 *(vec *)(op + d +  8) = REVV_BE(v2);    \
 *(vec *)(op + d + 12) = REVV_BE(v3);
 
-int crypto_stream(
+#if CHACHA_RNDS == 8
+#define FN_NAME crypto_stream_8
+#elif CHACHA_RNDS == 12
+#define FN_NAME crypto_stream_12
+#elif CHACHA_RNDS == 20
+#define FN_NAME crypto_stream_20
+#else
+#error
+#endif
+
+int FN_NAME (
         unsigned char *out,
         unsigned long long inlen,
         const unsigned char *n,
