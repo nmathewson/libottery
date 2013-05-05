@@ -36,7 +36,7 @@ experiment(const u8 *key, const u8 *nonce, int skip)
   dumphex("   key", key, 32);
   dumphex(" nonce", nonce, 8);
   printf("@%5d", skip);
-  crypto_stream_20(stream, skip+256, key, nonce);
+  crypto_stream_20(stream, skip+256, nonce, key);
   dumphex("", stream+skip, 256);
   free(stream);
 }
