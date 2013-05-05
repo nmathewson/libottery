@@ -1,4 +1,9 @@
 #!/usr/bin/python
+#
+# Here's a minimal chacha implementation, based on the paper, in
+# Python.  Its only purpose here is to validate the output of the C
+# implementation.  If you use this for crypto, you're a bad person.
+
 import struct
 import binascii
 
