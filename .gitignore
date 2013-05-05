@@ -1,4 +1,9 @@
 *~
 *.o
+*.pyc
+*.pyo
+.#*
+\#*
 
 test/test_vectors
+test/test_vectors.actual
