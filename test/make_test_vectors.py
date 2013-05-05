@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import struct
 import binascii
 
@@ -37,14 +38,19 @@ def chacha_block(position, nonce, key, nRounds):
 
     return struct.pack("<16L", *OUT)
 
-def X(key, nonce, skip, rounds=20):
+def experiment(key, nonce, skip, rounds=20):
+    print "================================================================"
     p = skip//64
     out = "".join(chacha_block(p+r, nonce, key, rounds) for r in (0,1,2,3) )
     print "   key: %s"%binascii.b2a_hex(key)
     print " nonce: %s"%binascii.b2a_hex(nonce)
-    print "@%5d:"%skip ,
+    print "offset: %s, rounds: %s"%(skip,rounds)
     for i in xrange(0, len(out), 32):
         print binascii.b2a_hex(out[i:i+32])
+
+def X(key,nonce,skip):
+    experiment(key,nonce,skip,8)
+    experiment(key,nonce,skip,20)
 
 if 1:
   X("helloworld!helloworld!helloworld",
@@ -55,5 +61,8 @@ if 1:
     "!hellowo", 8192);
   X("\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0",
     "\0\0\0\0\0\0\0\0", 8192);
-
+  X("Zombie ipsum reversus ab viral i", "nferno, ", 128)
+  X("nam rick grimes malum cerebro. D", "e carne ", 512)
+  X("lumbering animata corpora quaeri", "tis. Sum", 640)
+  X("mus brains sit, morbo vel malefi", "cia? De ", 704)
 
