@@ -1,4 +1,6 @@
-#include <stdint.h>
+#include "chacha.h"
+
+#define u64 uint64_t
 #define u32 uint32_t
 #define u8 uint8_t
 
@@ -15,3 +17,18 @@
 #include "src/chacha_merged.c"
 #endif
 
+#if CHACHA_RNDS == 8
+/*HACK*/
+void
+chacha_state_setup(struct chacha_state *state,
+                   const uint8_t *key,
+                   const uint8_t *nonce,
+                   uint64_t counter)
+{
+  memcpy(state->key, key, 32);
+  memcpy(state->nonce, nonce, 8);
+  state->block_counter = counter;
+}
+
+
+#endif

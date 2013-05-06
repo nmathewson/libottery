@@ -11,7 +11,7 @@ src/chacha20.o: src/chacha.c src/chacha_merged.c src/chacha_krovetz.c src/chacha
 	$(CC) $(CFLAGS) -DCHACHA_RNDS=20 -c src/chacha.c -o src/chacha20.o
 
 test/test_vectors: test/test_vectors.c src/chacha8.o src/chacha20.o
-	$(CC) $(CFLAGS) test/test_vectors.c src/chacha8.o src/chacha20.o -o test/test_vectors
+	$(CC) $(CFLAGS) -Isrc test/test_vectors.c src/chacha8.o src/chacha20.o -o test/test_vectors
 
 test/test_vectors.expected: test/make_test_vectors.py
 	./test/make_test_vectors.py > test/test_vectors.expected

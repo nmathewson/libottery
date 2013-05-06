@@ -140,6 +140,7 @@ static void ECRYPT_keystream_bytes(ECRYPT_ctx *x,u8 *c, u32 bytes)
     U32TO8_LITTLE(c + 16,x4);
     U32TO8_LITTLE(c + 20,x5);
     U32TO8_LITTLE(c + 24,x6);
+
     U32TO8_LITTLE(c + 28,x7);
     U32TO8_LITTLE(c + 32,x8);
     U32TO8_LITTLE(c + 36,x9);
@@ -176,13 +177,15 @@ static void ECRYPT_keystream_bytes(ECRYPT_ctx *x,u8 *c, u32 bytes)
 int FN_NAME (
         unsigned char *out,
         unsigned long long inlen,
-        const unsigned char *n,
-        const unsigned char *k
+        struct chacha_state *st)
 )
 {
   ECRYPT_ctx x;
-  ECRYPT_keysetup(&x, k, 256, 0);
-  ECRYPT_ivsetup(&x, n);
+  ECRYPT_keysetup(&x, st->key, 256, 0);
+  ECRYPT_ivsetup(&x, st->nonce);
+  x->input[12] = st->block_counter & 0xffffffff;
+  x->input[13] = st->block_counter >> 32;
   ECRYPT_keystream_bytes(&x, out, inlen);
+  st->block_counter = (((u64)x->input[13])<<32) | x->input[12];
   return 0;
 }

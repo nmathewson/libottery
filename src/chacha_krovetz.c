@@ -19,7 +19,8 @@ typedef unsigned vec __attribute__ ((vector_size (16)));
 #define GPR_TOO   1
 #define VBPI      2
 #define ONE       (vec)vsetq_lane_u32(1,vdupq_n_u32(0),0)
-#define NONCE(p)  (vec)vcombine_u32(vdup_n_u32(0),vcreate_u32(*(uint64_t *)p))
+#define NONCE(ctr,p)  (vec)vcombine_u32(vcreate_u32(ctr),vcreate_u32(*(uint64_t *)p))
+#error "Don't use this code till it can be tested on arm"
 #define ROTV1(x)  (vec)vextq_u32((uint32x4_t)x,(uint32x4_t)x,1)
 #define ROTV2(x)  (vec)vextq_u32((uint32x4_t)x,(uint32x4_t)x,2)
 #define ROTV3(x)  (vec)vextq_u32((uint32x4_t)x,(uint32x4_t)x,3)
@@ -38,7 +39,8 @@ typedef unsigned vec __attribute__ ((vector_size (16)));
 #define GPR_TOO    1
 #define VBPI       3
 #define ONE        ((vec){1,0,0,0})
-#define NONCE(p)   vec_sro(*(vec *)p, (vector char)(vec){0,0,0,8*8})
+#define NONCE(ctr,p)   vec_sro(*(vec *)p, (vector char)(vec){0,0,0,8*8})+((vec){((ctr)&0xffffffff), (ctr)>>32, 0, 0})
+#error "Don't use this code till it can be tested on altivec"
 #define REVW_BE(x) __builtin_bswap32(x)
 #define REVV_BE(x) vec_perm(x,x,(vector char){3,2,1,0,7,6,5,4,11,10,9,8,15,14,13,12})
 #define ROTV1(x)   vec_perm(x,x,(vector char){4,5,6,7,8,9,10,11,12,13,14,15,0,1,2,3})
@@ -57,7 +59,7 @@ typedef unsigned vec __attribute__ ((vector_size (16)));
 #define VBPI      3
 #endif
 #define ONE       (vec)_mm_set_epi32(0,0,0,1)
-#define NONCE(p)  (vec)_mm_slli_si128(_mm_loadl_epi64((__m128i *)(p)),8)
+#define NONCE(ctr,p)  (vec)(_mm_slli_si128(_mm_loadl_epi64((__m128i *)(p)),8)+_mm_set_epi64x(0,ctr))
 #define ROTV1(x)  (vec)_mm_shuffle_epi32((__m128i)x,_MM_SHUFFLE(0,3,2,1))
 #define ROTV2(x)  (vec)_mm_shuffle_epi32((__m128i)x,_MM_SHUFFLE(1,0,3,2))
 #define ROTV3(x)  (vec)_mm_shuffle_epi32((__m128i)x,_MM_SHUFFLE(2,1,0,3))
@@ -126,20 +128,20 @@ typedef unsigned vec __attribute__ ((vector_size (16)));
 #endif
 
 int FN_NAME (
-        unsigned char *out,
-        unsigned long long inlen,
-        const unsigned char *n,
-        const unsigned char *k
-)
+        uint8_t *out,
+        uint64_t inlen,
+        struct chacha_state *st)
 /* Assumes all pointers are aligned properly for vector reads */
 {
+    const unsigned char *k = st->key;
+    const unsigned char *n = st->nonce;
     unsigned iters, i, *op=(unsigned *)out, *kp, *np;
     __attribute__ ((aligned (16))) unsigned chacha_const[] =
                                 {0x61707865,0x3320646E,0x79622D32,0x6B206574};
-    #if ( __ARM_NEON__ || __SSE2__)
+#if ( __ARM_NEON__ || __SSE2__)
     kp = (unsigned *)k;
     np = (unsigned *)n;
-    #else
+#else
     __attribute__ ((aligned (16))) unsigned key[8], nonce[2];
     ((vec *)key)[0] = REVV_BE(((vec *)k)[0]);
     ((vec *)key)[1] = REVV_BE(((vec *)k)[1]);
@@ -147,7 +149,7 @@ int FN_NAME (
     nonce[1] = REVW_BE(((unsigned *)n)[1]);
     kp = (unsigned *)key;
     np = (unsigned *)nonce;
-    #endif
+#endif
     vec s0 = *(vec *)chacha_const;
 #if 0
     /* This gives a segfault with osx gcc, due to a bug in the the "tree-ter"
@@ -161,7 +163,7 @@ int FN_NAME (
     memcpy(&s2, kp+4, sizeof(vec));
 #endif
 
-    vec s3 = NONCE(np);
+    vec s3 = NONCE(st->block_counter, np);
     for (iters = 0; iters < inlen/(BPI*64); iters++) {
         vec v0,v1,v2,v3,v4,v5,v6,v7;
         v4 = v0 = s0; v5 = v1 = s1; v6 = v2 = s2; v3 = s3;
@@ -206,16 +208,16 @@ int FN_NAME (
             #endif
         }
         WRITE_XOR(ip, op, 0, v0+s0, v1+s1, v2+s2, v3+s3)
-        s3 += ONE;
+        s3 += ONE; st->block_counter++;
         WRITE_XOR(ip, op, 16, v4+s0, v5+s1, v6+s2, v7+s3)
-        s3 += ONE;
+        s3 += ONE; st->block_counter++;
         #if VBPI > 2
         WRITE_XOR(ip, op, 32, v8+s0, v9+s1, v10+s2, v11+s3)
-        s3 += ONE;
+        s3 += ONE; st->block_counter++;
         #endif
         #if VBPI > 3
         WRITE_XOR(ip, op, 48, v12+s0, v13+s1, v14+s2, v15+s3)
-        s3 += ONE;
+        s3 += ONE; st->block_counter++;
         #endif
         op += VBPI*16;
         #if GPR_TOO
@@ -235,7 +237,7 @@ int FN_NAME (
         op[13] = REVW_BE((x13));
         op[14] = REVW_BE((x14 + np[0]));
         op[15] = REVW_BE((x15 + np[1]));
-        s3 += ONE;
+        s3 += ONE; st->block_counter++;
         op += 16;
         #endif
     }
@@ -245,7 +247,7 @@ int FN_NAME (
             DQROUND_VECTORS(v0,v1,v2,v3)
         }
         WRITE_XOR(ip, op, 0, v0+s0, v1+s1, v2+s2, v3+s3)
-        s3 += ONE;
+        s3 += ONE; st->block_counter++;
         op += 16;
     }
     inlen = inlen % 64;

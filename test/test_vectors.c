@@ -2,15 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int crypto_stream_8(unsigned char *out,
-                  unsigned long long inlen,
-                  const unsigned char *n,
-                  const unsigned char *k);
-
-int crypto_stream_20(unsigned char *out,
-                  unsigned long long inlen,
-                  const unsigned char *n,
-                  const unsigned char *k);
+#include "chacha.h"
 
 typedef unsigned char u8;
 
@@ -30,20 +22,23 @@ dumphex(const char *label, const u8 *bytes, int n)
 void
 experiment(const u8 *key, const u8 *nonce, int skip, int rounds)
 {
-  u8 *stream = malloc(skip+256);
+  u8 stream[256];
+  struct chacha_state state;
+  chacha_state_setup(&state, key, nonce, skip/64);
 
   puts("================================================================");
   dumphex("   key", key, 32);
   dumphex(" nonce", nonce, 8);
   printf ("offset: %d, rounds: %d\n", skip, rounds);
   if (rounds == 8)
-    crypto_stream_8(stream, skip+256, nonce, key);
+    crypto_stream_8(stream, 256, &state);
   else if (rounds == 20)
-    crypto_stream_20(stream, skip+256, nonce, key);
+    crypto_stream_20(stream, 256, &state);
   else
-    memset(stream, 255, skip+256);
-  dumphex(NULL, stream+skip, 256);
-  free(stream);
+    memset(stream, 255, 256);
+  if (state.block_counter != (skip+256)/64)
+    puts("BAD BLOCK COUNT");
+  dumphex(NULL, stream, 256);
 }
 
 #define X(key,nonce,skip) do {                                  \
