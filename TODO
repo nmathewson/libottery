@@ -1,7 +1,7 @@
 
 Hey, it's a solo project! I get to use this TODO format again!
 
-  - Make both implementations work n*64-bytes at a time, with
+  o Make both implementations work n*64-bytes at a time, with
     persistent state. Use that as a backend for the RNG.
   - Add a frontend that wraps the 64-bites backend into a
     proper bytewise RNG.
@@ -29,4 +29,8 @@ Hey, it's a solo project! I get to use this TODO format again!
     - Don't use less than chacha20 for the high-security one.
 
   - Test on altivec, fix whatever I broke there.
+
+  - Drop support for 64-bit counters: 256GB is enough for anyone.
+
+
 
