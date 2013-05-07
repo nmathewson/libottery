@@ -3,7 +3,7 @@ Hey, it's a solo project! I get to use this TODO format again!
 
   o Make both implementations work n*64-bytes at a time, with
     persistent state. Use that as a backend for the RNG.
-  - Add a frontend that wraps the 64-bites backend into a
+  o Add a frontend that wraps the 64-bytes backend into a
     proper bytewise RNG.
   - Seed from the OS.  Facility to seed from extra stuff if
     you're paranoid.

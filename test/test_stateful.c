@@ -91,8 +91,13 @@ main(int argc, char **argv)
   check_stateful(20, 0);
 
   puts("8+");
-  check_stateful(8, 0xffffffffeULL);
+  check_stateful(8, 12345);
   puts("20+");
+  check_stateful(20, 12345);
+
+  puts("8++");
+  check_stateful(8, 0xffffffffeULL);
+  puts("20++");
   check_stateful(20, 0xfffffffeULL);
 
   puts("OK");
