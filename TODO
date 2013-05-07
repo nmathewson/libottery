@@ -27,3 +27,6 @@ Hey, it's a solo project! I get to use this TODO format again!
   - Port to MSVC
   - MAYBE, a high-security/low-security pair.
     - Don't use less than chacha20 for the high-security one.
+
+  - Test on altivec, fix whatever I broke there.
+

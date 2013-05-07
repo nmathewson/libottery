@@ -20,7 +20,6 @@ typedef unsigned vec __attribute__ ((vector_size (16)));
 #define VBPI      2
 #define ONE       (vec)vsetq_lane_u32(1,vdupq_n_u32(0),0)
 #define NONCE(ctr,p)  (vec)vcombine_u32(vcreate_u32(ctr),vcreate_u32(*(uint64_t *)p))
-#error "Don't use this code till it can be tested on arm"
 #define ROTV1(x)  (vec)vextq_u32((uint32x4_t)x,(uint32x4_t)x,1)
 #define ROTV2(x)  (vec)vextq_u32((uint32x4_t)x,(uint32x4_t)x,2)
 #define ROTV3(x)  (vec)vextq_u32((uint32x4_t)x,(uint32x4_t)x,3)
@@ -185,7 +184,8 @@ int FN_NAME (
         x2 = chacha_const[2]; x3 = chacha_const[3];
         x4 = kp[0]; x5 = kp[1]; x6  = kp[2]; x7  = kp[3];
         x8 = kp[4]; x9 = kp[5]; x10 = kp[6]; x11 = kp[7];
-        x12 = BPI*iters+(BPI-1); x13 = 0; x14 = np[0]; x15 = np[1];
+        const uint64_t x_ctr = st->block_counter + BPI*iters+(BPI-1);
+        x12 = x_ctr & 0xffffffff; x13 = x_ctr>>32; x14 = np[0]; x15 = np[1];
         #endif
         for (i = CHACHA_RNDS/2; i; i--) {
             DQROUND_VECTORS(v0,v1,v2,v3)
@@ -233,8 +233,8 @@ int FN_NAME (
         op[9]  = REVW_BE((x9  + kp[5]));
         op[10] = REVW_BE((x10 + kp[6]));
         op[11] = REVW_BE((x11 + kp[7]));
-        op[12] = REVW_BE((x12 + BPI*iters+(BPI-1)));
-        op[13] = REVW_BE((x13));
+        op[12] = REVW_BE((x12 + (x_ctr & 0xffffffff)));
+        op[13] = REVW_BE((x13 + (x_ctr >> 32)));
         op[14] = REVW_BE((x14 + np[0]));
         op[15] = REVW_BE((x15 + np[1]));
         s3 += ONE; st->block_counter++;
