@@ -5,6 +5,9 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <limits.h>
+#ifndef CHACHARAND_NO_LOCKS
+#include <pthread.h>
+#endif
 
 #define u64 uint64_t
 #define u32 uint32_t
@@ -67,6 +70,9 @@ struct chacharand_state {
   uint8_t pos;
   uint8_t initialized;
   pid_t pid;
+#ifndef CHACHARAND_NO_LOCKS
+  pthread_mutex_t mutex;
+#endif
 };
 
 static void
@@ -104,11 +110,25 @@ chacharand_memclear(void *mem, size_t len)
 #define chacharand_range64 chacharand20_range64
 #endif
 
+#ifndef CHACHARAND_NO_LOCKS
+#define LOCK(st) do {                             \
+    pthread_mutex_lock(&(st)->mutex);           \
+  } while (0)
+#define UNLOCK(st) do {                             \
+    pthread_mutex_unlock(&(st)->mutex);             \
+  } while (0)
+#else
+#define LOCK(st) ((void)0)
+#define UNLOCK(st) ((void)0)
+#endif
+
 int
 chacharand_init(struct chacharand_state *st)
 {
   uint8_t inp[40];
   memset(st, 0, sizeof(st));
+  if (pthread_mutex_init(&st->mutex, NULL))
+    return -1;
   if (chacharand_os_bytes(inp, sizeof(inp)) < 0)
     return -1;
   chacha_state_setup(&st->chst, inp, inp+32, 0);
@@ -124,6 +144,7 @@ void
 chacharand_add_seed(struct chacharand_state *st, uint8_t *seed, size_t n)
 {
   uint8_t inp[BUFFER_SIZE];
+  LOCK(st);
   while (n) {
     int i;
     size_t m = n % 32;
@@ -136,30 +157,44 @@ chacharand_add_seed(struct chacharand_state *st, uint8_t *seed, size_t n)
   }
   chacharand_memclear(inp, sizeof(inp));
   st->pos = 0;
+  UNLOCK(st);
 }
 
 void
 chacharand_wipe(struct chacharand_state *st)
 {
+  pthread_mutex_destroy(&st->mutex);
   chacharand_memclear(st, sizeof(struct chacharand_state));
 }
 
 void
 chacharand_flush(struct chacharand_state *st)
 {
+  LOCK(st);
   crypto_stream(st->buffer, BUFFER_SIZE, &st->chst);
   st->pos = 0;
+  UNLOCK(st);
 }
 
-void
-chacharand_stir(struct chacharand_state *st)
+static void
+chacharand_stir_nolock(struct chacharand_state *st)
 {
   uint8_t inp[BUFFER_SIZE];
+  LOCK(st);
   crypto_stream(inp, BUFFER_SIZE, &st->chst);
   chacha_state_setup(&st->chst, inp, inp+32, 0);
   chacharand_memclear(inp, sizeof(inp));
   crypto_stream(st->buffer, BUFFER_SIZE, &st->chst);
   st->pos=0;
+  UNLOCK(st);
+}
+
+void
+chacharand_stir(struct chacharand_state *st)
+{
+  LOCK(st);
+  chacharand_stir(st);
+  UNLOCK(st);
 }
 
 void
@@ -169,6 +204,7 @@ chacharand_bytes(struct chacharand_state *st, void *out,
   if (!st->initialized)
     abort();
 
+  LOCK(st);
   if (st->pid != getpid()) {
     if (chacharand_init(st) < 0)
       abort();
@@ -193,7 +229,8 @@ chacharand_bytes(struct chacharand_state *st, void *out,
   }
 
   if (st->chst.block_counter > (1<<20))
-    chacharand_stir(st);
+    chacharand_stir_nolock(st);
+  UNLOCK(st);
 }
 
 unsigned

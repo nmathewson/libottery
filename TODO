@@ -1,6 +1,8 @@
 
 Hey, it's a solo project! I get to use this TODO format again!
 
+BEFORE FIRST VERSION
+
   o Make both implementations work n*64-bytes at a time, with
     persistent state. Use that as a backend for the RNG.
   o Add a frontend that wraps the 64-bytes backend into a
@@ -9,13 +11,19 @@ Hey, it's a solo project! I get to use this TODO format again!
     you're paranoid.
   o frontend that returns an unsigned.
 
-  - Thread-safety: lock the thing.
-    - pthreads
+  o Thread-safety: lock the thing.
+    o pthreads
   o Handle fork() safely.
     o getpid() on each call?
-  - Code to clear the stack.
-  - A mixing/stirring feature
+  o Code to clear the stack.
+  o A mixing/stirring feature
+
+  o frontend that returns an unsigned within a range.
+
   - Add a benchmarking/timing feature
+  - 100% test coverage.
+
+BEFORE FINAL VERSION
 
   - Handle fork even better
     - mutex/state in a shared mmap?
@@ -23,8 +31,6 @@ Hey, it's a solo project! I get to use this TODO format again!
   - Windows port
     - Windows threads
     - No need for fork detection.
-
-  o frontend that returns an unsigned within a range.
   - Drop endianness conversion; not needed for PRNG usage
 
   - Port to MSVC
