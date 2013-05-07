@@ -1,4 +1,5 @@
 #include "chacha.h"
+#include <string.h>
 
 #define u64 uint64_t
 #define u32 uint32_t
@@ -29,6 +30,5 @@ chacha_state_setup(struct chacha_state *state,
   memcpy(state->nonce, nonce, 8);
   state->block_counter = counter;
 }
-
 
 #endif
