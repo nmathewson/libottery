@@ -24,6 +24,7 @@ typedef unsigned vec __attribute__ ((vector_size (16)));
 #define ROTV2(x)  (vec)vextq_u32((uint32x4_t)x,(uint32x4_t)x,2)
 #define ROTV3(x)  (vec)vextq_u32((uint32x4_t)x,(uint32x4_t)x,3)
 #define ROTW16(x) (vec)vrev32q_u16((uint16x8_t)x)
+#define ADD_ONE(x) (vec)vaddq_u64((uint64x2_t)x,(uint64x2_t)ONE)
 #if __clang__
 #define ROTW7(x)  (x << ((vec){ 7, 7, 7, 7})) ^ (x >> ((vec){25,25,25,25}))
 #define ROTW8(x)  (x << ((vec){ 8, 8, 8, 8})) ^ (x >> ((vec){24,24,24,24}))
@@ -64,6 +65,7 @@ typedef unsigned vec __attribute__ ((vector_size (16)));
 #define ROTV3(x)  (vec)_mm_shuffle_epi32((__m128i)x,_MM_SHUFFLE(2,1,0,3))
 #define ROTW7(x)  (vec)(_mm_slli_epi32((__m128i)x, 7) ^ _mm_srli_epi32((__m128i)x,25))
 #define ROTW12(x) (vec)(_mm_slli_epi32((__m128i)x,12) ^ _mm_srli_epi32((__m128i)x,20))
+#define ADD_ONE(x) (vec)_mm_add_epi64((__m128i)(x), (__m128i)ONE)
 #if __SSSE3__
 #include <tmmintrin.h>
 #define ROTW8(x)  (vec)_mm_shuffle_epi8((__m128i)x,_mm_set_epi8(14,13,12,15,10,9,8,11,6,5,4,7,2,1,0,3))
@@ -74,6 +76,14 @@ typedef unsigned vec __attribute__ ((vector_size (16)));
 #endif
 #else
 #error -- Implementation supports only machines with neon, altivec or SSE2
+#endif
+
+#ifndef ADD_ONE
+#define ADD_ONE(x)  ((x) + ONE)
+#endif
+
+#ifndef INCR
+#define INCR(x)     (x) = ADD_ONE((x))
 #endif
 
 #ifndef REVV_BE
@@ -166,16 +176,16 @@ int FN_NAME (
     for (iters = 0; iters < inlen/(BPI*64); iters++) {
         vec v0,v1,v2,v3,v4,v5,v6,v7;
         v4 = v0 = s0; v5 = v1 = s1; v6 = v2 = s2; v3 = s3;
-        v7 = v3 + ONE;
+        v7 = ADD_ONE(v3);
         #if VBPI > 2
         vec v8,v9,v10,v11;
         v8 = v4; v9 = v5; v10 = v6;
-        v11 =  v7 + ONE;
+        v11 = ADD_ONE(v7);
         #endif
         #if VBPI > 3
         vec v12,v13,v14,v15;
         v12 = v8; v13 = v9; v14 = v10;
-        v15 = v11 + ONE;
+        v15 = ADD_ONE(v11);
         #endif
         #if GPR_TOO
         register unsigned x0, x1, x2, x3, x4, x5, x6, x7, x8,
@@ -208,16 +218,16 @@ int FN_NAME (
             #endif
         }
         WRITE_XOR(ip, op, 0, v0+s0, v1+s1, v2+s2, v3+s3)
-        s3 += ONE; st->block_counter++;
+        INCR(s3); st->block_counter++;
         WRITE_XOR(ip, op, 16, v4+s0, v5+s1, v6+s2, v7+s3)
-        s3 += ONE; st->block_counter++;
+        INCR(s3); st->block_counter++;
         #if VBPI > 2
         WRITE_XOR(ip, op, 32, v8+s0, v9+s1, v10+s2, v11+s3)
-        s3 += ONE; st->block_counter++;
+        INCR(s3); st->block_counter++;
         #endif
         #if VBPI > 3
         WRITE_XOR(ip, op, 48, v12+s0, v13+s1, v14+s2, v15+s3)
-        s3 += ONE; st->block_counter++;
+        INCR(s3); st->block_counter++;
         #endif
         op += VBPI*16;
         #if GPR_TOO
@@ -237,7 +247,7 @@ int FN_NAME (
         op[13] = REVW_BE((x13 + (x_ctr >> 32)));
         op[14] = REVW_BE((x14 + np[0]));
         op[15] = REVW_BE((x15 + np[1]));
-        s3 += ONE; st->block_counter++;
+        INCR(s3); st->block_counter++;
         op += 16;
         #endif
     }
@@ -247,7 +257,7 @@ int FN_NAME (
             DQROUND_VECTORS(v0,v1,v2,v3)
         }
         WRITE_XOR(ip, op, 0, v0+s0, v1+s1, v2+s2, v3+s3)
-        s3 += ONE; st->block_counter++;
+        INCR(s3); st->block_counter++;
         op += 16;
     }
     inlen = inlen % 64;
