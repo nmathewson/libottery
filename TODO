@@ -5,23 +5,26 @@ Hey, it's a solo project! I get to use this TODO format again!
     persistent state. Use that as a backend for the RNG.
   o Add a frontend that wraps the 64-bytes backend into a
     proper bytewise RNG.
-  - Seed from the OS.  Facility to seed from extra stuff if
+  o Seed from the OS.  Facility to seed from extra stuff if
     you're paranoid.
-  - frontend that returns an unsigned.
-
+  o frontend that returns an unsigned.
 
   - Thread-safety: lock the thing.
     - pthreads
-    - win32
-  - Handle fork() safely.
-    - getpid() on each call?
-    - mutex/state in a shared mmap?
+  o Handle fork() safely.
+    o getpid() on each call?
   - Code to clear the stack.
   - A mixing/stirring feature
   - Add a benchmarking/timing feature
 
+  - Handle fork even better
+    - mutex/state in a shared mmap?
 
-  - frontend that returns an unsigned within a range.
+  - Windows port
+    - Windows threads
+    - No need for fork detection.
+
+  o frontend that returns an unsigned within a range.
   - Drop endianness conversion; not needed for PRNG usage
 
   - Port to MSVC

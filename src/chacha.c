@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <limits.h>
 
 #define u64 uint64_t
 #define u32 uint32_t
@@ -36,7 +37,7 @@ chacha_state_setup(struct chacha_state *state,
 }
 
 int
-chacharand_os_bytes(void *out, size_t outlen)
+chacharand_os_bytes(uint8_t *out, size_t outlen)
 {
   int fd;
   fd = open("/dev/urandom", O_RDONLY|O_CLOEXEC);
@@ -65,26 +66,42 @@ struct chacharand_state {
   uint8_t buffer[BUFFER_SIZE];
   uint8_t pos;
   uint8_t initialized;
+  pid_t pid;
 };
 
 static void
 chacharand_memclear(void *mem, size_t len)
 {
-  memset(mem, 0, len); /* XXXXX WRONG WRONG WRONG ! */
+  /* XXXX Test on many many platforms. */
+  volatile uint8_t *cp = mem;
+  while (len--)
+    *cp++ = 0;
 }
 
 #if CHACHA_RNDS == 8
 #define chacharand_init chacharand8_init
+#define chacharand_add_seed chacharand8_add_seed
 #define chacharand_flush chacharand8_flush
 #define chacharand_stir chacharand8_stir
 #define chacharand_bytes chacharand8_bytes
 #define crypto_stream crypto_stream_8
+#define chacharand_wipe chacharand8_wipe
+#define chacharand_unsigned chacharand8_unsigned
+#define chacharand_uint64 chacharand8_uint64
+#define chacharand_range chacharand8_range
+#define chacharand_range64 chacharand8_range64
 #else
 #define chacharand_init chacharand20_init
+#define chacharand_add_seed chacharand20_add_seed
 #define chacharand_flush chacharand20_flush
 #define chacharand_stir chacharand20_stir
 #define chacharand_bytes chacharand20_bytes
 #define crypto_stream crypto_stream_20
+#define chacharand_wipe chacharand20_wipe
+#define chacharand_unsigned chacharand20_unsigned
+#define chacharand_uint64 chacharand20_uint64
+#define chacharand_range chacharand20_range
+#define chacharand_range64 chacharand20_range64
 #endif
 
 int
@@ -95,11 +112,36 @@ chacharand_init(struct chacharand_state *st)
   if (chacharand_os_bytes(inp, sizeof(inp)) < 0)
     return -1;
   chacha_state_setup(&st->chst, inp, inp+32, 0);
-  chacharand_memclear(inp, 40);
+  chacharand_memclear(inp, sizeof(inp));
   crypto_stream(st->buffer, BUFFER_SIZE, &st->chst);
   st->pos=0;
   st->initialized = 1;
+  st->pid = getpid();
   return 0;
+}
+
+void
+chacharand_add_seed(struct chacharand_state *st, uint8_t *seed, size_t n)
+{
+  uint8_t inp[BUFFER_SIZE];
+  while (n) {
+    int i;
+    size_t m = n % 32;
+    for (i = 0; i < m; ++i) {
+      st->chst.key[i] ^= seed[i];
+      crypto_stream(inp, BUFFER_SIZE, &st->chst);
+      chacha_state_setup(&st->chst, inp, inp+32, 0);
+    }
+    n -= m;
+  }
+  chacharand_memclear(inp, sizeof(inp));
+  st->pos = 0;
+}
+
+void
+chacharand_wipe(struct chacharand_state *st)
+{
+  chacharand_memclear(st, sizeof(struct chacharand_state));
 }
 
 void
@@ -115,7 +157,7 @@ chacharand_stir(struct chacharand_state *st)
   uint8_t inp[BUFFER_SIZE];
   crypto_stream(inp, BUFFER_SIZE, &st->chst);
   chacha_state_setup(&st->chst, inp, inp+32, 0);
-  chacharand_memclear(inp, 40);
+  chacharand_memclear(inp, sizeof(inp));
   crypto_stream(st->buffer, BUFFER_SIZE, &st->chst);
   st->pos=0;
 }
@@ -126,6 +168,11 @@ chacharand_bytes(struct chacharand_state *st, void *out,
 {
   if (!st->initialized)
     abort();
+
+  if (st->pid != getpid()) {
+    if (chacharand_init(st) < 0)
+      abort();
+  }
 
   if (n >= BUFFER_SIZE) {
     crypto_stream(out, n & ~BUFFER_MASK, &st->chst);
@@ -149,3 +196,42 @@ chacharand_bytes(struct chacharand_state *st, void *out,
     chacharand_stir(st);
 }
 
+unsigned
+chacharand_unsigned(struct chacharand_state *st)
+{
+  unsigned u;
+  chacharand_bytes(st, &u, sizeof(u));
+  return u;
+}
+
+uint64_t
+chacharand_uint64(struct chacharand_state *st)
+{
+  uint64_t u;
+  chacharand_bytes(st, &u, sizeof(u));
+  return u;
+}
+
+unsigned
+chacharand_range(struct chacharand_state *st, unsigned upper)
+{
+  unsigned divisor = UINT_MAX / upper;
+  unsigned n;
+  do {
+    n = (chacharand_unsigned(st) / divisor);
+  } while (n > upper);
+
+  return n;
+}
+
+uint64_t
+chacharand_range64(struct chacharand_state *st, uint64_t upper)
+{
+  unsigned divisor = UINT64_MAX / upper;
+  unsigned n;
+  do {
+    n = (chacharand_uint64(st) / divisor);
+  } while (n > upper);
+
+  return n;
+}
