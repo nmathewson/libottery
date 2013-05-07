@@ -22,7 +22,7 @@ dumphex(const char *label, const u8 *bytes, int n)
 void
 experiment(const u8 *key, const u8 *nonce, int skip, int rounds)
 {
-  u8 stream[256];
+  u8 stream[512];
   struct chacha_state state;
   chacha_state_setup(&state, key, nonce, skip/64);
 
@@ -31,14 +31,14 @@ experiment(const u8 *key, const u8 *nonce, int skip, int rounds)
   dumphex(" nonce", nonce, 8);
   printf ("offset: %d, rounds: %d\n", skip, rounds);
   if (rounds == 8)
-    crypto_stream_8(stream, 256, &state);
+    crypto_stream_8(stream, 512, &state);
   else if (rounds == 20)
-    crypto_stream_20(stream, 256, &state);
+    crypto_stream_20(stream, 512, &state);
   else
-    memset(stream, 255, 256);
-  if (state.block_counter != (skip+256)/64)
+    memset(stream, 255, 512);
+  if (state.block_counter != (skip+512)/64)
     puts("BAD BLOCK COUNT");
-  dumphex(NULL, stream, 256);
+  dumphex(NULL, stream, 512);
 }
 
 #define X(key,nonce,skip) do {                                  \

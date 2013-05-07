@@ -46,7 +46,7 @@ def chacha_block(position, nonce, key, nRounds):
 def experiment(key, nonce, skip, rounds=20):
     print "================================================================"
     p = skip//64
-    out = "".join(chacha_block(p+r, nonce, key, rounds) for r in (0,1,2,3) )
+    out = "".join(chacha_block(p+r, nonce, key, rounds) for r in xrange(8) )
     print "   key: %s"%binascii.b2a_hex(key)
     print " nonce: %s"%binascii.b2a_hex(nonce)
     print "offset: %s, rounds: %s"%(skip,rounds)
