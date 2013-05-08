@@ -201,13 +201,11 @@ static void
 chacharand_stir_nolock(struct chacharand_state *st)
 {
   uint8_t inp[BUFFER_SIZE];
-  LOCK(st);
   crypto_stream(inp, BUFFER_SIZE, &st->chst);
   chacha_state_setup(&st->chst, inp, inp+32, 0);
   chacharand_memclear(inp, sizeof(inp));
   crypto_stream(st->buffer, BUFFER_SIZE, &st->chst);
   st->pos=0;
-  UNLOCK(st);
 }
 
 void
