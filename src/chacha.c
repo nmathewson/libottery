@@ -142,7 +142,7 @@ int
 chacharand_init(struct chacharand_state *st)
 {
   uint8_t inp[40];
-  memset(st, 0, sizeof(st));
+  memset(st, 0, sizeof(*st));
 #ifdef CHACHARAND_PTHREADS
   if (pthread_mutex_init(&st->mutex, NULL))
     return -1;
