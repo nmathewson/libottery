@@ -64,7 +64,6 @@ chacharand_os_bytes(uint8_t *out, size_t outlen)
 #else
 #define BUFFER_SIZE (64)
 #endif
-#define BUFFER_MASK ((size_t)(BUFFER_SIZE - 1))
 
 #if BUFFER_SIZE > 256
 #error "impossible buffer size"
@@ -234,9 +233,10 @@ chacharand_bytes(struct chacharand_state *st, void *out,
 #endif
 
   if (n >= BUFFER_SIZE) {
-    crypto_stream(out, n & ~BUFFER_MASK, &st->chst);
-    out += (n & ~BUFFER_MASK);
-    n &= BUFFER_MASK;
+    size_t remain = n % BUFFER_SIZE;
+    crypto_stream(out, n - remain, &st->chst);
+    out += (n - remain);
+    n = remain;
   }
 
   if (n + st->pos < BUFFER_SIZE) {
