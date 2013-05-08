@@ -33,7 +33,11 @@ BEFORE FINAL VERSION
   - Handle fork even better
     - mutex/state in a shared mmap?
     - pthread_atfork?
-    - Ignore when we have a state object; 
+    - Ignore when we have a state object
+
+  - Handle thread-safety even better
+    - Per-pthread?
+    - pthread_spin?
 
   - Windows port
     - Windows threads

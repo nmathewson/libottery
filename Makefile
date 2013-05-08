@@ -21,7 +21,7 @@ test/test_stateful: test/test_stateful.c src/chacha8.o src/chacha20.o
 	$(CC) $(CFLAGS) -Isrc test/test_stateful.c src/chacha8.o src/chacha20.o -o test/test_stateful
 
 test/bench_rng: test/bench_rng.c src/chacha8.o src/chacha20.o
-	$(CC) $(CFLAGS) -Isrc test/bench_rng.c src/chacha8.o src/chacha20.o -o test/bench_rng
+	$(CC) $(CFLAGS) -Isrc test/bench_rng.c src/chacha8.o src/chacha20.o -o test/bench_rng -lcrypto
 
 test/test_vectors.expected: test/make_test_vectors.py
 	./test/make_test_vectors.py > test/test_vectors.expected
