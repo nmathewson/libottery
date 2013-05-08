@@ -216,12 +216,14 @@ chacharand_stir(struct chacharand_state *st)
   UNLOCK(st);
 }
 
-inline void
+void
 chacharand_bytes(struct chacharand_state *st, void *out,
                    size_t n)
 {
+#ifndef CHACHARAND_NO_INIT_CHECK
   if (!st->initialized)
     abort();
+#endif
 
   LOCK(st);
 #ifndef CHACHARAND_NO_PID_CHECK
@@ -254,11 +256,48 @@ chacharand_bytes(struct chacharand_state *st, void *out,
   UNLOCK(st);
 }
 
+static inline void
+chacharand_bytes_small(struct chacharand_state *st, void *out,
+      size_t n)
+{
+#ifndef CHACHARAND_NO_INIT_CHECK
+  if (!st->initialized)
+    abort();
+#endif
+
+  LOCK(st);
+#ifndef CHACHARAND_NO_PID_CHECK
+  if (st->pid != getpid()) {
+    if (chacharand_init(st) < 0)
+      abort();
+  }
+#endif
+
+  if (n + st->pos < BUFFER_SIZE) {
+    memcpy(out, st->buffer+st->pos, n);
+    st->pos += n;
+  } else if (n + st->pos == BUFFER_SIZE) {
+    memcpy(out, st->buffer+st->pos, n);
+    crypto_stream(st->buffer, BUFFER_SIZE, &st->chst);
+    st->pos = 0;
+    if (st->chst.block_counter > (1<<20))
+      chacharand_stir_nolock(st);
+  } else {
+    crypto_stream(st->buffer, BUFFER_SIZE, &st->chst);
+    memcpy(out, st->buffer, n);
+    st->pos = n;
+    if (st->chst.block_counter > (1<<20))
+      chacharand_stir_nolock(st);
+  }
+
+  UNLOCK(st);
+}
+
 unsigned
 chacharand_unsigned(struct chacharand_state *st)
 {
   unsigned u;
-  chacharand_bytes(st, &u, sizeof(u));
+  chacharand_bytes_small(st, &u, sizeof(u));
   return u;
 }
 
@@ -266,7 +305,7 @@ uint64_t
 chacharand_uint64(struct chacharand_state *st)
 {
   uint64_t u;
-  chacharand_bytes(st, &u, sizeof(u));
+  chacharand_bytes_small(st, &u, sizeof(u));
   return u;
 }
 
