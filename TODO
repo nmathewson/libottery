@@ -20,13 +20,20 @@ BEFORE FIRST VERSION
 
   o frontend that returns an unsigned within a range.
 
-  - Add a benchmarking/timing feature
+  . Add a benchmarking/timing feature
   - 100% test coverage.
+
+  - Static state functions
+  - Well-considered set of what APIs to export
+  - Working headers
+  - Build with more warnings
 
 BEFORE FINAL VERSION
 
   - Handle fork even better
     - mutex/state in a shared mmap?
+    - pthread_atfork?
+    - Ignore when we have a state object; 
 
   - Windows port
     - Windows threads
