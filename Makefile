@@ -1,9 +1,10 @@
 CC=gcc
-CFLAGS=-Wall -g -O3 -I. -pthread -DCHACHARAND_NO_LOCKS=1 -DCHACHARAND_NO_PID_CHECK=1
+CFLAGS=-Wall -g -O3 -I. -pthread
 # -mfpu=neon
 #  -pthread
 # -DCHACHARAND_NO_VECS=1
 # -DCHACHARAND_NO_LOCKS=1
+# -DCHACHARAND_NO_PID_CHECK=1
 
 all: src/chacha8.o src/chacha20.o test/test_vectors test/test_stateful test/bench_rng
 
