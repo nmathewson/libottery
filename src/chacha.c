@@ -97,7 +97,7 @@ chacharand_memclear(void *mem, size_t len)
 #define chacharand_flush chacharand8_flush
 #define chacharand_stir chacharand8_stir
 #define chacharand_bytes chacharand8_bytes
-#define crypto_stream crypto_stream_8
+#define chacharand_stream crypto_stream_8
 #define chacharand_wipe chacharand8_wipe
 #define chacharand_unsigned chacharand8_unsigned
 #define chacharand_uint64 chacharand8_uint64
@@ -109,7 +109,7 @@ chacharand_memclear(void *mem, size_t len)
 #define chacharand_flush chacharand20_flush
 #define chacharand_stir chacharand20_stir
 #define chacharand_bytes chacharand20_bytes
-#define crypto_stream crypto_stream_20
+#define chacharand_stream crypto_stream_20
 #define chacharand_wipe chacharand20_wipe
 #define chacharand_unsigned chacharand20_unsigned
 #define chacharand_uint64 chacharand20_uint64
@@ -151,7 +151,7 @@ chacharand_init(struct chacharand_state *st)
     return -1;
   chacha_state_setup(&st->chst, inp, inp+32, 0);
   chacharand_memclear(inp, sizeof(inp));
-  crypto_stream(st->buffer, BUFFER_SIZE, &st->chst);
+  chacharand_stream(st->buffer, BUFFER_SIZE, &st->chst);
   st->pos=0;
   st->initialized = 1;
   st->pid = getpid();
@@ -168,7 +168,7 @@ chacharand_add_seed(struct chacharand_state *st, uint8_t *seed, size_t n)
     size_t m = n % 32;
     for (i = 0; i < m; ++i) {
       st->chst.key[i] ^= seed[i];
-      crypto_stream(inp, BUFFER_SIZE, &st->chst);
+      chacharand_stream(inp, BUFFER_SIZE, &st->chst);
       chacha_state_setup(&st->chst, inp, inp+32, 0);
     }
     n -= m;
@@ -191,7 +191,7 @@ void
 chacharand_flush(struct chacharand_state *st)
 {
   LOCK(st);
-  crypto_stream(st->buffer, BUFFER_SIZE, &st->chst);
+  chacharand_stream(st->buffer, BUFFER_SIZE, &st->chst);
   st->pos = 0;
   UNLOCK(st);
 }
@@ -200,10 +200,10 @@ static void
 chacharand_stir_nolock(struct chacharand_state *st)
 {
   uint8_t inp[BUFFER_SIZE];
-  crypto_stream(inp, BUFFER_SIZE, &st->chst);
+  chacharand_stream(inp, BUFFER_SIZE, &st->chst);
   chacha_state_setup(&st->chst, inp, inp+32, 0);
   chacharand_memclear(inp, sizeof(inp));
-  crypto_stream(st->buffer, BUFFER_SIZE, &st->chst);
+  chacharand_stream(st->buffer, BUFFER_SIZE, &st->chst);
   st->pos=0;
 }
 
@@ -234,7 +234,7 @@ chacharand_bytes(struct chacharand_state *st, void *out,
 
   if (n >= BUFFER_SIZE) {
     size_t remain = n % BUFFER_SIZE;
-    crypto_stream(out, n - remain, &st->chst);
+    chacharand_stream(out, n - remain, &st->chst);
     out += (n - remain);
     n = remain;
   }
@@ -246,7 +246,7 @@ chacharand_bytes(struct chacharand_state *st, void *out,
     memcpy(out, st->buffer+st->pos, BUFFER_SIZE-st->pos);
     n -= (BUFFER_SIZE-st->pos);
     out += (BUFFER_SIZE-st->pos);
-    crypto_stream(st->buffer, BUFFER_SIZE, &st->chst);
+    chacharand_stream(st->buffer, BUFFER_SIZE, &st->chst);
     memcpy(out, st->buffer, n);
     st->pos = n;
   }
@@ -278,12 +278,12 @@ chacharand_bytes_small(struct chacharand_state *st, void *out,
     st->pos += n;
   } else if (n + st->pos == BUFFER_SIZE) {
     memcpy(out, st->buffer+st->pos, n);
-    crypto_stream(st->buffer, BUFFER_SIZE, &st->chst);
+    chacharand_stream(st->buffer, BUFFER_SIZE, &st->chst);
     st->pos = 0;
     if (st->chst.block_counter > (1<<20))
       chacharand_stir_nolock(st);
   } else {
-    crypto_stream(st->buffer, BUFFER_SIZE, &st->chst);
+    chacharand_stream(st->buffer, BUFFER_SIZE, &st->chst);
     memcpy(out, st->buffer, n);
     st->pos = n;
     if (st->chst.block_counter > (1<<20))
