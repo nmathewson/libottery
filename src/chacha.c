@@ -6,7 +6,13 @@
 #include <unistd.h>
 #include <limits.h>
 #ifndef CHACHARAND_NO_LOCKS
+#ifdef __APPLE__
+#define CHACHARAND_OSATOMIC
+#include <libkern/OSAtomic.h>
+#else
+#define CHACHARAND_PTHREADS
 #include <pthread.h>
+#endif
 #endif
 
 #define u64 uint64_t
@@ -70,7 +76,9 @@ struct chacharand_state {
   uint8_t pos;
   uint8_t initialized;
   pid_t pid;
-#ifndef CHACHARAND_NO_LOCKS
+#if defined(CHACHARAND_OSATOMIC)
+  OSSpinLock mutex;
+#elif defined(CHACHARAND_PTHREADS)
   pthread_mutex_t mutex;
 #endif
 };
@@ -110,16 +118,25 @@ chacharand_memclear(void *mem, size_t len)
 #define chacharand_range64 chacharand20_range64
 #endif
 
-#ifndef CHACHARAND_NO_LOCKS
+#if defined(CHACHARAND_PTHREADS)
 #define LOCK(st) do {                             \
     pthread_mutex_lock(&(st)->mutex);           \
   } while (0)
 #define UNLOCK(st) do {                             \
     pthread_mutex_unlock(&(st)->mutex);             \
   } while (0)
-#else
+#elif defined(CHACHARAND_OSATOMIC)
+#define LOCK(st) do {                           \
+    OSSpinLockLock(&(st)->mutex);               \
+  } while(0)
+#define UNLOCK(st) do {                         \
+    OSSpinLockUnlock(&(st)->mutex);            \
+  } while(0)
+#elif defined(CHACHARAND_NO_LOCKS)
 #define LOCK(st) ((void)0)
 #define UNLOCK(st) ((void)0)
+#else
+#error How do I lock?
 #endif
 
 int
@@ -127,8 +144,10 @@ chacharand_init(struct chacharand_state *st)
 {
   uint8_t inp[40];
   memset(st, 0, sizeof(st));
+#ifdef CHACHARAND_PTHREADS
   if (pthread_mutex_init(&st->mutex, NULL))
     return -1;
+#endif
   if (chacharand_os_bytes(inp, sizeof(inp)) < 0)
     return -1;
   chacha_state_setup(&st->chst, inp, inp+32, 0);
@@ -163,7 +182,9 @@ chacharand_add_seed(struct chacharand_state *st, uint8_t *seed, size_t n)
 void
 chacharand_wipe(struct chacharand_state *st)
 {
+#ifdef CHACHARAND_PTHREADS
   pthread_mutex_destroy(&st->mutex);
+#endif
   chacharand_memclear(st, sizeof(struct chacharand_state));
 }
 
@@ -197,7 +218,7 @@ chacharand_stir(struct chacharand_state *st)
   UNLOCK(st);
 }
 
-void
+inline void
 chacharand_bytes(struct chacharand_state *st, void *out,
                    size_t n)
 {
@@ -205,10 +226,12 @@ chacharand_bytes(struct chacharand_state *st, void *out,
     abort();
 
   LOCK(st);
+#ifndef CHACHARAND_NO_PID_CHECK
   if (st->pid != getpid()) {
     if (chacharand_init(st) < 0)
       abort();
   }
+#endif
 
   if (n >= BUFFER_SIZE) {
     crypto_stream(out, n & ~BUFFER_MASK, &st->chst);
