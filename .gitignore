@@ -4,6 +4,10 @@
 *.pyo
 .#*
 \#*
+*.dSYM
 
 test/test_vectors
 test/test_vectors.actual
+test/bench_rng
+test/dump_bytes
+test/test_stateful
