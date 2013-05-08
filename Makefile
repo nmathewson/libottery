@@ -29,6 +29,9 @@ test/test_vectors.expected: test/make_test_vectors.py
 test/test_vectors.actual: test/test_vectors
 	./test/test_vectors > test/test_vectors.actual
 
+test/dump_bytes: test/dump_bytes.c src/chacha8.o
+	$(CC) $(CFLAGS) -Isrc test/dump_bytes.c src/chacha8.o -o test/dump_bytes
+
 check: test/test_vectors.expected test/test_vectors.actual test/test_stateful
 	./test/test_stateful
 	cmp test/test_vectors.expected test/test_vectors.actual && echo OK
