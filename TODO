@@ -22,11 +22,14 @@ BEFORE FIRST VERSION
 
   . Add a benchmarking/timing feature
   - 100% test coverage.
+  - Rename.
 
   - Static state functions
   - Well-considered set of what APIs to export
   - Working headers
   - Build with more warnings
+
+  - Test with dieharder, to see if I screwed up.
 
 BEFORE FINAL VERSION
 
@@ -38,6 +41,8 @@ BEFORE FINAL VERSION
   - Handle thread-safety even better
     - Per-pthread?
     - pthread_spin?
+
+  - Use ASENI instead of chacha when it's available?
 
   - Windows port
     - Windows threads
@@ -54,3 +59,8 @@ BEFORE FINAL VERSION
 
 
 
+
+GOOD NAMES:
+  tyche, alea, dreidel, talus, Ellerslie, julius, dushen, kochun, shakuni,
+  
+  - 
