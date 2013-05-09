@@ -24,14 +24,18 @@ BEFORE FIRST VERSION
   - 100% test coverage.
   - Rename.
 
-  - Static state functions
+  - Build/benchmark with -fPIC
+  - Static state functions. These get locks.
   - Well-considered set of what APIs to export
   - Working headers
   - Build with more warnings
+  - Pluggable backends.
 
-  - Test with dieharder, to see if I screwed up.
+  . Test with dieharder, to see if I screwed up.
 
 BEFORE FINAL VERSION
+
+  - Detect CPU features at runtime.
 
   - Handle fork even better
     - mutex/state in a shared mmap?
@@ -43,10 +47,12 @@ BEFORE FINAL VERSION
     - pthread_spin?
 
   - Use ASENI instead of chacha when it's available?
+    - cryptopp implementation doesn't look bad.
 
   - Windows port
     - Windows threads
     - No need for fork detection.
+
   - Drop endianness conversion; not needed for PRNG usage
 
   - Port to MSVC
@@ -62,5 +68,8 @@ BEFORE FINAL VERSION
 
 GOOD NAMES:
   tyche, alea, dreidel, talus, Ellerslie, julius, dushen, kochun, shakuni,
-  
-  - 
+
+  - ottery
+  - ret4, return4
+  - logrus, ogrus
+
