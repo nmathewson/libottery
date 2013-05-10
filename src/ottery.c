@@ -42,6 +42,7 @@ struct ottery_state {/*XXXX test this with sentinels and magic stuff */
   struct ottery_prf prf;
   uint32_t block_counter;
   uint8_t pos;
+  uint8_t initialized;
   pid_t pid;
 #if defined(OTTERY_OSATOMIC)
   OSSpinLock mutex;
@@ -155,6 +156,7 @@ ottery_st_initialize(struct ottery_state *st,
   st->pos=0;
 
   st->pid = getpid();
+  st->initialized = 1;
   return 0;
 }
 
