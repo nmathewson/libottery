@@ -163,7 +163,11 @@ ottery_st_initialize(struct ottery_state *st,
 int
 ottery_st_init(struct ottery_state *st, const struct ottery_config *cfg)
 {
-  return ottery_st_initialize(st, cfg->impl, 0);
+  if (cfg) {
+    return ottery_st_initialize(st, cfg->impl, 0);
+  } else {
+    return ottery_st_initialize(st, &ottery_prf_chacha20_, 0);
+  }
 }
 
 void
