@@ -35,16 +35,15 @@ BEFORE FIRST VERSION
   o Pluggable backends.
 
   . Add a benchmarking/timing feature
-  - 100% test coverage.
 
   . Test with dieharder, to see if I screwed up.
   - Document APIs.
   - Tests for chacha12
+  - 100% test coverage.
+  - Resolve every XXXX
 
   - Strip out ability to use chacha as stream cipher: it would be bad to do
     so given how I'm going to tweak it.
-
-  - 
 
 BEFORE FINAL VERSION
 
@@ -56,6 +55,7 @@ BEFORE FINAL VERSION
     - Ignore when we have a state object
 
   - Handle thread-safety even better
+    - ability to disable locking.
     - Per-pthread?
     - pthread_spin?
 
