@@ -286,6 +286,25 @@ ottery_st_rand_bytes(struct ottery_state *st, void *out_,
   UNLOCK(st);
 }
 
+#define INT_ASSIGN_PTR(type, r, p) do {         \
+    memcpy(&r, p, sizeof(type));                \
+  } while (0)
+
+#define OTTERY_RETURN_RAND_INTTYPE(st, inttype) do {                    \
+    ottery_st_rand_lock_and_check(st);                                  \
+    inttype result;                                                     \
+    if (sizeof(inttype) + (st)->pos < (st)->prf.output_len) {           \
+      INT_ASSIGN_PTR(inttype, result, (st)->buffer + (st)->pos);        \
+      (st)->pos += sizeof(inttype);                                     \
+    } else {                                                            \
+      ottery_st_nextblock_nolock(st, st->buffer);                       \
+      INT_ASSIGN_PTR(inttype, result, (st)->buffer);                    \
+      (st)->pos = sizeof(inttype);                                      \
+    }                                                                   \
+    UNLOCK(st);                                                         \
+    return result;                                                      \
+    } while (0)
+
 static inline void
 ottery_st_rand_bytes_small(struct ottery_state *st, void *out_,
                            size_t n)
@@ -316,17 +335,13 @@ ottery_st_rand_bytes_small(struct ottery_state *st, void *out_,
 unsigned
 ottery_st_rand_unsigned(struct ottery_state *st)
 {
-  unsigned u;
-  ottery_st_rand_bytes_small(st, &u, sizeof(u));
-  return u;
+  OTTERY_RETURN_RAND_INTTYPE(st, unsigned);
 }
 
 uint64_t
 ottery_st_rand_uint64(struct ottery_state *st)
 {
-  uint64_t u;
-  ottery_st_rand_bytes_small(st, &u, sizeof(u));
-  return u;
+  OTTERY_RETURN_RAND_INTTYPE(st, uint64_t);
 }
 
 unsigned
