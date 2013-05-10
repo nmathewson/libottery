@@ -22,16 +22,22 @@ BEFORE FIRST VERSION
 
   . Add a benchmarking/timing feature
   - 100% test coverage.
-  - Rename.
+  o Rename.
 
   - Build/benchmark with -fPIC
-  - Static state functions. These get locks.
-  - Well-considered set of what APIs to export
-  - Working headers
+  - Static state functions.
+
+  . Well-considered set of what APIs to export
+    o Initial state-based thing.
+    - Initial static thing
+
+  . Working headers
   - Build with more warnings
-  - Pluggable backends.
+  o Pluggable backends.
 
   . Test with dieharder, to see if I screwed up.
+  - Document APIs.
+  - Tests for chacha12
 
 BEFORE FINAL VERSION
 
