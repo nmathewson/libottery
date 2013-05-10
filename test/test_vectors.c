@@ -2,7 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "chacha.h"
+#include "ottery-internal.h"
+#include "ottery.h"
 
 typedef unsigned char u8;
 
@@ -24,16 +25,16 @@ experiment(const u8 *key, const u8 *nonce, int skip, int rounds)
 {
   u8 stream[512];
   struct chacha_state state;
-  chacha_state_setup(&state, key, nonce, skip/64);
+  ottery_chacha_state_setup_(&state, key, nonce, skip/64);
 
   puts("================================================================");
   dumphex("   key", key, 32);
   dumphex(" nonce", nonce, 8);
   printf ("offset: %d, rounds: %d\n", skip, rounds);
   if (rounds == 8)
-    crypto_stream_8(stream, 512, &state);
+    ottery_stream_chacha8_(stream, 512, &state);
   else if (rounds == 20)
-    crypto_stream_20(stream, 512, &state);
+    ottery_stream_chacha20_(stream, 512, &state);
   else
     memset(stream, 255, 512);
   if (state.block_counter != (skip+512)/64)

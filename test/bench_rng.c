@@ -7,21 +7,7 @@
 #include <openssl/rand.h>
 #endif
 
-#include "chacha.h"
-
-struct chacharand_state {
-  uint8_t junk[1024];
-};
-
-struct chacharand_state s8;
-struct chacharand_state s20;
-
-int chacharand8_init(struct chacharand_state *st);
-int chacharand20_init(struct chacharand_state *st);
-unsigned chacharand8_unsigned(struct chacharand_state *st);
-unsigned chacharand20_unsigned(struct chacharand_state *st);
-void chacharand8_bytes(struct chacharand_state *st, void *bytes, size_t n);
-void chacharand20_bytes(struct chacharand_state *st, void *bytes, size_t n);
+#include "ottery.h"
 
 #define N 10000000
 
@@ -40,16 +26,19 @@ void chacharand20_bytes(struct chacharand_state *st, void *bytes, size_t n);
     printf("%s: %f nsec per call\n", __func__, (usec*1000.0)/N); \
   } while (0)
 
+struct ottery_state s8;
+struct ottery_state s20;
+
 void
 time_chacharand8(void)
 {
-  TIME_UNSIGNED_RNG( (chacharand8_unsigned(&s8)) );
+  TIME_UNSIGNED_RNG( (ottery_st_rand_unsigned(&s8)) );
 }
 
 void
 time_chacharand20(void)
 {
-  TIME_UNSIGNED_RNG( (chacharand20_unsigned(&s20)) );
+  TIME_UNSIGNED_RNG( (ottery_st_rand_unsigned(&s20)) );
 }
 
 void
@@ -109,12 +98,12 @@ libc_random_buf(void *b, size_t n)
 void
 time_chacharand8_buf16(void)
 {
-  TIME_BUF(16, (chacharand8_bytes(&s8, buf, sizeof(buf))));
+  TIME_BUF(16, (ottery_st_rand_bytes(&s8, buf, sizeof(buf))));
 }
 void
 time_chacharand20_buf16(void)
 {
-  TIME_BUF(16, (chacharand20_bytes(&s8, buf, sizeof(buf))));
+  TIME_BUF(16, (ottery_st_rand_bytes(&s20, buf, sizeof(buf))));
 }
 void
 time_arc4random_buf16(void)
@@ -135,12 +124,12 @@ time_opensslrandom_buf16(void)
 void
 time_chacharand8_buf1024(void)
 {
-  TIME_BUF(1024, (chacharand8_bytes(&s8, buf, sizeof(buf))));
+  TIME_BUF(1024, (ottery_st_rand_bytes(&s8, buf, sizeof(buf))));
 }
 void
 time_chacharand20_buf1024(void)
 {
-  TIME_BUF(1024, (chacharand20_bytes(&s8, buf, sizeof(buf))));
+  TIME_BUF(1024, (ottery_st_rand_bytes(&s20, buf, sizeof(buf))));
 }
 void
 time_arc4random_buf1024(void)
@@ -158,15 +147,21 @@ time_opensslrandom_buf1024(void)
   TIME_BUF(1024, (RAND_bytes(buf, sizeof(buf))));
 }
 
-
-
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 #ifdef OPENSSL
   RAND_poll();
 #endif
-  chacharand8_init(&s8);
-  chacharand20_init(&s20);
+  struct ottery_config cfg_chacha8;
+  struct ottery_config cfg_chacha20;
+  ottery_config_init(&cfg_chacha8);
+  ottery_config_force_implementation(&cfg_chacha8, OTTERY_CHACHA8);
+  ottery_config_init(&cfg_chacha20);
+  ottery_config_force_implementation(&cfg_chacha20, OTTERY_CHACHA20);
+
+  ottery_st_init(&s8, &cfg_chacha8);
+  ottery_st_init(&s20, &cfg_chacha20);
 
   time_chacharand8();
   time_chacharand20();

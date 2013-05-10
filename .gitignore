@@ -6,6 +6,8 @@
 \#*
 *.dSYM
 
+libottery.a
+
 test/test_vectors
 test/test_vectors.actual
 test/bench_rng

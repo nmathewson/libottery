@@ -3,6 +3,7 @@ chacha-merged.c version 20080118
 D. J. Bernstein
 Public domain.
 */
+#include "ottery-internal.h"
 #include "src/chacha_merged_ecrypt.h"
 
 #define ROTATE(v,c) (ROTL32(v,c))
@@ -165,19 +166,22 @@ static void ECRYPT_keystream_bytes(ECRYPT_ctx *x,u8 *c, u32 bytes)
 }
 
 #if CHACHA_RNDS == 8
-#define FN_NAME crypto_stream_8
+#define ottery_stream_chacha ottery_stream_chacha8_
+#define ottery_prf_chacha ottery_prf_chacha8_
 #elif CHACHA_RNDS == 12
-#define FN_NAME crypto_stream_12
+#define ottery_stream_chacha ottery_stream_chacha12_
+#define ottery_prf_chacha ottery_prf_chacha12_
 #elif CHACHA_RNDS == 20
-#define FN_NAME crypto_stream_20
+#define ottery_stream_chacha ottery_stream_chacha20_
+#define ottery_prf_chacha ottery_prf_chacha20_
 #else
 #error
 #endif
 
-int FN_NAME (
-        uint8_t *out,
-        uint64_t inlen,
-        struct chacha_state *st)
+int
+ottery_stream_chacha(uint8_t *out,
+                     uint64_t inlen,
+                     struct chacha_state *st)
 {
   ECRYPT_ctx x;
   ECRYPT_keysetup(&x, st->key, 256, 0);
@@ -188,3 +192,33 @@ int FN_NAME (
   st->block_counter = (((u64)x.input[13])<<32) | x.input[12];
   return 0;
 }
+
+#define STATE_LEN   (sizeof(ECRYPT_ctx))
+#define STATE_BYTES 40
+#define IDX_STEP    4
+#define OUTPUT_LEN  (IDX_STEP * 64)
+
+static void
+chacha_state_setup(void *state_, const uint8_t *bytes)
+{
+  ECRYPT_ctx *x = state_;
+  ECRYPT_keysetup(x, bytes, 256, 0);
+  ECRYPT_ivsetup(x, bytes+32);
+}
+
+static void
+chacha_generate(void *state_, uint8_t *output, uint32_t idx)
+{
+  ECRYPT_ctx *x = state_;
+  x->input[12] = idx;
+  ECRYPT_keystream_bytes(x, output, OUTPUT_LEN);
+}
+
+const struct ottery_prf ottery_prf_chacha = {
+  STATE_LEN,
+  STATE_BYTES,
+  OUTPUT_LEN,
+  IDX_STEP,
+  chacha_state_setup,
+  chacha_generate,
+};

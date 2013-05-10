@@ -127,16 +127,20 @@ typedef unsigned vec __attribute__ ((vector_size (16)));
 *(vec *)(op + d + 12) = REVV_BE(v3);
 
 #if CHACHA_RNDS == 8
-#define FN_NAME crypto_stream_8
+#define ottery_stream_chacha ottery_stream_chacha8_
+#define ottery_prf_chacha ottery_prf_chacha8_
 #elif CHACHA_RNDS == 12
-#define FN_NAME crypto_stream_12
+#define ottery_stream_chacha ottery_stream_chacha12_
+#define ottery_prf_chacha ottery_prf_chacha12_
 #elif CHACHA_RNDS == 20
-#define FN_NAME crypto_stream_20
+#define ottery_stream_chacha ottery_stream_chacha20_
+#define ottery_prf_chacha ottery_prf_chacha20_
 #else
 #error
 #endif
 
-int FN_NAME (
+int
+ottery_stream_chacha(
         uint8_t *out,
         uint64_t inlen,
         struct chacha_state *st)
@@ -283,4 +287,35 @@ int FN_NAME (
     }
     return 0;
 }
+
+#define STATE_LEN   (sizeof(struct chacha_state))
+#define STATE_BYTES 40
+#define IDX_STEP    BPI
+#define OUTPUT_LEN  (IDX_STEP * 64)
+
+static void
+chacha_state_setup(void *state, const uint8_t *bytes)
+{
+  struct chacha_state *st = state;
+  memcpy(st->key, bytes, 32);
+  memcpy(st->nonce, bytes+32, 8);
+  st->block_counter = 0;
+}
+
+static void
+chacha_generate(void *state, uint8_t *output, uint32_t idx)
+{
+  struct chacha_state *st = state;
+  st->block_counter = idx;
+  ottery_stream_chacha(output, OUTPUT_LEN, st);
+}
+
+const struct ottery_prf ottery_prf_chacha = {
+  STATE_LEN,
+  STATE_BYTES,
+  OUTPUT_LEN,
+  IDX_STEP,
+  chacha_state_setup,
+  chacha_generate,
+};
 

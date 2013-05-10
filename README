@@ -1,5 +1,5 @@
-chacharand -- drop-in replacement for arc4random using the chacha cipher
-========================================================================
+libottery -- drop-in secure replacement for your RNG.
+======================================================
 
 This project is meant to provide a drop-in replacement for the horrible
 random number generator you are using today.
@@ -23,7 +23,7 @@ your libc's random() or rand() function.  It aims to be so fast that you
 will never need to think "do I need to use a secure random number
 generator here, or can I use a fast one?"
 
-It uses Dan Bernstein's chacha stream cipher as its base.
+It currently uses Dan Bernstein's chacha stream cipher as its base.
 
 Intellectual Property Notices
 -----------------------------
