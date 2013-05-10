@@ -9,7 +9,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <limits.h>
-#ifndef CHACHARAND_NO_LOCKS
+#ifndef OTTERY_NO_LOCKS
 #ifdef __APPLE__
 #define OTTERY_OSATOMIC
 #include <libkern/OSAtomic.h>
