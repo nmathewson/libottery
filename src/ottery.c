@@ -140,7 +140,7 @@ ottery_st_initialize(struct ottery_state *st,
   if (!reinit) {
     memset(st, 0, sizeof(*st));
 #ifdef OTTERY_PTHREADS
-    if (!pthread_mutex_init(&st->mutex, NULL))
+    if (pthread_mutex_init(&st->mutex, NULL))
       return -1;
 #endif
     if (prf->state_len > MAX_STATE_LEN)
