@@ -57,7 +57,7 @@ static inline unsigned
 openssl_random(void)
 {
   unsigned u;
-  RAND_bytes(&u, sizeof(u));
+  RAND_bytes((void*)&u, sizeof(u));
   return u;
 }
 void
@@ -89,7 +89,7 @@ static inline void
 libc_random_buf(void *b, size_t n)
 {
   unsigned *cp = b;
-  int i;
+  unsigned i;
   for (i=0;i<n/sizeof(unsigned);++i) {
     *cp++ = random();
   }
@@ -150,6 +150,8 @@ time_opensslrandom_buf1024(void)
 int
 main(int argc, char **argv)
 {
+  (void) argc;
+  (void) argv;
 #ifdef OPENSSL
   RAND_poll();
 #endif

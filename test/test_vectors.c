@@ -21,7 +21,7 @@ dumphex(const char *label, const u8 *bytes, int n)
 }
 
 void
-experiment(const u8 *key, const u8 *nonce, int skip, int rounds)
+experiment(const u8 *key, const u8 *nonce, unsigned skip, int rounds)
 {
   u8 stream[512];
   struct chacha_state state;
@@ -48,8 +48,10 @@ experiment(const u8 *key, const u8 *nonce, int skip, int rounds)
   } while (0)
 
 int
-main(int argc, char **v)
+main(int argc, char **argv)
 {
+  (void)argc;
+  (void)argv;
   X("helloworld!helloworld!helloworld", "!hellowo", 0);
   X("\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0",
     "\0\0\0\0\0\0\0\0", 0);

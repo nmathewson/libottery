@@ -32,7 +32,7 @@ BEFORE FIRST VERSION
     - Initial static thing
 
   . Working headers
-  - Build with more warnings
+  o Build with more warnings
   o Pluggable backends.
 
   . Test with dieharder, to see if I screwed up.

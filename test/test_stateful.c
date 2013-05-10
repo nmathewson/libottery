@@ -50,7 +50,7 @@ stream_stepped(int rounds, uint8_t *out, uint64_t outlen, unsigned step,
   return 0;
 }
 
-static int
+static unsigned
 stream_chunked(const struct ottery_prf *prf, void *prf_state,
                uint8_t *output, uint32_t outlen, uint32_t idx)
 {
@@ -105,7 +105,7 @@ check_stateful(int rounds, uint64_t initial_counter, int check_chunked)
   if (! check_chunked)
     goto done;
   prf->setup(&ost, (uint8_t*)"Come in, Ftumch! Your time is upnmklpjkl");
-  int n = stream_chunked(prf, ost, buf2, LEN, (uint32_t)initial_counter);
+  unsigned n = stream_chunked(prf, ost, buf2, LEN, (uint32_t)initial_counter);
   if (n < prf->output_len*3) {
     printf("nothing or little generated (%d, %d)\n", n, prf->output_len);
     exit(1);
@@ -124,6 +124,8 @@ check_stateful(int rounds, uint64_t initial_counter, int check_chunked)
 int
 main(int argc, char **argv)
 {
+  (void) argc;
+  (void) argv;
   puts("8");
   check_stateful(8, 0, 1);
   puts("20");

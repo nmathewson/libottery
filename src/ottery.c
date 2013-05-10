@@ -23,10 +23,11 @@ int
 ottery_os_randbytes_(uint8_t *out, size_t outlen)
 {
   int fd;
+  ssize_t n;
   fd = open("/dev/urandom", O_RDONLY|O_CLOEXEC);
   if (fd < 0)
     return -1;
-  if (read(fd, out, outlen) != outlen)
+  if ((n = read(fd, out, outlen)) < 0 || (size_t)n != outlen)
     return -1;
   close(fd);
   return 0;
@@ -170,7 +171,7 @@ ottery_st_add_seed(struct ottery_state *st, uint8_t *seed, size_t n)
 {
   LOCK(st);
   while (n) {
-    int i;
+    unsigned i;
     size_t m = n > st->prf.state_bytes ? st->prf.state_bytes : n;
     ottery_st_nextblock_nolock(st, st->buffer);
     for (i = 0; i < m; ++i) {
@@ -218,7 +219,7 @@ ottery_st_stir(struct ottery_state *st)
 }
 
 void
-ottery_st_rand_bytes(struct ottery_state *st, void *out,
+ottery_st_rand_bytes(struct ottery_state *st, void *out_,
                      size_t n)
 {
 #ifndef OTTERY_NO_INIT_CHECK
@@ -234,6 +235,7 @@ ottery_st_rand_bytes(struct ottery_state *st, void *out,
   }
 #endif
 
+  uint8_t *out = out_;
   while (n >= st->prf.output_len) {
     ottery_st_nextblock_nolock(st, out);
     out += st->prf.output_len;
@@ -257,7 +259,7 @@ ottery_st_rand_bytes(struct ottery_state *st, void *out,
 }
 
 static inline void
-ottery_st_rand_bytes_small(struct ottery_state *st, void *out,
+ottery_st_rand_bytes_small(struct ottery_state *st, void *out_,
                            size_t n)
 {
 #ifndef OTTERY_NO_INIT_CHECK
@@ -273,6 +275,7 @@ ottery_st_rand_bytes_small(struct ottery_state *st, void *out,
   }
 #endif
 
+  uint8_t *out = out_;
   if (n + st->pos < st->prf.output_len) {
     memcpy(out, st->buffer+st->pos, n);
     st->pos += n;

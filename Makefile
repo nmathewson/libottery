@@ -1,5 +1,6 @@
 CC=gcc
-CFLAGS=-Wall -g -O3 -I. -pthread
+CFLAGS=-Wall -W -Wextra -g -O3 -I. -pthread
+# -pedantic --std=c99
 # -mfpu=neon
 #  -pthread
 # -DOTTERY_NO_VECS
@@ -23,7 +24,7 @@ test/test_stateful: test/test_stateful.c libottery.a
 	$(CC) $(CFLAGS) -Isrc test/test_stateful.c libottery.a -o test/test_stateful
 
 test/bench_rng: test/bench_rng.c libottery.a
-	$(CC) $(CFLAGS) -Isrc test/bench_rng.c libottery.a -lcrypto -o test/bench_rng
+	$(CC) $(CFLAGS) -Wno-deprecated-declarations -Isrc test/bench_rng.c libottery.a -lcrypto -o test/bench_rng
 
 test/test_vectors.expected: test/make_test_vectors.py
 	./test/make_test_vectors.py > test/test_vectors.expected
