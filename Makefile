@@ -4,6 +4,8 @@ CFLAGS=-Wall -W -Wextra -g -O3 -I. -pthread
 # -mfpu=neon
 #  -pthread
 # -DOTTERY_NO_VECS
+# -DOTTERY_NO_PID_CHECK
+# -DOTTERY_NO_INIT_CHECK
 
 TESTS =  test/test_vectors test/test_stateful test/bench_rng
 
