@@ -27,7 +27,7 @@ int ottery_config_force_implementation(struct ottery_config *cfg,
 
 /* Functions that take or manipulate state explicitly. */
 int ottery_st_init(struct ottery_state *st, const struct ottery_config *cfg);
-void ottery_st_add_seed(struct ottery_state *st, uint8_t *seed, size_t n);
+void ottery_st_add_seed(struct ottery_state *st, const uint8_t *seed, size_t n);
 void ottery_st_wipe(struct ottery_state *st);
 void ottery_st_flush(struct ottery_state *st);
 void ottery_st_stir(struct ottery_state *st);

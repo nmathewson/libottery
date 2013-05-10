@@ -165,8 +165,19 @@ ottery_st_init(struct ottery_state *st, const struct ottery_config *cfg)
 }
 
 void
-ottery_st_add_seed(struct ottery_state *st, uint8_t *seed, size_t n)
+ottery_st_add_seed(struct ottery_state *st, const uint8_t *seed, size_t n)
 {
+  uint8_t tmp_seed[MAX_STATE_BYTES];
+  if (! seed) {
+    unsigned state_bytes;
+    LOCK(st);
+    state_bytes = st->prf.state_bytes;
+    UNLOCK(st);
+    ottery_os_randbytes_(tmp_seed, state_bytes);
+    seed = tmp_seed;
+    n = state_bytes;
+  }
+
   LOCK(st);
   while (n) {
     unsigned i;
@@ -184,6 +195,9 @@ ottery_st_add_seed(struct ottery_state *st, uint8_t *seed, size_t n)
 
   st->pos = 0;
   UNLOCK(st);
+
+  if (seed == tmp_seed)
+    ottery_memclear_(tmp_seed, sizeof(tmp_seed));
 }
 
 void
