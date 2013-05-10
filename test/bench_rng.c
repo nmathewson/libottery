@@ -17,7 +17,7 @@
     int i;                                      \
     gettimeofday(&start, NULL);                 \
     for (i=0; i < N; ++i) {                     \
-      accumulator += rng_fn;                    \
+      accumulator += (unsigned)( rng_fn );      \
     }                                           \
     gettimeofday(&end, NULL);                   \
     uint64_t usec = end.tv_sec - start.tv_sec;  \
@@ -51,6 +51,32 @@ void
 time_libc_random(void)
 {
   TIME_UNSIGNED_RNG( (random()) );
+}
+
+void
+time_chacharand8_u64(void)
+{
+  TIME_UNSIGNED_RNG( (ottery_st_rand_uint64(&s8)) );
+}
+
+void
+time_chacharand20_u64(void)
+{
+  TIME_UNSIGNED_RNG( (ottery_st_rand_uint64(&s20)) );
+}
+
+static inline uint64_t
+arc4random_u64(void)
+{
+  uint64_t x;
+  arc4random_buf((void*)&x, sizeof(x));
+  return x;
+}
+
+void
+time_arc4random_u64(void)
+{
+  TIME_UNSIGNED_RNG( (arc4random_u64()) );
 }
 
 static inline unsigned
@@ -93,6 +119,23 @@ libc_random_buf(void *b, size_t n)
   for (i=0;i<n/sizeof(unsigned);++i) {
     *cp++ = random();
   }
+}
+
+
+void
+time_chacha8_onebyte(void)
+{
+  TIME_BUF(1, ottery_st_rand_bytes(&s8, buf, sizeof(buf)));
+}
+void
+time_chacha20_onebyte(void)
+{
+  TIME_BUF(1, ottery_st_rand_bytes(&s20, buf, sizeof(buf)));
+}
+void
+time_libc_onebyte(void)
+{
+  TIME_UNSIGNED_RNG((random() & 0xff));
 }
 
 void
@@ -168,19 +211,28 @@ main(int argc, char **argv)
   time_chacharand8();
   time_chacharand20();
   time_arc4random();
-  time_openssl_random();
   time_libc_random();
+
+  time_chacharand8_u64();
+  time_chacharand20_u64();
+  time_arc4random_u64();
+
+  time_chacha8_onebyte();
+  time_chacha20_onebyte();
+  time_libc_onebyte();
 
   time_chacharand8_buf16();
   time_chacharand20_buf16();
   time_arc4random_buf16();
   time_libcrandom_buf16();
-  time_opensslrandom_buf16();
 
   time_chacharand8_buf1024();
   time_chacharand20_buf1024();
   time_arc4random_buf1024();
   time_libcrandom_buf1024();
+
+  time_openssl_random();
+  time_opensslrandom_buf16();
   time_opensslrandom_buf1024();
 
   return 0;
