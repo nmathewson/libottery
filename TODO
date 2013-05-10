@@ -20,24 +20,31 @@ BEFORE FIRST VERSION
 
   o frontend that returns an unsigned within a range.
 
-  . Add a benchmarking/timing feature
-  - 100% test coverage.
   o Rename.
 
   - Build/benchmark with -fPIC
+
   o Static state functions.
 
-  . Well-considered set of what APIs to export
+  o Well-considered set of what APIs to export
     o Initial state-based thing.
-    - Initial static thing
+    o Initial static thing
 
   . Working headers
   o Build with more warnings
   o Pluggable backends.
 
+  . Add a benchmarking/timing feature
+  - 100% test coverage.
+
   . Test with dieharder, to see if I screwed up.
   - Document APIs.
   - Tests for chacha12
+
+  - Strip out ability to use chacha as stream cipher: it would be bad to do
+    so given how I'm going to tweak it.
+
+  - 
 
 BEFORE FINAL VERSION
 
