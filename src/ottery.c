@@ -236,9 +236,11 @@ ottery_st_stir(struct ottery_state *st)
   UNLOCK(st);
 }
 
-void
-ottery_st_rand_bytes(struct ottery_state *st, void *out_,
-                     size_t n)
+static inline void ottery_st_rand_lock_and_check(struct ottery_state *st)
+  __attribute__((always_inline));
+
+static inline void
+ottery_st_rand_lock_and_check(struct ottery_state *st)
 {
 #ifndef OTTERY_NO_INIT_CHECK
   if (!st->initialized)
@@ -252,6 +254,14 @@ ottery_st_rand_bytes(struct ottery_state *st, void *out_,
       abort();
   }
 #endif
+}
+
+
+void
+ottery_st_rand_bytes(struct ottery_state *st, void *out_,
+                     size_t n)
+{
+  ottery_st_rand_lock_and_check(st);
 
   uint8_t *out = out_;
   while (n >= st->prf.output_len) {
@@ -280,18 +290,7 @@ static inline void
 ottery_st_rand_bytes_small(struct ottery_state *st, void *out_,
                            size_t n)
 {
-#ifndef OTTERY_NO_INIT_CHECK
-  if (!st->initialized)
-    abort();
-#endif
-
-  LOCK(st);
-#ifndef OTTERY_NO_PID_CHECK
-  if (st->pid != getpid()) {
-    if (ottery_st_initialize(st, NULL, 1) < 0)
-      abort();
-  }
-#endif
+  ottery_st_rand_lock_and_check(st);
 
   uint8_t *out = out_;
   if (n + st->pos < st->prf.output_len) {
