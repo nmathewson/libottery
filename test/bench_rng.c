@@ -44,7 +44,9 @@ time_chacharand20(void)
 void
 time_arc4random(void)
 {
+#ifndef NO_ARC4RANDOM
   TIME_UNSIGNED_RNG( (arc4random()) );
+#endif
 }
 
 void
@@ -65,6 +67,7 @@ time_chacharand20_u64(void)
   TIME_UNSIGNED_RNG( (ottery_st_rand_uint64(&s20)) );
 }
 
+#ifndef NO_ARC4RANDOM
 static inline uint64_t
 arc4random_u64(void)
 {
@@ -72,11 +75,14 @@ arc4random_u64(void)
   arc4random_buf((void*)&x, sizeof(x));
   return x;
 }
+#endif
 
 void
 time_arc4random_u64(void)
 {
+#ifndef NO_ARC4RANDOM
   TIME_UNSIGNED_RNG( (arc4random_u64()) );
+#endif
 }
 
 static inline unsigned
@@ -151,7 +157,9 @@ time_chacharand20_buf16(void)
 void
 time_arc4random_buf16(void)
 {
+#ifndef NO_ARC4RANDOM
   TIME_BUF(16, (arc4random_buf(buf, sizeof(buf))));
+#endif
 }
 void
 time_libcrandom_buf16(void)
@@ -177,7 +185,9 @@ time_chacharand20_buf1024(void)
 void
 time_arc4random_buf1024(void)
 {
+#ifndef NO_ARC4RANDOM
   TIME_BUF(1024, (arc4random_buf(buf, sizeof(buf))));
+#endif
 }
 void
 time_libcrandom_buf1024(void)
