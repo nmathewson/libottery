@@ -37,7 +37,7 @@ test/test_vectors.actual: test/test_vectors
 test/dump_bytes: test/dump_bytes.c libottery.a
 	$(CC) $(CFLAGS) -Isrc test/dump_bytes.c libottery.a -o test/dump_bytes
 
-check: $(TESTS)
+check: $(TESTS) test/test_vectors.actual
 	./test/test_stateful
 	cmp test/test_vectors.expected test/test_vectors.actual && echo OK
 

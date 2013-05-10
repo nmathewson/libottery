@@ -136,11 +136,6 @@ main(int argc, char **argv)
   puts("20+");
   check_stateful(20, 12345, 1);
 
-  puts("8++");
-  check_stateful(8, 0xffffffffeULL, 0);
-  puts("20++");
-  check_stateful(20, 0xfffffffeULL, 0);
-
   puts("OK");
   return 0;
 }

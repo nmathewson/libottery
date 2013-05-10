@@ -129,10 +129,7 @@ static void ECRYPT_keystream_bytes(ECRYPT_ctx *x,u8 *c, u32 bytes)
     x15 = PLUS(x15,j15);
 
     j12 = PLUSONE(j12);
-    if (!j12) {
-      j13 = PLUSONE(j13);
-      /* stopping at 2^70 bytes per nonce is user's responsibility */
-    }
+    /* Ottery: j13 can never need to be incremented. */
 
     U32TO8_LITTLE(c + 0,x0);
     U32TO8_LITTLE(c + 4,x1);
