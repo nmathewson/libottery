@@ -42,7 +42,6 @@ struct ottery_state {/*XXXX test this with sentinels and magic stuff */
   struct ottery_prf prf;
   uint32_t block_counter;
   uint8_t pos;
-  uint8_t initialized;
   pid_t pid;
 #if defined(OTTERY_OSATOMIC)
   OSSpinLock mutex;
@@ -155,7 +154,6 @@ ottery_st_initialize(struct ottery_state *st,
   ottery_st_nextblock_nolock(st, st->buffer);
   st->pos=0;
 
-  st->initialized = 1;
   st->pid = getpid();
   return 0;
 }
@@ -334,4 +332,78 @@ ottery_st_rand_range64(struct ottery_state *st, uint64_t upper)
   } while (n > upper);
 
   return n;
+}
+
+static int ottery_global_state_initialized_ = 0;
+static struct ottery_state ottery_global_state_;
+
+#define CHECK_INIT() do {                       \
+    if (!ottery_global_state_initialized_) {    \
+      if (ottery_init(NULL))                    \
+        abort();                                \
+    }                                           \
+  } while (0)
+
+int
+ottery_init(const struct ottery_config *cfg)
+{
+  int n = ottery_st_init(&ottery_global_state_, cfg);
+  if (n == 0)
+    ottery_global_state_initialized_ = 1;
+  return n;
+}
+
+void
+ottery_add_seed(const uint8_t *seed, size_t n)
+{
+  CHECK_INIT();
+  ottery_st_add_seed(&ottery_global_state_, seed, n);
+}
+
+void
+ottery_wipe(void)
+{
+  if (ottery_global_state_initialized_) {
+    ottery_global_state_initialized_ = 0;
+    ottery_st_wipe(&ottery_global_state_);
+  }
+}
+
+void
+ottery_stir(void)
+{
+  CHECK_INIT();
+  ottery_st_stir(&ottery_global_state_);
+}
+
+void
+ottery_rand_bytes(void *out, size_t n)
+{
+  CHECK_INIT();
+  ottery_st_rand_bytes(&ottery_global_state_, out, n);
+}
+
+unsigned
+ottery_rand_unsigned(void)
+{
+  CHECK_INIT();
+  return ottery_st_rand_unsigned(&ottery_global_state_);
+}
+uint64_t
+ottery_rand_uint64(void)
+{
+  CHECK_INIT();
+  return ottery_st_rand_uint64(&ottery_global_state_);
+}
+unsigned
+ottery_rand_range(unsigned top)
+{
+  CHECK_INIT();
+  return ottery_st_rand_range(&ottery_global_state_, top);
+}
+uint64_t
+ottery_rand_range64(uint64_t top)
+{
+  CHECK_INIT();
+  return ottery_st_rand_range64(&ottery_global_state_, top);
 }

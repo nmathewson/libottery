@@ -25,7 +25,7 @@ BEFORE FIRST VERSION
   o Rename.
 
   - Build/benchmark with -fPIC
-  - Static state functions.
+  o Static state functions.
 
   . Well-considered set of what APIs to export
     o Initial state-based thing.

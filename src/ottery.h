@@ -38,4 +38,18 @@ uint64_t ottery_st_rand_uint64(struct ottery_state *st);
 unsigned ottery_st_rand_range(struct ottery_state *st, unsigned top);
 uint64_t ottery_st_rand_range64(struct ottery_state *st, uint64_t top);
 
+
+/* Functions that use an implicit global state */
+int ottery_init(const struct ottery_config *cfg);
+void ottery_add_seed(const uint8_t *seed, size_t n);
+void ottery_wipe(void);
+void ottery_stir(void);
+
+void ottery_rand_bytes(void *out, size_t n);
+unsigned ottery_rand_unsigned(void);
+uint64_t ottery_rand_uint64(void);
+unsigned ottery_rand_range(unsigned top);
+uint64_t ottery_rand_range64(uint64_t top);
+
+
 #endif
