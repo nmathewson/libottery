@@ -7,7 +7,7 @@ CFLAGS=-Wall -W -Wextra -g -O3 -I. -pthread
 # -DOTTERY_NO_PID_CHECK
 # -DOTTERY_NO_INIT_CHECK
 
-TESTS =  test/test_vectors test/test_stateful test/bench_rng
+TESTS =  test/test_vectors test/test_stateful test/bench_rng test/dump_bytes
 
 all: $(TESTS) libottery.a
 
