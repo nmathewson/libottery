@@ -45,6 +45,8 @@ BEFORE FIRST VERSION
   - Strip out ability to use chacha as stream cipher: it would be bad to do
     so given how I'm going to tweak it.
 
+  - Switch from initialized-check to magic-number check?
+
 BEFORE FINAL VERSION
 
   - Detect CPU features at runtime.
@@ -65,6 +67,12 @@ BEFORE FINAL VERSION
   - Windows port
     - Windows threads
     - No need for fork detection.
+
+  - Other entropy sources besides /dev/urandom
+    - User-specified device
+    - Syscall/ioctl
+    - That windows thing.
+    - User promises to seed (dangerous)
 
   - Drop endianness conversion; not needed for PRNG usage
 

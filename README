@@ -23,7 +23,82 @@ your libc's random() or rand() function.  It aims to be so fast that you
 will never need to think "do I need to use a secure random number
 generator here, or can I use a fast one?"
 
-It currently uses Dan Bernstein's chacha stream cipher as its base.
+It currently uses Dan Bernstein's ChaCha stream cipher as its base.
+
+How to use it (101 class)
+-------------------------
+
+   #include <ottery.h>
+
+   ...
+   unsigned u = ottery_rand_unsigned();
+
+   unsigned char buf[128];
+   ottery_rand_bytes(buf, sizeof(buf));
+   ...
+
+   gcc -Wall -O2 -g myprog.c -o myprog -lottery
+
+Details
+-------
+
+A libottery PRNG seeds itself from your operating system's (hopefully)
+secure random number generator.  This seed is used as the key and nonce
+for a (hopefully) strong, fast stream cipher.  After some amount of
+output, or whenever you explicitly "stir" the RNG, it generate a little
+more output, and uses that output to replace its key and nonce.  Every
+time this happens, the old state becomes unrecoverable from the new
+state.  (This is (basically) equivalent as the CTR_DRBG construction from
+http://csrc.nist.gov/publications/nistpubs/800-90A/SP800-90A.pdf , if
+you drop the requirement that the stream generator be a block cipher in
+counter mode.)
+
+By default, I'm trying to make libottery as safe to use as possible.
+Therefore, I am making it threadsafe by default, and forksafe by
+default.  (That is, you don't need to tell it to lock itself to tolerate
+concurrent access, and you don't need to explicitly reinitialize it
+after each fork().)  It also tries to make it impossible to accidentally
+use it unseeded.  Later versions will try to resist even more common
+mistakes.
+
+Getting good performance for large-sized requests is a simple matter of
+choosing a fast secure stream generator.  Fortunately, we have a bunch
+of those.  Right now, libottery uses Dan Bernstein's ChaCha cipher,
+where a event naive implementation is pretty fast, and an optimized one
+can be downright scary.  Eventually, I'm also going to add support for
+the CPU's AES implementation, if the CPU has an AES instructions:
+there's really no competing with a hardware implementation.
+
+For small request performance (say, somebody wants to generate a bunch
+of random 4=byte unsigned ints), overhead management is more
+important. Right now, for a 4-byte request, the majority of our time
+goes into locking, checking whether we've forked, and making sure that
+the RNG is really initialized.
+
+Speed comparison
+----------------
+
+On my Core i7 laptop running OSX: If you're only generating a 4-byte
+unsigned, the ChaCha8 implementation is currently 8% slower than
+arc4random(), and the ChaCha20 implementation is 25%.  We're faster than
+arc4random() once you're generating at least 8 bytes per go.  We're
+faster than libc random() once you're generating at least 16 bytes per
+go.
+
+In one test, I turned off all the safety features for a laugh (NOT
+RECOMMENDED!), and libottery was faster than libc random even at 4
+bytes.
+
+At this point, I'm not sweating performance too badly.
+
+One area where I *do* want to do better in the future is performance in
+high-contention scenarios where the PRNG is getting used by many threads
+at once.
+
+
+Digression: What's wrong with arc4random()?
+-------------------------------------------
+
 
 Intellectual Property Notices
 -----------------------------
