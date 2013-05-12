@@ -23,6 +23,7 @@ static const char tau[16] = "expand 16-byte k";
 static void ECRYPT_keysetup(ECRYPT_ctx *x,const u8 *k,u32 kbits,u32 ivbits)
 {
   const char *constants;
+  (void)ivbits;
 
   x->input[4] = U8TO32_LITTLE(k + 0);
   x->input[5] = U8TO32_LITTLE(k + 4);
@@ -59,7 +60,7 @@ static void ECRYPT_keystream_bytes(ECRYPT_ctx *x,u8 *c, u32 bytes)
   u32 j0, j1, j2, j3, j4, j5, j6, j7, j8, j9, j10, j11, j12, j13, j14, j15;
   u8 *ctarget;
   u8 tmp[64];
-  int i;
+  unsigned i;
 
   if (!bytes) return;
 
