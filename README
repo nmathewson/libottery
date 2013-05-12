@@ -25,6 +25,31 @@ generator here, or can I use a fast one?"
 
 It currently uses Dan Bernstein's ChaCha stream cipher as its base.
 
+WARNING WARNING WARNING
+WARNING WARNING WARNING
+WARNING WARNING WARNING
+-----------------------
+
+YOU WOULD HAVE TO BE SOME KIND OF LUNATIC TO USE THIS IN PRODUCTION CODE
+RIGHT NOW.  It is so alpha that it begins the Greek alphabet.  It is so
+alpha that Jean-Luc Godard is filming there.  It is so alpha that it's
+64-bit RISC from the 1990s.  It's so alpha that it'll try to tell you
+that you belong to everyone else.  It's so alpha that when you turn it
+sideways, it looks like an ox.  It's so alpha that the Planck constant
+wobbles a little bit whenever I run the unit tests.
+
+I *will* break backward compatibility more than once. (Probably.)
+
+I *will* change something you were depending on. (Or at least, I won't
+promise not to.)
+
+If it breaks, you *don't* get to keep both pieces: I will come over to
+your house and break the pieces into even smaller pieces, then point at
+them and laugh.
+
+
+
+
 How to use it (101 class)
 -------------------------
 

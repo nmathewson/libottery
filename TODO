@@ -22,7 +22,7 @@ BEFORE FIRST VERSION
 
   o Rename.
 
-  - Build/benchmark with -fPIC
+  o Build/benchmark with -fPIC
 
   o Static state functions.
 
@@ -35,12 +35,15 @@ BEFORE FIRST VERSION
   o Pluggable backends.
 
   . Add a benchmarking/timing feature
+    - do it right.
 
   . Test with dieharder, to see if I screwed up.
   - Document APIs.
+  - Finish the readme
   - Tests for chacha12
   - 100% test coverage.
   - Resolve every XXXX
+  - comment it
 
   - Strip out ability to use chacha as stream cipher: it would be bad to do
     so given how I'm going to tweak it.
@@ -51,6 +54,8 @@ BEFORE FINAL VERSION
 
   - Detect CPU features at runtime.
 
+  - Separate threaded/nonthreaded libraries.
+
   - Handle fork even better
     - mutex/state in a shared mmap?
     - pthread_atfork?
@@ -60,6 +65,10 @@ BEFORE FINAL VERSION
     - ability to disable locking.
     - Per-pthread?
     - pthread_spin?
+    - When about to generate a ton of stuff, increment the counter *then*
+      drop the lock!
+
+  - Do something about L1 cache pressure.
 
   - Use ASENI instead of chacha when it's available?
     - cryptopp implementation doesn't look bad.
