@@ -27,12 +27,19 @@
   } while (0)
 
 struct ottery_state s8;
+struct ottery_state s12;
 struct ottery_state s20;
 
 void
 time_chacharand8(void)
 {
   TIME_UNSIGNED_RNG( (ottery_st_rand_unsigned(&s8)) );
+}
+
+void
+time_chacharand12(void)
+{
+  TIME_UNSIGNED_RNG( (ottery_st_rand_unsigned(&s12)) );
 }
 
 void
@@ -62,10 +69,22 @@ time_chacharand8_u64(void)
 }
 
 void
+time_chacharand12_u64(void)
+{
+  TIME_UNSIGNED_RNG( (ottery_st_rand_uint64(&s8)) );
+}
+
+void
 time_chacharand20_u64(void)
 {
   TIME_UNSIGNED_RNG( (ottery_st_rand_uint64(&s20)) );
 }
+void
+time_libc_random_u64(void)
+{
+  TIME_UNSIGNED_RNG( (((uint64_t)random()) << 32) + random() );
+}
+
 
 #ifndef NO_ARC4RANDOM
 static inline uint64_t
@@ -134,9 +153,21 @@ time_chacha8_onebyte(void)
   TIME_BUF(1, ottery_st_rand_bytes(&s8, buf, sizeof(buf)));
 }
 void
+time_chacha12_onebyte(void)
+{
+  TIME_BUF(1, ottery_st_rand_bytes(&s12, buf, sizeof(buf)));
+}
+void
 time_chacha20_onebyte(void)
 {
   TIME_BUF(1, ottery_st_rand_bytes(&s20, buf, sizeof(buf)));
+}
+void
+time_arc4random_onebyte(void)
+{
+#ifndef NO_ARC4RANDOM
+  TIME_BUF(1, arc4random_buf(buf, sizeof(buf)));
+#endif
 }
 void
 time_libc_onebyte(void)
@@ -148,6 +179,11 @@ void
 time_chacharand8_buf16(void)
 {
   TIME_BUF(16, (ottery_st_rand_bytes(&s8, buf, sizeof(buf))));
+}
+void
+time_chacharand12_buf16(void)
+{
+  TIME_BUF(16, (ottery_st_rand_bytes(&s12, buf, sizeof(buf))));
 }
 void
 time_chacharand20_buf16(void)
@@ -176,6 +212,11 @@ void
 time_chacharand8_buf1024(void)
 {
   TIME_BUF(1024, (ottery_st_rand_bytes(&s8, buf, sizeof(buf))));
+}
+void
+time_chacharand12_buf1024(void)
+{
+  TIME_BUF(1024, (ottery_st_rand_bytes(&s12, buf, sizeof(buf))));
 }
 void
 time_chacharand20_buf1024(void)
@@ -209,36 +250,47 @@ main(int argc, char **argv)
   RAND_poll();
 #endif
   struct ottery_config cfg_chacha8;
+  struct ottery_config cfg_chacha12;
   struct ottery_config cfg_chacha20;
   ottery_config_init(&cfg_chacha8);
   ottery_config_force_implementation(&cfg_chacha8, OTTERY_CHACHA8);
+  ottery_config_init(&cfg_chacha12);
+  ottery_config_force_implementation(&cfg_chacha12, OTTERY_CHACHA12);
   ottery_config_init(&cfg_chacha20);
   ottery_config_force_implementation(&cfg_chacha20, OTTERY_CHACHA20);
 
   ottery_st_init(&s8, &cfg_chacha8);
+  ottery_st_init(&s12, &cfg_chacha12);
   ottery_st_init(&s20, &cfg_chacha20);
 
   time_chacharand8();
-  time_chacharand20();
-  time_arc4random();
-  time_libc_random();
-
   time_chacharand8_u64();
-  time_chacharand20_u64();
-  time_arc4random_u64();
-
   time_chacha8_onebyte();
-  time_chacha20_onebyte();
-  time_libc_onebyte();
-
   time_chacharand8_buf16();
-  time_chacharand20_buf16();
-  time_arc4random_buf16();
-  time_libcrandom_buf16();
-
   time_chacharand8_buf1024();
+
+  time_chacharand12();
+  time_chacharand12_u64();
+  time_chacha12_onebyte();
+  time_chacharand12_buf16();
+  time_chacharand12_buf1024();
+
+  time_chacharand20();
+  time_chacharand20_u64();
+  time_chacha20_onebyte();
+  time_chacharand20_buf16();
   time_chacharand20_buf1024();
+
+  time_arc4random();
+  time_arc4random_u64();
+  time_arc4random_onebyte();
+  time_arc4random_buf16();
   time_arc4random_buf1024();
+
+  time_libc_random();
+  time_libc_random_u64();
+  time_libc_onebyte();
+  time_libcrandom_buf16();
   time_libcrandom_buf1024();
 
   time_openssl_random();
