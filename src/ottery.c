@@ -38,7 +38,8 @@ struct ottery_config {
 };
 
 struct ottery_state {/*XXXX test this with sentinels and magic stuff */
-  uint8_t buffer[MAX_OUTPUT_LEN];/*XXXX appears to need to be vector-aligned*/
+  __attribute__ ((aligned (16))) uint8_t buffer[MAX_OUTPUT_LEN];
+  __attribute__ ((aligned (16))) uint8_t state[MAX_STATE_LEN];
   struct ottery_prf prf;
   uint32_t block_counter;
   uint8_t pos;
@@ -49,7 +50,6 @@ struct ottery_state {/*XXXX test this with sentinels and magic stuff */
 #elif defined(OTTERY_PTHREADS)
   pthread_mutex_t mutex;
 #endif
-  uint8_t state[MAX_STATE_LEN];
 };
 
 static void
@@ -256,55 +256,7 @@ ottery_st_rand_lock_and_check(struct ottery_state *st)
 #endif
 }
 
-
-void
-ottery_st_rand_bytes(struct ottery_state *st, void *out_,
-                     size_t n)
-{
-  ottery_st_rand_lock_and_check(st);
-
-  uint8_t *out = out_;
-  while (n >= st->prf.output_len) {
-    ottery_st_nextblock_nolock(st, out);
-    out += st->prf.output_len;
-    n -= st->prf.output_len;
-  }
-
-  if (n + st->pos < st->prf.output_len) {
-    memcpy(out, st->buffer+st->pos, n);
-    st->pos += n;
-  } else {
-    unsigned cpy = st->prf.output_len - st->pos;
-    memcpy(out, st->buffer+st->pos, cpy);
-    n -= cpy;
-    out += cpy;
-    ottery_st_nextblock_nolock(st, st->buffer);
-    memcpy(out, st->buffer, n);
-    st->pos = n;
-  }
-
-  UNLOCK(st);
-}
-
-#define INT_ASSIGN_PTR(type, r, p) do {         \
-    memcpy(&r, p, sizeof(type));                \
-  } while (0)
-
-#define OTTERY_RETURN_RAND_INTTYPE(st, inttype) do {                    \
-    ottery_st_rand_lock_and_check(st);                                  \
-    inttype result;                                                     \
-    if (sizeof(inttype) + (st)->pos < (st)->prf.output_len) {           \
-      INT_ASSIGN_PTR(inttype, result, (st)->buffer + (st)->pos);        \
-      (st)->pos += sizeof(inttype);                                     \
-    } else {                                                            \
-      ottery_st_nextblock_nolock(st, st->buffer);                       \
-      INT_ASSIGN_PTR(inttype, result, (st)->buffer);                    \
-      (st)->pos = sizeof(inttype);                                      \
-    }                                                                   \
-    UNLOCK(st);                                                         \
-    return result;                                                      \
-    } while (0)
-
+#if 0
 static inline void
 ottery_st_rand_bytes_small(struct ottery_state *st, void *out_,
                            size_t n)
@@ -331,6 +283,74 @@ ottery_st_rand_bytes_small(struct ottery_state *st, void *out_,
 
   UNLOCK(st);
 }
+#endif
+
+static inline void
+ottery_st_rand_bytes_from_buf(struct ottery_state *st, uint8_t *out,
+                              size_t n)
+{
+
+  if (n + st->pos < st->prf.output_len) {
+    memcpy(out, st->buffer+st->pos, n);
+    st->pos += n;
+  } else {
+    unsigned cpy = st->prf.output_len - st->pos;
+    memcpy(out, st->buffer+st->pos, cpy);
+    n -= cpy;
+    out += cpy;
+    ottery_st_nextblock_nolock(st, st->buffer);
+    memcpy(out, st->buffer, n);
+    st->pos = n;
+  }
+}
+
+void
+ottery_st_rand_bytes(struct ottery_state *st, void *out_,
+                     size_t n)
+{
+  ottery_st_rand_lock_and_check(st);
+
+  uint8_t *out = out_;
+  if (n >= st->prf.output_len) {
+    if ( ((uintptr_t)out) & 0xf ) {
+      unsigned misalign = 16 - (((uintptr_t)out) & 0xf);
+      ottery_st_rand_bytes_from_buf(st, out, misalign);
+      out += misalign;
+      n -= misalign;
+    }
+
+    while (n >= st->prf.output_len) {
+      ottery_st_nextblock_nolock(st, out);
+      out += st->prf.output_len;
+      n -= st->prf.output_len;
+    }
+  }
+
+  if (n) {
+    ottery_st_rand_bytes_from_buf(st, out, n);
+  }
+
+  UNLOCK(st);
+}
+
+#define INT_ASSIGN_PTR(type, r, p) do {         \
+    memcpy(&r, p, sizeof(type));                \
+  } while (0)
+
+#define OTTERY_RETURN_RAND_INTTYPE(st, inttype) do {                    \
+    ottery_st_rand_lock_and_check(st);                                  \
+    inttype result;                                                     \
+    if (sizeof(inttype) + (st)->pos < (st)->prf.output_len) {           \
+      INT_ASSIGN_PTR(inttype, result, (st)->buffer + (st)->pos);        \
+      (st)->pos += sizeof(inttype);                                     \
+    } else {                                                            \
+      ottery_st_nextblock_nolock(st, st->buffer);                       \
+      INT_ASSIGN_PTR(inttype, result, (st)->buffer);                    \
+      (st)->pos = sizeof(inttype);                                      \
+    }                                                                   \
+    UNLOCK(st);                                                         \
+    return result;                                                      \
+    } while (0)
 
 unsigned
 ottery_st_rand_unsigned(struct ottery_state *st)

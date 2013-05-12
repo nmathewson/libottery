@@ -148,9 +148,9 @@ ottery_stream_chacha(
     np = (unsigned *)nonce;
 #endif
     vec s0 = *(vec *)chacha_const;
-#if 0
+#if 1
     /* This gives a segfault with osx gcc, due to a bug in the the "tree-ter"
-     * optimization */
+     * optimization */ /*XXXX really ? I doubt it. */
     vec s1 = ((vec *)kp)[0];
     vec s2 = ((vec *)kp)[1];
 #else

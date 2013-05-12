@@ -6,8 +6,8 @@
 int ottery_os_randbytes_(uint8_t *bytes, size_t n);
 
 struct chacha_state {
-  uint8_t key[32];
-  uint8_t nonce[8];
+  __attribute__ ((aligned (16))) uint8_t key[32];
+  __attribute__ ((aligned (16))) uint8_t nonce[8];
   uint64_t block_counter;
 };
 void ottery_chacha_state_setup_(struct chacha_state *state,
