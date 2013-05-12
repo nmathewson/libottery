@@ -14,7 +14,8 @@ TESTS =  test/test_vectors test/test_stateful test/bench_rng test/dump_bytes
 all: $(TESTS) libottery.a
 
 OTTERY_OBJS = src/chacha8.o src/chacha12.o src/chacha20.o src/ottery.o
-TEST_OBJS = test/test_stateful.o test/test_vectors.o test/bench_rng.o test/dump_bytes.o
+TEST_OBJS = test/test_stateful.o test/test_vectors.o test/bench_rng.o \
+	test/dump_bytes.o test/streams.o
 
 libottery.a: $(OTTERY_OBJS)
 	ar rcs libottery.a $(OTTERY_OBJS) && ranlib libottery.a
@@ -25,8 +26,8 @@ $(OTTERY_OBJS): %.o: %.c
 $(TEST_OBJS): %.o: %.c
 	$(CC) $(CFLAGS) -Isrc -c $< -o $@
 
-test/test_vectors: test/test_vectors.o libottery.a
-	$(CC) $(CFLAGS) -Isrc test/test_vectors.o libottery.a -o test/test_vectors
+test/test_vectors: test/test_vectors.o test/streams.o libottery.a
+	$(CC) $(CFLAGS) -Isrc test/test_vectors.o test/streams.o libottery.a -o test/test_vectors
 test/test_stateful: test/test_stateful.o libottery.a
 	$(CC) $(CFLAGS) -Isrc test/test_stateful.o libottery.a -o test/test_stateful
 

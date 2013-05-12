@@ -20,6 +20,8 @@ int ottery_os_randbytes_(uint8_t *bytes, size_t n);
 /* REQUIRED: state_bytes <= output_len */
 
 struct ottery_prf {
+  const char *name;
+  const char *impl;
   unsigned state_len;
   unsigned state_bytes;
   unsigned output_len;

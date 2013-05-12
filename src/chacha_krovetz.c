@@ -112,10 +112,13 @@ typedef unsigned vec __attribute__ ((vector_size (16)));
 
 #if CHACHA_RNDS == 8
 #define ottery_prf_chacha ottery_prf_chacha8_krovetz_
+#define NAME "ChaCha8"
 #elif CHACHA_RNDS == 12
 #define ottery_prf_chacha ottery_prf_chacha12_krovetz_
+#define NAME "ChaCha12"
 #elif CHACHA_RNDS == 20
 #define ottery_prf_chacha ottery_prf_chacha20_krovetz_
+#define NAME "ChaCha20"
 #else
 #error
 #endif
@@ -296,6 +299,8 @@ chacha_krovetz_generate(void *state, uint8_t *output, uint32_t idx)
 }
 
 const struct ottery_prf ottery_prf_chacha = {
+  NAME,
+  "krovetz",
   STATE_LEN,
   STATE_BYTES,
   OUTPUT_LEN,
@@ -304,6 +309,7 @@ const struct ottery_prf ottery_prf_chacha = {
   chacha_krovetz_generate,
 };
 
+#undef NAME
 #undef STATE_LEN
 #undef STATE_BYTES
 #undef OUTPUT_LEN

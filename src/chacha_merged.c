@@ -165,10 +165,13 @@ static void ECRYPT_keystream_bytes(ECRYPT_ctx *x,u8 *c, u32 bytes)
 
 #if CHACHA_RNDS == 8
 #define ottery_prf_chacha ottery_prf_chacha8_merged_
+#define NAME "ChaCha8"
 #elif CHACHA_RNDS == 12
 #define ottery_prf_chacha ottery_prf_chacha12_merged_
+#define NAME "ChaCha12"
 #elif CHACHA_RNDS == 20
 #define ottery_prf_chacha ottery_prf_chacha20_merged_
+#define NAME "ChaCha20"
 #else
 #error
 #endif
@@ -195,6 +198,8 @@ chacha_merged_generate(void *state_, uint8_t *output, uint32_t idx)
 }
 
 const struct ottery_prf ottery_prf_chacha = {
+  NAME,
+  "merged",
   STATE_LEN,
   STATE_BYTES,
   OUTPUT_LEN,
@@ -203,6 +208,7 @@ const struct ottery_prf ottery_prf_chacha = {
   chacha_merged_generate,
 };
 
+#undef NAME
 #undef STATE_LEN
 #undef STATE_BYTES
 #undef OUTPUT_LEN
