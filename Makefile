@@ -12,6 +12,7 @@ TESTS =  test/test_vectors test/test_stateful test/bench_rng test/dump_bytes
 all: $(TESTS) libottery.a
 
 OTTERY_OBJS = src/chacha8.o src/chacha12.o src/chacha20.o src/ottery.o
+TEST_OBJS = test/test_stateful.o test/test_vectors.o test/bench_rng.o test/dump_bytes.o
 
 libottery.a: $(OTTERY_OBJS)
 	ar rcs libottery.a $(OTTERY_OBJS) && ranlib libottery.a
@@ -19,14 +20,16 @@ libottery.a: $(OTTERY_OBJS)
 $(OTTERY_OBJS): %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-test/test_vectors: test/test_vectors.c libottery.a
-	$(CC) $(CFLAGS) -Isrc test/test_vectors.c libottery.a -o test/test_vectors
+$(TEST_OBJS): %.o: %.c
+	$(CC) $(CFLAGS) -Isrc -c $< -o $@
 
-test/test_stateful: test/test_stateful.c libottery.a
-	$(CC) $(CFLAGS) -Isrc test/test_stateful.c libottery.a -o test/test_stateful
+test/test_vectors: test/test_vectors.o libottery.a
+	$(CC) $(CFLAGS) -Isrc test/test_vectors.o libottery.a -o test/test_vectors
+test/test_stateful: test/test_stateful.o libottery.a
+	$(CC) $(CFLAGS) -Isrc test/test_stateful.o libottery.a -o test/test_stateful
 
-test/bench_rng: test/bench_rng.c libottery.a
-	$(CC) $(CFLAGS) -Wno-deprecated-declarations -Isrc test/bench_rng.c libottery.a -lcrypto -o test/bench_rng
+test/bench_rng: test/bench_rng.o libottery.a
+	$(CC) $(CFLAGS) -Wno-deprecated-declarations -Isrc test/bench_rng.o libottery.a -lcrypto -o test/bench_rng
 
 test/test_vectors.expected: test/make_test_vectors.py
 	./test/make_test_vectors.py > test/test_vectors.expected
@@ -34,8 +37,8 @@ test/test_vectors.expected: test/make_test_vectors.py
 test/test_vectors.actual: test/test_vectors
 	./test/test_vectors > test/test_vectors.actual
 
-test/dump_bytes: test/dump_bytes.c libottery.a
-	$(CC) $(CFLAGS) -Isrc test/dump_bytes.c libottery.a -o test/dump_bytes
+test/dump_bytes: test/dump_bytes.o libottery.a
+	$(CC) $(CFLAGS) -Isrc test/dump_bytes.o libottery.a -o test/dump_bytes
 
 check: $(TESTS) test/test_vectors.actual
 	./test/test_stateful
@@ -43,3 +46,14 @@ check: $(TESTS) test/test_vectors.actual
 
 clean:
 	rm -f src/*.o test/*.o $(TESTS) libottery.a
+
+
+src/chacha12.o: src/chacha12.c src/ottery-internal.h src/chacha_krovetz.c
+src/chacha20.o: src/chacha20.c src/ottery-internal.h src/chacha_krovetz.c
+src/chacha8.o: src/chacha8.c src/ottery-internal.h src/chacha_krovetz.c
+src/ottery.o: src/ottery.c src/ottery-internal.h src/ottery.h
+
+src/bench_rng.o: test/bench_rng.c src/ottery.h
+src/dump_bytes.o: test/dump_bytes.c src/ottery.h
+src/test_stateful.o: test/test_stateful.c src/ottery.h src/ottery-internal.h
+src/test_vectors.o: test/test_vectors.c src/ottery-internal.h src/ottery.h
