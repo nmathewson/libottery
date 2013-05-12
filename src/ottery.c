@@ -24,6 +24,9 @@ ottery_os_randbytes_(uint8_t *out, size_t outlen)
 {
   int fd;
   ssize_t n;
+#ifndef O_CLOEXEC
+#define O_CLOEXEC 0
+#endif
   fd = open("/dev/urandom", O_RDONLY|O_CLOEXEC);
   if (fd < 0)
     return -1;
