@@ -104,12 +104,6 @@ typedef unsigned vec __attribute__ ((vector_size (16)));
   a = a+b; d ^= a; d = d<< 8 | d>>24; \
   c = c+d; b ^= c; b = b<< 7 | b>>25;
 
-#define WRITE_XOR(in, op, d, v0, v1, v2, v3)                   \
-*(vec *)(op + d +  0) = REVV_BE(v0);    \
-*(vec *)(op + d +  4) = REVV_BE(v1);    \
-*(vec *)(op + d +  8) = REVV_BE(v2);    \
-*(vec *)(op + d + 12) = REVV_BE(v3);
-
 #define WRITE(op, d, v0, v1, v2, v3)                   \
 *(vec *)(op + d +  0) = REVV_BE(v0);    \
 *(vec *)(op + d +  4) = REVV_BE(v1);    \
@@ -211,16 +205,16 @@ ottery_stream_chacha(
             QROUND_WORDS( x3, x4, x9,x14)
             #endif
         }
-        WRITE_XOR(ip, op, 0, v0+s0, v1+s1, v2+s2, v3+s3)
+        WRITE(op, 0, v0+s0, v1+s1, v2+s2, v3+s3)
         s3 += ONE; st->block_counter++;
-        WRITE_XOR(ip, op, 16, v4+s0, v5+s1, v6+s2, v7+s3)
+        WRITE(op, 16, v4+s0, v5+s1, v6+s2, v7+s3)
         s3 += ONE; st->block_counter++;
         #if VBPI > 2
-        WRITE_XOR(ip, op, 32, v8+s0, v9+s1, v10+s2, v11+s3)
+        WRITE(op, 32, v8+s0, v9+s1, v10+s2, v11+s3)
         s3 += ONE; st->block_counter++;
         #endif
         #if VBPI > 3
-        WRITE_XOR(ip, op, 48, v12+s0, v13+s1, v14+s2, v15+s3)
+        WRITE(op, 48, v12+s0, v13+s1, v14+s2, v15+s3)
         s3 += ONE; st->block_counter++;
         #endif
         op += VBPI*16;
@@ -250,7 +244,7 @@ ottery_stream_chacha(
         for (i = CHACHA_RNDS/2; i; i--) {
             DQROUND_VECTORS(v0,v1,v2,v3)
         }
-        WRITE_XOR(ip, op, 0, v0+s0, v1+s1, v2+s2, v3+s3)
+        WRITE(op, 0, v0+s0, v1+s1, v2+s2, v3+s3)
         s3 += ONE; st->block_counter++;
         op += 16;
     }
