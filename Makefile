@@ -2,10 +2,12 @@ CC=gcc
 CFLAGS=-Wall -W -Wextra -g -O3 -I. -pthread
 # -pedantic --std=c99
 # -mfpu=neon
-#  -pthread
+# -pthread
 # -DOTTERY_NO_VECS
 # -DOTTERY_NO_PID_CHECK
 # -DOTTERY_NO_INIT_CHECK
+# -DNO_ARC4RANDOM
+# -DOTTERY_NO_LOCKS
 
 TESTS =  test/test_vectors test/test_stateful test/bench_rng test/dump_bytes
 
@@ -48,9 +50,9 @@ clean:
 	rm -f src/*.o test/*.o $(TESTS) libottery.a
 
 
-src/chacha12.o: src/chacha12.c src/ottery-internal.h src/chacha_krovetz.c
-src/chacha20.o: src/chacha20.c src/ottery-internal.h src/chacha_krovetz.c
-src/chacha8.o: src/chacha8.c src/ottery-internal.h src/chacha_krovetz.c
+src/chacha12.o: src/chacha12.c src/ottery-internal.h src/chacha_krovetz.c src/chacha_merged.c
+src/chacha20.o: src/chacha20.c src/ottery-internal.h src/chacha_krovetz.c src/chacha_merged.c
+src/chacha8.o: src/chacha8.c src/ottery-internal.h src/chacha_krovetz.c src/chacha_merged.c
 src/ottery.o: src/ottery.c src/ottery-internal.h src/ottery.h
 
 src/bench_rng.o: test/bench_rng.c src/ottery.h
