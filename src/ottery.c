@@ -105,6 +105,19 @@ ottery_config_force_implementation(struct ottery_config *cfg,
     { OTTERY_CHACHA8,  &ottery_prf_chacha8_, },
     { OTTERY_CHACHA12, &ottery_prf_chacha12_, },
     { OTTERY_CHACHA20, &ottery_prf_chacha20_, },
+
+#ifdef OTTERY_HAVE_SIMD_IMPL
+    { OTTERY_CHACHA_SIMD,   &ottery_prf_chacha20_krovetz_, },
+    { OTTERY_CHACHA8_SIMD,  &ottery_prf_chacha8_krovetz_, },
+    { OTTERY_CHACHA12_SIMD, &ottery_prf_chacha12_krovetz_, },
+    { OTTERY_CHACHA20_SIMD, &ottery_prf_chacha20_krovetz_, },
+#endif
+
+    { OTTERY_CHACHA_NO_SIMD,   &ottery_prf_chacha20_merged_, },
+    { OTTERY_CHACHA8_NO_SIMD,  &ottery_prf_chacha8_merged_, },
+    { OTTERY_CHACHA12_NO_SIMD, &ottery_prf_chacha12_merged_, },
+    { OTTERY_CHACHA20_NO_SIMD, &ottery_prf_chacha20_merged_, },
+
     { NULL, NULL }
   };
   if (!impl)

@@ -5,22 +5,13 @@
 
 int ottery_os_randbytes_(uint8_t *bytes, size_t n);
 
-struct chacha_state {
-  __attribute__ ((aligned (16))) uint8_t key[32];
-  __attribute__ ((aligned (16))) uint8_t nonce[8];
-  uint64_t block_counter;
-};
-void ottery_chacha_state_setup_(struct chacha_state *state,
-                               const uint8_t *key,
-                               const uint8_t *nonce,
-                               uint64_t counter);
 
-int ottery_stream_chacha8_(uint8_t *out,
-                           uint64_t output_len,
-                           struct chacha_state *st);
-int ottery_stream_chacha20_(uint8_t *out,
-                            uint64_t output_len,
-                            struct chacha_state *st);
+#if ! defined(OTTERY_NO_VECS)          \
+       && (defined(__ARM_NEON__) ||    \
+           defined(__ALTIVEC__)  ||    \
+           defined(__SSE2__))
+#define OTTERY_HAVE_SIMD_IMPL
+#endif
 
 #define MAX_STATE_BYTES 64
 #define MAX_STATE_LEN 256
@@ -37,8 +28,21 @@ struct ottery_prf {
   void (*generate)(void *state, uint8_t *output, uint32_t idx);
 };
 
-extern const struct ottery_prf ottery_prf_chacha8_;
-extern const struct ottery_prf ottery_prf_chacha12_;
-extern const struct ottery_prf ottery_prf_chacha20_;
+extern const struct ottery_prf ottery_prf_chacha8_merged_;
+extern const struct ottery_prf ottery_prf_chacha12_merged_;
+extern const struct ottery_prf ottery_prf_chacha20_merged_;
+
+#ifdef OTTERY_HAVE_SIMD_IMPL
+extern const struct ottery_prf ottery_prf_chacha8_krovetz_;
+extern const struct ottery_prf ottery_prf_chacha12_krovetz_;
+extern const struct ottery_prf ottery_prf_chacha20_krovetz_;
+#define ottery_prf_chacha8_ ottery_prf_chacha8_krovetz_
+#define ottery_prf_chacha12_ ottery_prf_chacha12_krovetz_
+#define ottery_prf_chacha20_ ottery_prf_chacha20_krovetz_
+#else
+#define ottery_prf_chacha8_ ottery_prf_chacha8_merged_
+#define ottery_prf_chacha12_ ottery_prf_chacha12_merged_
+#define ottery_prf_chacha20_ ottery_prf_chacha20_merged_
+#endif
 
 #endif

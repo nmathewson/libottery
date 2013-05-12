@@ -111,23 +111,26 @@ typedef unsigned vec __attribute__ ((vector_size (16)));
 *(vec *)(op + d + 12) = REVV_BE(v3);
 
 #if CHACHA_RNDS == 8
-#define ottery_stream_chacha ottery_stream_chacha8_
-#define ottery_prf_chacha ottery_prf_chacha8_
+#define ottery_prf_chacha ottery_prf_chacha8_krovetz_
 #elif CHACHA_RNDS == 12
-#define ottery_stream_chacha ottery_stream_chacha12_
-#define ottery_prf_chacha ottery_prf_chacha12_
+#define ottery_prf_chacha ottery_prf_chacha12_krovetz_
 #elif CHACHA_RNDS == 20
-#define ottery_stream_chacha ottery_stream_chacha20_
-#define ottery_prf_chacha ottery_prf_chacha20_
+#define ottery_prf_chacha ottery_prf_chacha20_krovetz_
 #else
 #error
 #endif
 
-int
-ottery_stream_chacha(
+struct chacha_state_krovetz {
+  __attribute__ ((aligned (16))) uint8_t key[32];
+  __attribute__ ((aligned (16))) uint8_t nonce[8];
+};
+
+static int
+ottery_stream_chacha_krovetz(
         uint8_t *out,
         uint64_t inlen,
-        struct chacha_state *st)
+        uint32_t block_idx,
+        struct chacha_state_krovetz *st)
 /* Assumes all pointers are aligned properly for vector reads */
 {
     const unsigned char *k = st->key;
@@ -160,7 +163,7 @@ ottery_stream_chacha(
     memcpy(&s2, kp+4, sizeof(vec));
 #endif
 
-    vec s3 = NONCE(st->block_counter, np);
+    vec s3 = NONCE(block_idx, np);
     for (iters = 0; iters < inlen/(BPI*64); iters++) {
         vec v0,v1,v2,v3,v4,v5,v6,v7;
         v4 = v0 = s0; v5 = v1 = s1; v6 = v2 = s2; v3 = s3;
@@ -182,7 +185,7 @@ ottery_stream_chacha(
         x2 = chacha_const[2]; x3 = chacha_const[3];
         x4 = kp[0]; x5 = kp[1]; x6  = kp[2]; x7  = kp[3];
         x8 = kp[4]; x9 = kp[5]; x10 = kp[6]; x11 = kp[7];
-        const uint64_t x_ctr = st->block_counter + BPI*iters+(BPI-1);
+        const uint64_t x_ctr = block_idx + BPI*iters+(BPI-1);
         x12 = x_ctr & 0xffffffff; x13 = x_ctr>>32; x14 = np[0]; x15 = np[1];
         #endif
         for (i = CHACHA_RNDS/2; i; i--) {
@@ -206,16 +209,16 @@ ottery_stream_chacha(
             #endif
         }
         WRITE(op, 0, v0+s0, v1+s1, v2+s2, v3+s3)
-        s3 += ONE; st->block_counter++;
+        s3 += ONE;
         WRITE(op, 16, v4+s0, v5+s1, v6+s2, v7+s3)
-        s3 += ONE; st->block_counter++;
+        s3 += ONE;
         #if VBPI > 2
         WRITE(op, 32, v8+s0, v9+s1, v10+s2, v11+s3)
-        s3 += ONE; st->block_counter++;
+        s3 += ONE;
         #endif
         #if VBPI > 3
         WRITE(op, 48, v12+s0, v13+s1, v14+s2, v15+s3)
-        s3 += ONE; st->block_counter++;
+        s3 += ONE;
         #endif
         op += VBPI*16;
         #if GPR_TOO
@@ -235,7 +238,7 @@ ottery_stream_chacha(
         op[13] = REVW_BE((x13 + (x_ctr >> 32)));
         op[14] = REVW_BE((x14 + np[0]));
         op[15] = REVW_BE((x15 + np[1]));
-        s3 += ONE; st->block_counter++;
+        s3 += ONE;
         op += 16;
         #endif
     }
@@ -245,7 +248,7 @@ ottery_stream_chacha(
             DQROUND_VECTORS(v0,v1,v2,v3)
         }
         WRITE(op, 0, v0+s0, v1+s1, v2+s2, v3+s3)
-        s3 += ONE; st->block_counter++;
+        s3 += ONE;
         op += 16;
     }
     inlen = inlen % 64;
@@ -272,26 +275,24 @@ ottery_stream_chacha(
     return 0;
 }
 
-#define STATE_LEN   (sizeof(struct chacha_state))
+#define STATE_LEN   (sizeof(struct chacha_state_krovetz))
 #define STATE_BYTES 40
 #define IDX_STEP    BPI
 #define OUTPUT_LEN  (IDX_STEP * 64)
 
 static void
-chacha_state_setup(void *state, const uint8_t *bytes)
+chacha_krovetz_state_setup(void *state, const uint8_t *bytes)
 {
-  struct chacha_state *st = state;
+  struct chacha_state_krovetz *st = state;
   memcpy(st->key, bytes, 32);
   memcpy(st->nonce, bytes+32, 8);
-  st->block_counter = 0;
 }
 
 static void
-chacha_generate(void *state, uint8_t *output, uint32_t idx)
+chacha_krovetz_generate(void *state, uint8_t *output, uint32_t idx)
 {
-  struct chacha_state *st = state;
-  st->block_counter = idx;
-  ottery_stream_chacha(output, OUTPUT_LEN, st);
+  struct chacha_state_krovetz *st = state;
+  ottery_stream_chacha_krovetz(output, OUTPUT_LEN, idx, st);
 }
 
 const struct ottery_prf ottery_prf_chacha = {
@@ -299,7 +300,14 @@ const struct ottery_prf ottery_prf_chacha = {
   STATE_BYTES,
   OUTPUT_LEN,
   IDX_STEP,
-  chacha_state_setup,
-  chacha_generate,
+  chacha_krovetz_state_setup,
+  chacha_krovetz_generate,
 };
+
+#undef STATE_LEN
+#undef STATE_BYTES
+#undef OUTPUT_LEN
+#undef IDX_STEP
+#undef ottery_stream_chacha
+#undef ottery_prf_chacha
 

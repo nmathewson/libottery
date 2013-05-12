@@ -11,6 +11,7 @@
            defined(__ALTIVEC__)  ||    \
            defined(__SSE2__))
 #include "src/chacha_krovetz.c"
-#else
-#include "src/chacha_merged.c"
 #endif
+
+#include "src/chacha_merged.c"
+

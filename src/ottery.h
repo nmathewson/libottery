@@ -18,10 +18,19 @@ struct ottery_config;
 /* Functions to manipulate parameters. */
 #define OTTERY_CHACHA   "CHACHA"
 #define OTTERY_CHACHA8  "CHACHA8"
-#define OTTERY_CHACHA12 "CHACHA12"
+#define OTTERY_CHACHA12 "CHACHA2"
 #define OTTERY_CHACHA20 "CHACHA20"
+#define OTTERY_CHACHA_SIMD   "CHACHA-SIMD"
+#define OTTERY_CHACHA8_SIMD  "CHACHA8-SIMD"
+#define OTTERY_CHACHA12_SIMD "CHACHA2-SIMD"
+#define OTTERY_CHACHA20_SIMD "CHACHA20-SIMD"
+#define OTTERY_CHACHA_NO_SIMD   "CHACHA-SIMD"
+#define OTTERY_CHACHA8_NO_SIMD  "CHACHA8-SIMD"
+#define OTTERY_CHACHA12_NO_SIMD "CHACHA2-SIMD"
+#define OTTERY_CHACHA20_NO_SIMD "CHACHA20-SIMD"
 
 int ottery_config_init(struct ottery_config *cfg);
+int ottery_config_set_option(struct ottery_config *cfg, uint32_t option);
 int ottery_config_force_implementation(struct ottery_config *cfg,
                                        const char *impl);
 
