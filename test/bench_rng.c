@@ -2,8 +2,18 @@
 #include <stdio.h>
 #include <sys/time.h>
 
+#if !(                      \
+  defined(__APPLE__) ||     \
+  defined(__FreeBSD__) ||   \
+  defined(__NetBSD__))
+#define NO_ARC4RANDOM
+#endif
+
 #ifndef NO_OPENSSL
 #define OPENSSL
+#if defined(__APPLE__) && defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 #include <openssl/rand.h>
 #endif
 
@@ -104,6 +114,7 @@ time_arc4random_u64(void)
 #endif
 }
 
+#ifndef NO_OPENSSL
 static inline unsigned
 openssl_random(void)
 {
@@ -111,10 +122,13 @@ openssl_random(void)
   RAND_bytes((void*)&u, sizeof(u));
   return u;
 }
+#endif
 void
 time_openssl_random(void)
 {
+#ifndef NO_OPENSSL
   TIME_UNSIGNED_RNG( (openssl_random()) );
+#endif
 }
 
 #undef N
@@ -205,7 +219,9 @@ time_libcrandom_buf16(void)
 void
 time_opensslrandom_buf16(void)
 {
+#ifndef NO_OPENSSL
   TIME_BUF(16, (RAND_bytes(buf, sizeof(buf))));
+#endif
 }
 
 void
@@ -238,7 +254,9 @@ time_libcrandom_buf1024(void)
 void
 time_opensslrandom_buf1024(void)
 {
+#ifndef NO_OPENSSL
   TIME_BUF(1024, (RAND_bytes(buf, sizeof(buf))));
+#endif
 }
 
 int
@@ -246,7 +264,7 @@ main(int argc, char **argv)
 {
   (void) argc;
   (void) argv;
-#ifdef OPENSSL
+#ifndef NO_OPENSSL
   RAND_poll();
 #endif
   struct ottery_config cfg_chacha8;

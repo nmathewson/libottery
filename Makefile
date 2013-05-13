@@ -3,7 +3,6 @@ CFLAGS=-Wall -W -Wextra -g -O3 -pthread
 # -pedantic --std=c99
 # -mfpu=neon
 # -pthread
-# -DNO_ARC4RANDOM
 
 TESTS =  test/test_vectors test/bench_rng test/dump_bytes
 
@@ -26,7 +25,7 @@ test/test_vectors: test/test_vectors.o test/streams.o libottery.a
 	$(CC) $(CFLAGS) -Isrc test/test_vectors.o test/streams.o libottery.a -o test/test_vectors
 
 test/bench_rng: test/bench_rng.o libottery.a
-	$(CC) $(CFLAGS) -Wno-deprecated-declarations -Isrc test/bench_rng.o libottery.a -lcrypto -o test/bench_rng
+	$(CC) $(CFLAGS) -Isrc test/bench_rng.o libottery.a -lcrypto -o test/bench_rng
 
 test/test_vectors.expected: test/make_test_vectors.py
 	./test/make_test_vectors.py > test/test_vectors.expected
