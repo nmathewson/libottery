@@ -43,8 +43,9 @@ test/test_memclear: test/test_memclear.o libottery.a
 	$(CC) $(CFLAGS) -Isrc test/test_memclear.o libottery.a -o test/test_memclear
 
 check: $(TESTS) test/test_vectors.actual test/test_vectors.actual-nosimd
-	cmp test/test_vectors.expected test/test_vectors.actual && echo OK
-	cmp test/test_vectors.expected test/test_vectors.actual-nosimd && echo OK
+	@cmp test/test_vectors.expected test/test_vectors.actual && echo OKAY || BAD
+	@cmp test/test_vectors.expected test/test_vectors.actual-nosimd && echo OKAY || echo BAD
+	@./test/test_memclear
 
 clean:
 	rm -f src/*.o test/*.o $(TESTS) libottery.a
