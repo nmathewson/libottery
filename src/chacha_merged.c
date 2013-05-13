@@ -53,16 +53,14 @@ static void ECRYPT_ivsetup(ECRYPT_ctx *x,const u8 *iv)
   x->input[15] = U8TO32_LITTLE(iv + 4);
 }
 
-/*XXXX u32 bytes should be u64. */
-static void ECRYPT_keystream_bytes(ECRYPT_ctx *x,u8 *c, u32 bytes)
+#define IDX_STEP    4
+#define OUTPUT_LEN  (IDX_STEP * 64)
+
+static void chacha_merged_getblocks(ECRYPT_ctx *x,u8 *c)
 {
   u32 x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15;
   u32 j0, j1, j2, j3, j4, j5, j6, j7, j8, j9, j10, j11, j12, j13, j14, j15;
-  u8 *ctarget;
-  u8 tmp[64];
-  unsigned i;
-
-  if (!bytes) return;
+  unsigned i, block;
 
   j0 = x->input[0];
   j1 = x->input[1];
@@ -81,11 +79,7 @@ static void ECRYPT_keystream_bytes(ECRYPT_ctx *x,u8 *c, u32 bytes)
   j14 = x->input[14];
   j15 = x->input[15];
 
-  for (;;) {
-    if (bytes < 64) {
-      ctarget = c;
-      c = tmp;
-    }
+  for (block = 0; block < IDX_STEP; ++block) {
     x0 = j0;
     x1 = j1;
     x2 = j2;
@@ -150,15 +144,6 @@ static void ECRYPT_keystream_bytes(ECRYPT_ctx *x,u8 *c, u32 bytes)
     U32TO8_LITTLE(c + 56,x14);
     U32TO8_LITTLE(c + 60,x15);
 
-    if (bytes <= 64) {
-      if (bytes < 64) {
-        for (i = 0;i < bytes;++i) ctarget[i] = c[i];
-      }
-      x->input[12] = j12;
-      x->input[13] = j13;
-      return;
-    }
-    bytes -= 64;
     c += 64;
   }
 }
@@ -178,8 +163,6 @@ static void ECRYPT_keystream_bytes(ECRYPT_ctx *x,u8 *c, u32 bytes)
 
 #define STATE_LEN   (sizeof(ECRYPT_ctx))
 #define STATE_BYTES 40
-#define IDX_STEP    4
-#define OUTPUT_LEN  (IDX_STEP * 64)
 
 static void
 chacha_merged_state_setup(void *state_, const uint8_t *bytes)
@@ -194,7 +177,7 @@ chacha_merged_generate(void *state_, uint8_t *output, uint32_t idx)
 {
   ECRYPT_ctx *x = state_;
   x->input[12] = idx;
-  ECRYPT_keystream_bytes(x, output, OUTPUT_LEN);
+  chacha_merged_getblocks(x, output);
 }
 
 const struct ottery_prf ottery_prf_chacha = {

@@ -4,6 +4,7 @@
  * http://cr.yp.to/papers.html#chacha
  */
 #include <string.h>
+#include <assert.h>
 
 /* Architecture-neutral way to specify 16-byte vector of ints              */
 typedef unsigned vec __attribute__ ((vector_size (16)));
@@ -129,16 +130,15 @@ struct chacha_state_krovetz {
 };
 
 static int
-ottery_stream_chacha_krovetz(
+ottery_blocks_chacha_krovetz(
         uint8_t *out,
-        uint64_t inlen,
         uint32_t block_idx,
         struct chacha_state_krovetz *st)
 /* Assumes all pointers are aligned properly for vector reads */
 {
     const unsigned char *k = st->key;
     const unsigned char *n = st->nonce;
-    unsigned iters, i, *op=(unsigned *)out, *kp, *np;
+    unsigned i, *op=(unsigned *)out, *kp, *np;
     __attribute__ ((aligned (16))) unsigned chacha_const[] =
                                 {0x61707865,0x3320646E,0x79622D32,0x6B206574};
 #if ( __ARM_NEON__ || __SSE2__)
@@ -167,7 +167,7 @@ ottery_stream_chacha_krovetz(
 #endif
 
     vec s3 = NONCE(block_idx, np);
-    for (iters = 0; iters < inlen/(BPI*64); iters++) {
+    {
         vec v0,v1,v2,v3,v4,v5,v6,v7;
         v4 = v0 = s0; v5 = v1 = s1; v6 = v2 = s2; v3 = s3;
         v7 = v3 + ONE;
@@ -245,36 +245,6 @@ ottery_stream_chacha_krovetz(
         op += 16;
         #endif
     }
-    for (iters = inlen%(BPI*64)/64; iters != 0; iters--) {
-        vec v0 = s0, v1 = s1, v2 = s2, v3 = s3;
-        for (i = CHACHA_RNDS/2; i; i--) {
-            DQROUND_VECTORS(v0,v1,v2,v3)
-        }
-        WRITE(op, 0, v0+s0, v1+s1, v2+s2, v3+s3)
-        s3 += ONE;
-        op += 16;
-    }
-    inlen = inlen % 64;
-    if (inlen) {
-        __attribute__ ((aligned (16))) vec buf[4];
-        vec v0,v1,v2,v3;
-        v0 = s0; v1 = s1; v2 = s2; v3 = s3;
-        for (i = CHACHA_RNDS/2; i; i--) {
-            DQROUND_VECTORS(v0,v1,v2,v3)
-        }
-        if (inlen >= 16) {
-            *(vec *)(op +   0) = REVV_BE(v0 + s0);
-            if (inlen >= 32) {
-                *(vec *)(op +  4) = REVV_BE(v1 + s1);
-                if (inlen >= 48) {
-                    *(vec *)(op +  8) = REVV_BE(v2 + s2);
-                    buf[3] = REVV_BE(v3 + s3);
-                } else { buf[2] = REVV_BE(v2 + s2); }
-            } else { buf[1] = REVV_BE(v1 + s1); }
-        } else buf[0] = REVV_BE(v0 + s0);
-        for (i=inlen & ~15; i<inlen; i++)
-            ((char *)op)[i] = ((char *)buf)[i];
-    }
     return 0;
 }
 
@@ -295,7 +265,7 @@ static void
 chacha_krovetz_generate(void *state, uint8_t *output, uint32_t idx)
 {
   struct chacha_state_krovetz *st = state;
-  ottery_stream_chacha_krovetz(output, OUTPUT_LEN, idx, st);
+  ottery_blocks_chacha_krovetz(output, idx, st);
 }
 
 const struct ottery_prf ottery_prf_chacha = {
