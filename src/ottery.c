@@ -36,6 +36,10 @@ ottery_os_randbytes_(uint8_t *out, size_t outlen)
   return 0;
 }
 
+#define MAGIC_BASIS 0x11b07734
+
+#define MAGIC(ptr) ( ((uint32_t)(uintptr_t)(ptr)) ^ MAGIC_BASIS )
+
 struct ottery_config {
   const struct ottery_prf *impl;
 };
@@ -45,8 +49,8 @@ struct ottery_state {/*XXXX test this with sentinels and magic stuff */
   __attribute__ ((aligned (16))) uint8_t state[MAX_STATE_LEN];
   struct ottery_prf prf;
   uint32_t block_counter;
+  uint32_t magic;
   uint8_t pos;
-  uint8_t initialized;
   pid_t pid;
 #if defined(OTTERY_OSATOMIC)
   OSSpinLock mutex;
@@ -172,7 +176,7 @@ ottery_st_initialize(struct ottery_state *st,
   st->pos=0;
 
   st->pid = getpid();
-  st->initialized = 1;
+  st->magic = MAGIC(st);
   return 0;
 }
 
@@ -259,7 +263,7 @@ static inline void
 ottery_st_rand_lock_and_check(struct ottery_state *st)
 {
 #ifndef OTTERY_NO_INIT_CHECK
-  if (!st->initialized)
+  if (st->magic != MAGIC(st))
     abort();
 #endif
 

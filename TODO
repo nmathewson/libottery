@@ -48,7 +48,7 @@ BEFORE FIRST VERSION
   o Strip out ability to use chacha as stream cipher: it would be bad to do
     so given how I'm going to tweak it.
 
-  - Switch from initialized-check to magic-number check?
+  o Switch from initialized-check to magic-number check?
 
   o Remove the idx_step logic; it's an accident waiting to happen
 
