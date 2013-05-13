@@ -33,17 +33,9 @@ BEFORE FIRST VERSION
   . Working headers
   o Build with more warnings
   o Pluggable backends.
-
-  . Add a benchmarking/timing feature
-    - do it right.
-
-  . Test with dieharder, to see if I screwed up.
-  - Document APIs.
-  - Finish the readme
   o Tests for chacha12
-  - 100% test coverage.
+
   o Resolve every XXXX
-  - comment it
 
   o Strip out ability to use chacha as stream cipher: it would be bad to do
     so given how I'm going to tweak it.
@@ -51,6 +43,17 @@ BEFORE FIRST VERSION
   o Switch from initialized-check to magic-number check?
 
   o Remove the idx_step logic; it's an accident waiting to happen
+
+  - TESTING
+    . Add a benchmarking/timing feature
+      - do it right.
+    . Test with dieharder, to see if I screwed up.
+    - 100% test coverage.
+
+  - DOCUMENTATION
+    - Document APIs.
+    - Finish the readme
+    - comment it
 
 BEFORE FINAL VERSION
 
