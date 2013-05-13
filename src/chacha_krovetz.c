@@ -1,3 +1,16 @@
+/*
+ * This code is based on Ted Krovetz's ChaCha implementation; details below.
+ *
+ * Note that I've ripped out all of the code that wasn't suitable for doing
+ * block-oriented operation, all (residual) support for 128-bit ChaCha keys,
+ * all (partial) support for counter values over 32 bits, the ability to xor
+ * the stream with a plaintext, and so on.
+ *
+ * Future versions of this might remove bigendian conversions too.  DO NOT use
+ * this code for your stream cipher: go back to the original source.  (I got
+ * this copy from SUPERCOP).
+ */
+
 /* Chacha implementation for 16-byte vectors by Ted Krovetz (ted@krovetz.net).
  * Assumes 32-bit int, 64-bit long long. Public domain. Modified: 2012.07.26.
  * Chacha is an improvement on the stream cipher Salsa, described at
@@ -129,6 +142,9 @@ struct chacha_state_krovetz {
   __attribute__ ((aligned (16))) uint8_t nonce[8];
 };
 
+/** Generates 64 * BPI bytes of output using the key and nonce in st and the
+ * counter in block_idx, and store them in out.
+ */
 static int
 ottery_blocks_chacha_krovetz(
         uint8_t *out,

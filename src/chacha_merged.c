@@ -1,4 +1,18 @@
 /*
+ * This code is based on Dan Bernstein's pure C "merged" ChaCha
+ * implementation; details below.
+ *
+ * Note that I've ripped out all of the code that wasn't suitable for doing
+ * block-oriented operation, all (residual) support for 128-bit ChaCha keys,
+ * all support for counter values over 32 bits, the ability to xor the stream
+ * with a plaintext, and so on.
+ *
+ * Future versions of this might remove bigendian conversions too.  DO NOT use
+ * this code for your stream cipher: go back to the original source.  (I got
+ * this copy from SUPERCOP).
+ */
+
+/*
 chacha-merged.c version 20080118
 D. J. Bernstein
 Public domain.
@@ -51,6 +65,9 @@ static void ECRYPT_ivsetup(ECRYPT_ctx *x,const u8 *iv)
 #define IDX_STEP    4
 #define OUTPUT_LEN  (IDX_STEP * 64)
 
+/** Generate OUTPUT_LEN bytes of output using the key, nonce, and counter in x,
+ * and store them in c.
+ */
 static void chacha_merged_getblocks(ECRYPT_ctx *x,u8 *c)
 {
   u32 x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15;
