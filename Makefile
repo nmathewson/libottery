@@ -13,7 +13,7 @@ TESTS =  test/test_vectors test/bench_rng test/dump_bytes
 
 all: $(TESTS) libottery.a
 
-OTTERY_OBJS = src/chacha8.o src/chacha12.o src/chacha20.o src/ottery.o
+OTTERY_OBJS = src/chacha8.o src/chacha12.o src/chacha20.o src/ottery.o src/aes128.o src/aes192.o src/aes256.o
 TEST_OBJS = test/test_vectors.o test/bench_rng.o \
 	test/dump_bytes.o test/streams.o
 
@@ -57,3 +57,5 @@ src/ottery.o: src/ottery.c src/ottery-internal.h src/ottery.h
 src/bench_rng.o: test/bench_rng.c src/ottery.h
 src/dump_bytes.o: test/dump_bytes.c src/ottery.h
 src/test_vectors.o: test/test_vectors.c src/ottery-internal.h src/ottery.h
+
+src/aes128.o: src/aes128.c src/aesni.c src/ottery-internal.h
