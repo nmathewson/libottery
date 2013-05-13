@@ -72,8 +72,10 @@ BEFORE FINAL VERSION
 
   - Do something about L1 cache pressure.
 
-  - Use ASENI instead of chacha when it's available?
-    - cryptopp implementation doesn't look bad.
+  - Use AESNI instead of chacha when it's available?
+    o Port implementation (see branch 'aesni')
+    - Test implementation
+    - Use it when appropriate.
 
   - Windows port
     - Windows threads
