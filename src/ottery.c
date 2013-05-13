@@ -137,14 +137,14 @@ static void
 ottery_st_nextblock_nolock_nostir(struct ottery_state *st, uint8_t *target)
 {
   st->prf.generate(st->state, target, st->block_counter);
-  st->block_counter += st->prf.idx_step;
+  ++st->block_counter;
 }
 
 static void
 ottery_st_nextblock_nolock(struct ottery_state *st, uint8_t *target)
 {
   ottery_st_nextblock_nolock_nostir(st, target);
-  if (st->block_counter >= 256)
+  if (st->block_counter >= st->prf.stir_after)
     ottery_st_stir_nolock(st);
 }
 

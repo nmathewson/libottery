@@ -281,8 +281,10 @@ static void
 chacha_krovetz_generate(void *state, uint8_t *output, uint32_t idx)
 {
   struct chacha_state_krovetz *st = state;
-  ottery_blocks_chacha_krovetz(output, idx, st);
+  ottery_blocks_chacha_krovetz(output, idx * IDX_STEP, st);
 }
+
+#define STIR_AFTER (256 / IDX_STEP)
 
 const struct ottery_prf ottery_prf_chacha = {
   NAME,
@@ -290,7 +292,7 @@ const struct ottery_prf ottery_prf_chacha = {
   STATE_LEN,
   STATE_BYTES,
   OUTPUT_LEN,
-  IDX_STEP,
+  STIR_AFTER,
   chacha_krovetz_state_setup,
   chacha_krovetz_generate,
 };
@@ -300,6 +302,7 @@ const struct ottery_prf ottery_prf_chacha = {
 #undef STATE_BYTES
 #undef OUTPUT_LEN
 #undef IDX_STEP
+#undef STIR_AFTER
 #undef ottery_stream_chacha
 #undef ottery_prf_chacha
 

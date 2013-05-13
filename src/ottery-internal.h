@@ -29,10 +29,8 @@ int ottery_os_randbytes_(uint8_t *bytes, size_t n);
  * bytes.
  *
  * Broadly speaking, every ottery_prf has an underlying function from an
- * (state_bytes)-byte state and a 4 byte counter to an (output_len /
- * idx_byte)-byte output block.  This function is computed (output_len)
- * bytes at a time, so you need to advance the counter (idx_byte) bytes
- * between calls.
+ * (state_bytes)-byte state and a 4 byte counter to an output_len-byte
+ * output block.
  **/
 struct ottery_prf {
   /** The name of this algorithm. */
@@ -51,9 +49,8 @@ struct ottery_prf {
    *  function.
    */
   unsigned output_len;
-  /** The number of counter values consumed by a single call to the generate
-   * function. */
-  unsigned idx_step;
+  /** Stir after this many invocations of the generate function. */
+  unsigned stir_after;
   /** Pointer to a function to to intialize a state structure for the PRF.
    *
    * @param state An object of size at least (state_len) that will

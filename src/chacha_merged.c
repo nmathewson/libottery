@@ -188,9 +188,11 @@ static void
 chacha_merged_generate(void *state_, uint8_t *output, uint32_t idx)
 {
   ECRYPT_ctx *x = state_;
-  x->input[12] = idx;
+  x->input[12] = idx * IDX_STEP;
   chacha_merged_getblocks(x, output);
 }
+
+#define STIR_AFTER (256 / IDX_STEP)
 
 const struct ottery_prf ottery_prf_chacha = {
   NAME,
@@ -198,7 +200,7 @@ const struct ottery_prf ottery_prf_chacha = {
   STATE_LEN,
   STATE_BYTES,
   OUTPUT_LEN,
-  IDX_STEP,
+  STIR_AFTER,
   chacha_merged_state_setup,
   chacha_merged_generate,
 };
@@ -208,4 +210,5 @@ const struct ottery_prf ottery_prf_chacha = {
 #undef STATE_BYTES
 #undef OUTPUT_LEN
 #undef IDX_STEP
+#undef STIR_AFTER
 #undef ottery_prf_chacha

@@ -28,7 +28,6 @@ experiment(const u8 *key, const u8 *nonce, unsigned skip,
 {
   __attribute__((aligned(16))) struct stream state;
   u8 stream[512];
-  unsigned blocklen = prf->output_len / prf->idx_step;
   stream_setup(&state, prf, key, 32, nonce, 8);
 
   puts("================================================================");
@@ -37,7 +36,7 @@ experiment(const u8 *key, const u8 *nonce, unsigned skip,
   dumphex(" nonce", nonce, 8);
   printf("offset: %d\n", skip);
 
-  stream_generate(&state, stream, 512, skip/(blocklen));
+  stream_generate(&state, stream, 512, skip);
   dumphex(NULL, stream, 512);
 }
 

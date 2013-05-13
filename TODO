@@ -50,7 +50,7 @@ BEFORE FIRST VERSION
 
   - Switch from initialized-check to magic-number check?
 
-  - Remove the idx_step logic; it's an accident waiting to happen
+  o Remove the idx_step logic; it's an accident waiting to happen
 
 BEFORE FINAL VERSION
 

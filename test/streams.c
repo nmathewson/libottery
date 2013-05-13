@@ -22,20 +22,23 @@ void
 stream_generate(struct stream *stream,
                 uint8_t *output,
                 size_t output_len,
-                uint32_t skip_blocks)
+                uint32_t skip_bytes)
 {
   __attribute__((aligned(16))) uint8_t buf[MAX_OUTPUT_LEN];
-  uint32_t counter = skip_blocks;
+
+  uint32_t counter = skip_bytes / stream->prf.output_len;
+  skip_bytes -= counter * stream->prf.output_len;
   while (output_len) {
     stream->prf.generate(stream->state, buf, counter);
-    counter += stream->prf.idx_step;
-    if (stream->prf.output_len > output_len) {
-      memcpy(output, buf, output_len);
+    ++counter;
+    if (stream->prf.output_len - skip_bytes > output_len) {
+      memcpy(output, buf + skip_bytes, output_len - skip_bytes);
       output_len = 0;
     } else {
-      memcpy(output, buf, stream->prf.output_len);
-      output_len -= stream->prf.output_len;
-      output += stream->prf.output_len;
+      memcpy(output, buf + skip_bytes , stream->prf.output_len - skip_bytes);
+      output_len -= stream->prf.output_len - skip_bytes;
+      output += stream->prf.output_len - skip_bytes;
+      skip_bytes = 0;
     }
   }
 }

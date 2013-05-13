@@ -17,5 +17,5 @@ void stream_setup(struct stream *stream,
 void stream_generate(struct stream *st,
                      uint8_t *output,
                      size_t output_len,
-                     uint32_t skip_blocks);
+                     uint32_t skip_bytes);
 #endif
