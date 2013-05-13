@@ -10,6 +10,7 @@ libottery.a
 
 test/test_vectors
 test/test_vectors.actual
+test/test_vectors.actual-nosimd
 test/bench_rng
 test/dump_bytes
 test/test_stateful

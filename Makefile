@@ -38,12 +38,15 @@ test/test_vectors.expected: test/make_test_vectors.py
 test/test_vectors.actual: test/test_vectors
 	./test/test_vectors > test/test_vectors.actual
 
+test/test_vectors.actual-nosimd: test/test_vectors
+	./test/test_vectors no-simd > test/test_vectors.actual-nosimd
+
 test/dump_bytes: test/dump_bytes.o libottery.a
 	$(CC) $(CFLAGS) -Isrc test/dump_bytes.o libottery.a -o test/dump_bytes
 
-check: $(TESTS) test/test_vectors.actual
-	./test/test_stateful
+check: $(TESTS) test/test_vectors.actual test/test_vectors.actual-nosimd
 	cmp test/test_vectors.expected test/test_vectors.actual && echo OK
+	cmp test/test_vectors.expected test/test_vectors.actual-nosimd && echo OK
 
 clean:
 	rm -f src/*.o test/*.o $(TESTS) libottery.a
