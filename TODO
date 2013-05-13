@@ -50,11 +50,14 @@ BEFORE FIRST VERSION
 
   - Switch from initialized-check to magic-number check?
 
+  - Remove the idx_step logic; it's an accident waiting to happen
+
 BEFORE FINAL VERSION
 
   - Waste fewer bytes when stirring.
 
   - Detect CPU features at runtime.
+    - In particular, detecting SSE3/SSE2 could be a bit of a win.
 
   - Separate threaded/nonthreaded libraries.
 
@@ -90,20 +93,11 @@ BEFORE FINAL VERSION
   - Drop endianness conversion; not needed for PRNG usage
 
   - Port to MSVC
-  - MAYBE, a high-security/low-security pair.
-    - Don't use less than chacha20 for the high-security one.
 
   - Test on altivec, fix whatever I broke there.
 
-  - Drop support for 64-bit counters: 256GB is enough for anyone.
+  o Drop support for 64-bit counters: 256GB is enough for anyone.
 
+  - avoid redundant initialization checks.
 
-
-
-GOOD NAMES:
-  tyche, alea, dreidel, talus, Ellerslie, julius, dushen, kochun, shakuni,
-
-  - ottery
-  - ret4, return4
-  - logrus, ogrus
 
