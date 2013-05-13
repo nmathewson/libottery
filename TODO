@@ -42,7 +42,7 @@ BEFORE FIRST VERSION
   - Finish the readme
   o Tests for chacha12
   - 100% test coverage.
-  - Resolve every XXXX
+  o Resolve every XXXX
   - comment it
 
   o Strip out ability to use chacha as stream cipher: it would be bad to do

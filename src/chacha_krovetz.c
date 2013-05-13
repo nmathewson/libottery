@@ -170,18 +170,8 @@ ottery_blocks_chacha_krovetz(
     np = (unsigned *)nonce;
 #endif
     vec s0 = *(vec *)chacha_const;
-#if 1
-    /* This gives a segfault with osx gcc, due to a bug in the the "tree-ter"
-     * optimization */ /*XXXX really ? I doubt it. */
     vec s1 = ((vec *)kp)[0];
     vec s2 = ((vec *)kp)[1];
-#else
-    /* XXXX check peformance on this one */
-    vec s1, s2;
-    memcpy(&s1, kp, sizeof(vec));
-    memcpy(&s2, kp+4, sizeof(vec));
-#endif
-
     vec s3 = NONCE(block_idx, np);
     {
         vec v0,v1,v2,v3,v4,v5,v6,v7;

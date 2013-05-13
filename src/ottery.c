@@ -44,7 +44,7 @@ struct ottery_config {
   const struct ottery_prf *impl;
 };
 
-struct ottery_state {/*XXXX test this with sentinels and magic stuff */
+struct __attribute__((aligned(16))) ottery_state {
   __attribute__ ((aligned (16))) uint8_t buffer[MAX_OUTPUT_LEN];
   __attribute__ ((aligned (16))) uint8_t state[MAX_STATE_LEN];
   struct ottery_prf prf;

@@ -1,5 +1,4 @@
 #include "ottery-internal.h"
-#include <string.h>/* XXXX remove me.*/
 
 #define u64 uint64_t
 #define u32 uint32_t
