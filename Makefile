@@ -9,12 +9,12 @@ CFLAGS=-Wall -W -Wextra -g -O3 -I. -pthread
 # -DNO_ARC4RANDOM
 # -DOTTERY_NO_LOCKS
 
-TESTS =  test/test_vectors test/test_stateful test/bench_rng test/dump_bytes
+TESTS =  test/test_vectors test/bench_rng test/dump_bytes
 
 all: $(TESTS) libottery.a
 
 OTTERY_OBJS = src/chacha8.o src/chacha12.o src/chacha20.o src/ottery.o
-TEST_OBJS = test/test_stateful.o test/test_vectors.o test/bench_rng.o \
+TEST_OBJS = test/test_vectors.o test/bench_rng.o \
 	test/dump_bytes.o test/streams.o
 
 libottery.a: $(OTTERY_OBJS)
@@ -28,8 +28,6 @@ $(TEST_OBJS): %.o: %.c
 
 test/test_vectors: test/test_vectors.o test/streams.o libottery.a
 	$(CC) $(CFLAGS) -Isrc test/test_vectors.o test/streams.o libottery.a -o test/test_vectors
-test/test_stateful: test/test_stateful.o libottery.a
-	$(CC) $(CFLAGS) -Isrc test/test_stateful.o libottery.a -o test/test_stateful
 
 test/bench_rng: test/bench_rng.o libottery.a
 	$(CC) $(CFLAGS) -Wno-deprecated-declarations -Isrc test/bench_rng.o libottery.a -lcrypto -o test/bench_rng
@@ -58,5 +56,4 @@ src/ottery.o: src/ottery.c src/ottery-internal.h src/ottery.h
 
 src/bench_rng.o: test/bench_rng.c src/ottery.h
 src/dump_bytes.o: test/dump_bytes.c src/ottery.h
-src/test_stateful.o: test/test_stateful.c src/ottery.h src/ottery-internal.h
 src/test_vectors.o: test/test_vectors.c src/ottery-internal.h src/ottery.h
