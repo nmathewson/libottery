@@ -4,7 +4,7 @@ D. J. Bernstein
 Public domain.
 */
 #include "ottery-internal.h"
-#include "src/chacha_merged_ecrypt.h"
+#include "chacha_merged_ecrypt.h"
 
 #define ROTATE(v,c) (ROTL32(v,c))
 #define XOR(v,w) ((v) ^ (w))

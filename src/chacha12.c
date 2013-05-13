@@ -10,8 +10,8 @@
        && (defined(__ARM_NEON__) ||    \
            defined(__ALTIVEC__)  ||    \
            defined(__SSE2__))
-#include "src/chacha_krovetz.c"
+#include "chacha_krovetz.c"
 #endif
 
-#include "src/chacha_merged.c"
+#include "chacha_merged.c"
 

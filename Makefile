@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall -W -Wextra -g -O3 -I. -pthread
+CFLAGS=-Wall -W -Wextra -g -O3 -pthread
 # -pedantic --std=c99
 # -mfpu=neon
 # -pthread
