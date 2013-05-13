@@ -2,6 +2,7 @@
 #define OTTERY_INTERNAL_H_HEADER_INCLUDED_
 #include <stdint.h>
 #include <sys/types.h>
+#include "ottery-config.h"
 
 /**
  * Interface to the operating system's strong RNG.  If this were fast,

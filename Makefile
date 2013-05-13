@@ -3,11 +3,7 @@ CFLAGS=-Wall -W -Wextra -g -O3 -pthread
 # -pedantic --std=c99
 # -mfpu=neon
 # -pthread
-# -DOTTERY_NO_VECS
-# -DOTTERY_NO_PID_CHECK
-# -DOTTERY_NO_INIT_CHECK
 # -DNO_ARC4RANDOM
-# -DOTTERY_NO_LOCKS
 
 TESTS =  test/test_vectors test/bench_rng test/dump_bytes
 
@@ -52,11 +48,20 @@ clean:
 	rm -f src/*.o test/*.o $(TESTS) libottery.a
 
 
-src/chacha12.o: src/chacha12.c src/ottery-internal.h src/chacha_krovetz.c src/chacha_merged.c
-src/chacha20.o: src/chacha20.c src/ottery-internal.h src/chacha_krovetz.c src/chacha_merged.c
-src/chacha8.o: src/chacha8.c src/ottery-internal.h src/chacha_krovetz.c src/chacha_merged.c
-src/ottery.o: src/ottery.c src/ottery-internal.h src/ottery.h
+src/chacha12.o: src/chacha12.c src/ottery-internal.h src/ottery-config.h \
+  src/chacha_krovetz.c src/chacha_merged.c src/chacha_merged_ecrypt.h
+src/chacha20.o: src/chacha20.c src/ottery-internal.h src/ottery-config.h \
+  src/chacha_krovetz.c src/chacha_merged.c src/chacha_merged_ecrypt.h
+src/chacha8.o: src/chacha8.c src/ottery-internal.h src/ottery-config.h \
+  src/chacha_krovetz.c src/chacha_merged.c src/chacha_merged_ecrypt.h
+src/ottery.o: src/ottery.c src/ottery-internal.h src/ottery-config.h \
+  src/ottery.h
 
-src/bench_rng.o: test/bench_rng.c src/ottery.h
-src/dump_bytes.o: test/dump_bytes.c src/ottery.h
-src/test_vectors.o: test/test_vectors.c src/ottery-internal.h src/ottery.h
+test/bench_rng.o: test/bench_rng.c src/ottery.h
+test/dump_bytes.o: test/dump_bytes.c src/ottery.h
+test/streams.o: test/streams.c test/streams.h src/ottery-internal.h \
+  src/ottery-config.h
+test/test_shallow.o: test/test_shallow.c src/ottery.h
+test/test_vectors.o: test/test_vectors.c src/ottery-internal.h \
+  src/ottery-config.h src/ottery.h test/streams.h
+
