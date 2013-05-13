@@ -4,7 +4,7 @@
 #include <sys/types.h>
 
 #ifndef OTTERY_INTERNAL
-__attribute__((aligned(16))) struct ottery_state {
+struct __attribute__((aligned(16))) ottery_state {
   uint8_t dummy_[1024];
 };
 struct ottery_config {
