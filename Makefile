@@ -4,13 +4,13 @@ CFLAGS=-Wall -W -Wextra -g -O3 -pthread
 # -mfpu=neon
 # -pthread
 
-TESTS =  test/test_vectors test/bench_rng test/dump_bytes
+TESTS =  test/test_vectors test/bench_rng test/dump_bytes test/test_memclear
 
 all: $(TESTS) libottery.a
 
 OTTERY_OBJS = src/chacha8.o src/chacha12.o src/chacha20.o src/ottery.o
 TEST_OBJS = test/test_vectors.o test/bench_rng.o \
-	test/dump_bytes.o test/streams.o
+	test/dump_bytes.o test/streams.o test/test_memclear.o
 
 libottery.a: $(OTTERY_OBJS)
 	ar rcs libottery.a $(OTTERY_OBJS) && ranlib libottery.a
@@ -38,6 +38,9 @@ test/test_vectors.actual-nosimd: test/test_vectors
 
 test/dump_bytes: test/dump_bytes.o libottery.a
 	$(CC) $(CFLAGS) -Isrc test/dump_bytes.o libottery.a -o test/dump_bytes
+
+test/test_memclear: test/test_memclear.o libottery.a
+	$(CC) $(CFLAGS) -Isrc test/test_memclear.o libottery.a -o test/test_memclear
 
 check: $(TESTS) test/test_vectors.actual test/test_vectors.actual-nosimd
 	cmp test/test_vectors.expected test/test_vectors.actual && echo OK

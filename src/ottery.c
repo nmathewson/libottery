@@ -59,10 +59,18 @@ struct ottery_state {/*XXXX test this with sentinels and magic stuff */
 #endif
 };
 
+/**
+ * Clear all bytes stored in a structure. Unlike memset, the compiler is not
+ * going to optimize this out of existence because the target is about to go
+ * out of scope.
+ *
+ * @param mem Pointer to the memory to erase.
+ * @param len The number of bytes to erase.
+ */
+/* NOTE: whenever we change this, change test/test_memclear.c accordingly */
 static void
 ottery_memclear_(void *mem, size_t len)
 {
-  /* XXXX Test on many many platforms. */
   volatile uint8_t *cp = mem;
   while (len--)
     *cp++ = 0;
