@@ -33,4 +33,10 @@
  */
 /* #undef OTTERY_NO_LOCKS */
 
+/**
+ * If OTTERY_NO_SPINLOCKS is defined, then when we _do_ use lock structures,
+ * use pthread_mutexes instead of spinlocks.
+ */
+/* #undef OTTERY_NO_SPINLOCKS */
+
 #endif
