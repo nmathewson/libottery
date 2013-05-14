@@ -58,13 +58,12 @@ src/chacha20.o: src/chacha20.c src/ottery-internal.h src/ottery-config.h \
 src/chacha8.o: src/chacha8.c src/ottery-internal.h src/ottery-config.h \
   src/chacha_krovetz.c src/chacha_merged.c src/chacha_merged_ecrypt.h
 src/ottery.o: src/ottery.c src/ottery-internal.h src/ottery-config.h \
-  src/ottery.h
+  src/ottery.h src/ottery_st.h
 
-test/bench_rng.o: test/bench_rng.c src/ottery.h
+test/bench_rng.o: test/bench_rng.c src/ottery.h src/ottery_st.h
 test/dump_bytes.o: test/dump_bytes.c src/ottery.h
 test/streams.o: test/streams.c test/streams.h src/ottery-internal.h \
   src/ottery-config.h
-test/test_shallow.o: test/test_shallow.c src/ottery.h
+test/test_memclear.o: test/test_memclear.c
 test/test_vectors.o: test/test_vectors.c src/ottery-internal.h \
   src/ottery-config.h src/ottery.h test/streams.h
-
