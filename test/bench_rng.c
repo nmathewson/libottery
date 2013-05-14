@@ -18,6 +18,7 @@
 #endif
 
 #include "ottery.h"
+#include "ottery_st.h"
 
 #define N 10000000
 
@@ -271,11 +272,11 @@ main(int argc, char **argv)
   struct ottery_config cfg_chacha12;
   struct ottery_config cfg_chacha20;
   ottery_config_init(&cfg_chacha8);
-  ottery_config_force_implementation(&cfg_chacha8, OTTERY_CHACHA8);
+  ottery_config_force_implementation(&cfg_chacha8, OTTERY_PRF_CHACHA8);
   ottery_config_init(&cfg_chacha12);
-  ottery_config_force_implementation(&cfg_chacha12, OTTERY_CHACHA12);
+  ottery_config_force_implementation(&cfg_chacha12, OTTERY_PRF_CHACHA12);
   ottery_config_init(&cfg_chacha20);
-  ottery_config_force_implementation(&cfg_chacha20, OTTERY_CHACHA20);
+  ottery_config_force_implementation(&cfg_chacha20, OTTERY_PRF_CHACHA20);
 
   ottery_st_init(&s8, &cfg_chacha8);
   ottery_st_init(&s12, &cfg_chacha12);
