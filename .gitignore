@@ -8,6 +8,8 @@
 
 libottery.a
 
+doxygen
+
 test/test_vectors
 test/test_vectors.actual
 test/test_vectors.actual-nosimd

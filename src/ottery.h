@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include <sys/types.h>
 
+/** @file */
+
 struct ottery_config;
 struct ottery_state;
 
@@ -230,6 +232,7 @@ int ottery_config_force_implementation(struct ottery_config *cfg,
  * more than enough room.
  */
 struct ottery_config {
+  /** Nothing to see here */
   uint8_t dummy_[1024];
 };
 #endif

@@ -50,6 +50,9 @@ check: $(TESTS) test/test_vectors.actual test/test_vectors.actual-nosimd
 clean:
 	rm -f src/*.o test/*.o $(TESTS) libottery.a
 
+doxygen:
+	doxygen etc/doxygen.conf
+
 
 src/chacha12.o: src/chacha12.c src/ottery-internal.h src/ottery-config.h \
   src/chacha_krovetz.c src/chacha_merged.c src/chacha_merged_ecrypt.h

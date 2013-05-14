@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include <sys/types.h>
 
+/** @file */
+
 struct ottery_config;
 
 #ifndef OTTERY_INTERNAL
@@ -20,6 +22,7 @@ struct ottery_config;
  * more than enough room.
  */
 struct __attribute__((aligned(16))) ottery_state {
+  /** Nothing to see here */
   uint8_t dummy_[1024];
 };
 #endif
