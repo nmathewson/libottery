@@ -370,9 +370,16 @@ ottery_st_rand_bytes(struct ottery_state *st, void *out_,
   UNLOCK(st);
 }
 
+#if defined (__amd64) || defined(__i386)
+/* Unalignd integer access is allowed and fast */
+#define INT_ASSIGN_PTR(type, r, p) do {         \
+    r = *(type*)(p);                            \
+  } while (0)
+#else
 #define INT_ASSIGN_PTR(type, r, p) do {         \
     memcpy(&r, p, sizeof(type));                \
   } while (0)
+#endif
 
 #define OTTERY_RETURN_RAND_INTTYPE(st, inttype) do {                    \
     ottery_st_rand_lock_and_check(st);                                  \
