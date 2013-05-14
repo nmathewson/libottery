@@ -178,6 +178,13 @@ ottery_config_force_implementation(struct ottery_config *cfg,
   return OTTERY_ERR_INVALID_ARGUMENT;
 }
 
+void
+ottery_config_set_manual_prf_(struct ottery_config *cfg,
+                              const struct ottery_prf *prf)
+{
+  cfg->impl = prf;
+}
+
 static void ottery_st_stir_nolock(struct ottery_state *st);
 
 static void

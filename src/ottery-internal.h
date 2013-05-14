@@ -77,6 +77,13 @@ struct ottery_prf {
 /** Largest possible output_len value. */
 #define MAX_OUTPUT_LEN 256
 
+struct ottery_config;
+/**
+ * For testing: manually supply a PRF.
+ */
+void ottery_config_set_manual_prf_(struct ottery_config *cfg,
+                                     const struct ottery_prf *prf);
+
 /**
  * @brief pure-C portable ChaCha implementations.
  *
