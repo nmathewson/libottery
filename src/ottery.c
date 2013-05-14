@@ -17,14 +17,41 @@
 #define OTTERY_CRITICAL_SECTION
 #include <windows.h>
 #else
-#define OTTERY_PTHREADS
-#include <pthread.h>
+#define OTTERY_PTHREAD_MUTEX
 #endif
 #endif /* OTTERY_NO_LOCKS */
+
+#if !defined(_WIN32) && !defined(OTTERY_NO_PTHREADS)
+#include <pthread.h>
+#endif
 
 #ifdef _WIN32
 /* On Windows, there is no fork(), so we don't need to worry about forking. */
 #define OTTERY_NO_PID_CHECK
+#endif
+
+#if !defined(OTTERY_NO_PTHREADS) && !defined(OTTERY_NO_PID_CHECK)
+static int pthread_atfork_installed = 0; //XXXX LOCKME
+static pid_t process_counter = 1;
+static void increment_process_counter(void)
+{
+  ++process_counter;
+}
+static inline pid_t
+ottery_getpid(void)
+{
+  return process_counter;
+}
+#define INIT_PID_CHECKING()                                     \
+  do {                                                          \
+    if (!pthread_atfork_installed) {                            \
+      pthread_atfork_installed = 1;                             \
+      pthread_atfork(NULL, NULL, increment_process_counter);    \
+    }                                                           \
+  } while (0)
+#else
+#define ottery_getpid() getpid()
+#define INIT_PID_CHECKING ((void)0)
 #endif
 
 int
@@ -39,7 +66,7 @@ ottery_os_randbytes_(uint8_t *out, size_t outlen)
 
   if (0 == CryptGenRandom(provider, outlen, out))
     retval = -1;
-  
+
   CryptReleaseContext(provider, 0);
   return retval;
 #else
@@ -48,13 +75,14 @@ ottery_os_randbytes_(uint8_t *out, size_t outlen)
 #ifndef O_CLOEXEC
 #define O_CLOEXEC 0
 #endif
+  int retval = 0;
   fd = open("/dev/urandom", O_RDONLY|O_CLOEXEC);
   if (fd < 0)
     return -1;
   if ((n = read(fd, out, outlen)) < 0 || (size_t)n != outlen)
-    return -1;
+    retval = -1;
   close(fd);
-  return 0;
+  return retval;
 #endif
 }
 
@@ -78,7 +106,7 @@ struct __attribute__((aligned(16))) ottery_state {
   OSSpinLock mutex;
 #elif defined(OTTERY_CRITICAL_SECTION)
   CRITICAL_SECTION mutex;
-#elif defined(OTTERY_PTHREADS)
+#elif defined(OTTERY_PTHREAD_MUTEX)
   pthread_mutex_t mutex;
 #endif
 };
@@ -217,7 +245,9 @@ ottery_st_initialize(struct ottery_state *st,
   ottery_st_nextblock_nolock(st, st->buffer);
   st->pos=0;
 
-  st->pid = getpid();
+  INIT_PID_CHECKING();
+
+  st->pid = ottery_getpid();
   st->magic = MAGIC(st);
   return 0;
 }
@@ -313,7 +343,7 @@ ottery_st_rand_lock_and_check(struct ottery_state *st)
 
   LOCK(st);
 #ifndef OTTERY_NO_PID_CHECK
-  if (st->pid != getpid()) {
+  if (st->pid != ottery_getpid()) {
     if (ottery_st_initialize(st, NULL, 1) < 0)
       abort();
   }
