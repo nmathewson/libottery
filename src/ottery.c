@@ -27,6 +27,8 @@
 #define OTTERY_NO_PID_CHECK
 #endif
 
+#define UNLIKELY(x) __builtin_expect((x), 0)
+
 int
 ottery_os_randbytes_(uint8_t *out, size_t outlen)
 {
@@ -187,7 +189,7 @@ static void
 ottery_st_nextblock_nolock(struct ottery_state *st, uint8_t *target)
 {
   ottery_st_nextblock_nolock_nostir(st, target);
-  if (st->block_counter >= st->prf.stir_after)
+  if (UNLIKELY(st->block_counter >= st->prf.stir_after))
     ottery_st_stir_nolock(st);
 }
 
@@ -307,13 +309,13 @@ static inline void
 ottery_st_rand_lock_and_check(struct ottery_state *st)
 {
 #ifndef OTTERY_NO_INIT_CHECK
-  if (st->magic != MAGIC(st))
+  if (UNLIKELY(st->magic != MAGIC(st)))
     abort();
 #endif
 
   LOCK(st);
 #ifndef OTTERY_NO_PID_CHECK
-  if (st->pid != getpid()) {
+  if (UNLIKELY(st->pid != getpid())) {
     if (ottery_st_initialize(st, NULL, 1) < 0)
       abort();
   }
