@@ -15,6 +15,9 @@ struct ottery_state;
 struct ottery_config;
 #endif
 
+/* Functions to interact with the library on a global level */
+void ottery_set_fatal_handler(void (*fn)(const char *));
+
 /* Functions to manipulate parameters. */
 #define OTTERY_CHACHA   "CHACHA"
 #define OTTERY_CHACHA8  "CHACHA8"

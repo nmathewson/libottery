@@ -302,6 +302,23 @@ ottery_st_stir(struct ottery_state *st)
   UNLOCK(st);
 }
 
+static void (*ottery_fatal_handler)(const char *error) = NULL;
+
+static void
+ottery_fatal(const char *error)
+{
+  if (ottery_fatal_handler)
+    ottery_fatal_handler(error);
+  else
+    abort();
+}
+
+void
+ottery_set_fatal_handler(void (*fn)(const char *))
+{
+  ottery_fatal_handler = fn;
+}
+
 static inline void ottery_st_rand_lock_and_check(struct ottery_state *st)
   __attribute__((always_inline));
 
@@ -309,15 +326,16 @@ static inline void
 ottery_st_rand_lock_and_check(struct ottery_state *st)
 {
 #ifndef OTTERY_NO_INIT_CHECK
-  if (UNLIKELY(st->magic != MAGIC(st)))
-    abort();
+  if (UNLIKELY(st->magic != MAGIC(st))) {
+    ottery_fatal("RNG was not initialized!");
+  }
 #endif
 
   LOCK(st);
 #ifndef OTTERY_NO_PID_CHECK
   if (UNLIKELY(st->pid != getpid())) {
     if (ottery_st_initialize(st, NULL, 1) < 0)
-      abort();
+      ottery_fatal("PID changed, but can't reinitialize the RNG!");
   }
 #endif
 }
@@ -435,11 +453,11 @@ ottery_st_rand_range64(struct ottery_state *st, uint64_t upper)
 static int ottery_global_state_initialized_ = 0;
 static struct ottery_state ottery_global_state_;
 
-#define CHECK_INIT() do {                       \
-    if (!ottery_global_state_initialized_) {    \
-      if (ottery_init(NULL))                    \
-        abort();                                \
-    }                                           \
+#define CHECK_INIT() do {                                       \
+    if (!ottery_global_state_initialized_) {                    \
+      if (ottery_init(NULL))                                    \
+        ottery_fatal("Failed to initialize global RNG");        \
+    }                                                           \
   } while (0)
 
 int
