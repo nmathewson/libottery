@@ -10,7 +10,7 @@
 #include <unistd.h>
 #include <limits.h>
 #ifndef OTTERY_NO_LOCKS
-#ifdef __APPLE__ && !defined(OTTERY_NO_SPINLOCKS)
+#if defined(__APPLE__) && !defined(OTTERY_NO_SPINLOCKS)
 #define OTTERY_OSATOMIC
 #include <libkern/OSAtomic.h>
 #else
