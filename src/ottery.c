@@ -147,6 +147,18 @@ struct __attribute__((aligned(16))) ottery_state {
   /**@}*/
 };
 
+size_t
+ottery_get_sizeof_config(void)
+{
+  return sizeof(struct ottery_config);
+}
+
+size_t
+ottery_get_sizeof_state(void)
+{
+  return sizeof(struct ottery_state);
+}
+
 /**
  * Clear all bytes stored in a structure. Unlike memset, the compiler is not
  * going to optimize this out of existence because the target is about to go

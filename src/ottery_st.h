@@ -28,6 +28,18 @@ struct __attribute__((aligned(16))) ottery_state {
 #endif
 
 /**
+ * Get the minimal size for allocating an ottery_state.
+ *
+ * sizeof(ottery_state) will give an overestimate to allow binary
+ * compatibility with future versions of libottery. Use this function instead
+ * to get the minimal number of bytes to allocate.
+ *
+ * @return The minimal number of bytes to use when allocating an
+ *   ottery_state structure.
+ */
+size_t ottery_get_sizeof_state(void);
+
+/**
  * Initialize an ottery_state structure.
  *
  * You must call this function on any ottery_state structure before

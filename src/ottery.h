@@ -237,4 +237,16 @@ struct ottery_config {
 };
 #endif
 
+/**
+ * Get the minimal size for allocating an ottery_config.
+ *
+ * sizeof(ottery_config) will give an overestimate to allow binary
+ * compatibility with future versions of libottery. Use this function instead
+ * to get the minimal number of bytes to allocate.
+ *
+ * @return The minimal number of bytes to use when allocating an
+ *   ottery_config structure.
+ */
+size_t ottery_get_sizeof_config(void);
+
 #endif
