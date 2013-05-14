@@ -128,7 +128,7 @@ ottery_memclear_(void *mem, size_t len)
     *cp++ = 0;
 }
 
-#if defined(OTTERY_PTHREADS)
+#if defined(OTTERY_PTHREAD_MUTEX)
 #define LOCK(st) do {                             \
     pthread_mutex_lock(&(st)->mutex);           \
   } while (0)
