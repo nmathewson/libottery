@@ -30,6 +30,19 @@
 int
 ottery_os_randbytes_(uint8_t *out, size_t outlen)
 {
+#ifdef _WIN32
+  HCRYPTPROV provider;
+  int retval = 0;
+  if (0 == CryptAcquireContext(&provider, NULL, NULL, PROV_RSA_FULL,
+                               CRYPT_VERIFYCONTEXT))
+    return -1;
+
+  if (0 == CryptGenRandom(provider, outlen, out))
+    retval = -1;
+  
+  CryptReleaseContext(provider, 0);
+  return retval;
+#else
   int fd;
   ssize_t n;
 #ifndef O_CLOEXEC
@@ -42,6 +55,7 @@ ottery_os_randbytes_(uint8_t *out, size_t outlen)
     return -1;
   close(fd);
   return 0;
+#endif
 }
 
 #define MAGIC_BASIS 0x11b07734

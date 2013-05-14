@@ -91,10 +91,10 @@ BEFORE FINAL VERSION
     - Good build process
     - Actually test on windows
 
-  - Other entropy sources besides /dev/urandom
+  . Other entropy sources besides /dev/urandom
     - User-specified device
     - Syscall/ioctl
-    - That windows thing.
+    o That windows thing.
     - User promises to seed (dangerous)
 
   - Drop endianness conversion; not needed for PRNG usage
