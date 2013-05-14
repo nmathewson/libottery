@@ -24,10 +24,10 @@ struct ottery_config;
 #define OTTERY_CHACHA8_SIMD  "CHACHA8-SIMD"
 #define OTTERY_CHACHA12_SIMD "CHACHA12-SIMD"
 #define OTTERY_CHACHA20_SIMD "CHACHA20-SIMD"
-#define OTTERY_CHACHA_NO_SIMD   "CHACHA-SIMD"
-#define OTTERY_CHACHA8_NO_SIMD  "CHACHA8-SIMD"
-#define OTTERY_CHACHA12_NO_SIMD "CHACHA12-SIMD"
-#define OTTERY_CHACHA20_NO_SIMD "CHACHA20-SIMD"
+#define OTTERY_CHACHA_NO_SIMD   "CHACHA-NOSIMD"
+#define OTTERY_CHACHA8_NO_SIMD  "CHACHA8-NOSIMD"
+#define OTTERY_CHACHA12_NO_SIMD "CHACHA12-NOSIMD"
+#define OTTERY_CHACHA20_NO_SIMD "CHACHA20-NOSIMD"
 
 int ottery_config_init(struct ottery_config *cfg);
 int ottery_config_set_option(struct ottery_config *cfg, uint32_t option);
