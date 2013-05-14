@@ -15,8 +15,20 @@ struct ottery_state;
 struct ottery_config;
 #endif
 
+/* Error codes */
+#define OTTERY_ERR_NONE                  0x0000
+#define OTTERY_ERR_LOCK_INIT             0x0001
+#define OTTERY_ERR_INTERNAL              0x0002
+#define OTTERY_ERR_INIT_STRONG_RNG       0x0003
+#define OTTERY_ERR_ACCESS_STRONG_RNG     0x0004
+#define OTTERY_ERR_INVALID_ARGUMENT      0x0005
+
+#define OTTERY_ERR_STATE_INIT            0x1000
+#define OTTERY_ERR_FLAG_GLOBAL_PRNG_INIT 0x2000
+#define OTTERY_ERR_FLAG_POSTFORK_RESEED  0x4000
+
 /* Functions to interact with the library on a global level */
-void ottery_set_fatal_handler(void (*fn)(const char *));
+void ottery_set_fatal_handler(void (*fn)(int errorcode));
 
 /* Functions to manipulate parameters. */
 #define OTTERY_CHACHA   "CHACHA"

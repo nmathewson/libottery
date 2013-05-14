@@ -11,8 +11,8 @@
  *
  * @param bytes A buffer to receive random bytes.
  * @param n The number of bytes to write
- * @return 0 on success, -1 on failure.  On failure, it is not safe to treat
- *   the contents of the buffer as random at all.
+ * @return 0 on success, or an error code on failure. On failure, it is not
+ *   safe to treat the contents of the buffer as random at all.
  */
 int ottery_os_randbytes_(uint8_t *bytes, size_t n);
 

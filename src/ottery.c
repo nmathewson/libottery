@@ -37,11 +37,11 @@ ottery_os_randbytes_(uint8_t *out, size_t outlen)
   int retval = 0;
   if (0 == CryptAcquireContext(&provider, NULL, NULL, PROV_RSA_FULL,
                                CRYPT_VERIFYCONTEXT))
-    return -1;
+    return OTTERY_ERR_INIT_STRONG_RNG;
 
   if (0 == CryptGenRandom(provider, outlen, out))
-    retval = -1;
-  
+    retval = OTTERY_ERR_ACCESS_STRONG_RNG;
+
   CryptReleaseContext(provider, 0);
   return retval;
 #else
@@ -52,9 +52,9 @@ ottery_os_randbytes_(uint8_t *out, size_t outlen)
 #endif
   fd = open("/dev/urandom", O_RDONLY|O_CLOEXEC);
   if (fd < 0)
-    return -1;
+    return OTTERY_ERR_INIT_STRONG_RNG;
   if ((n = read(fd, out, outlen)) < 0 || (size_t)n != outlen)
-    return -1;
+    return OTTERY_ERR_ACCESS_STRONG_RNG;
   close(fd);
   return 0;
 #endif
@@ -166,14 +166,14 @@ ottery_config_force_implementation(struct ottery_config *cfg,
     { NULL, NULL }
   };
   if (!impl)
-    return -1;
+    return OTTERY_ERR_INVALID_ARGUMENT;
   for (i = 0; prf_table[i].name; ++i) {
     if (0 == strcmp(impl, prf_table[i].name)) {
       cfg->impl = prf_table[i].prf;
       return 0;
     }
   }
-  return -1;
+  return OTTERY_ERR_INVALID_ARGUMENT;
 }
 
 static void ottery_st_stir_nolock(struct ottery_state *st);
@@ -202,17 +202,18 @@ ottery_st_initialize(struct ottery_state *st,
     memset(st, 0, sizeof(*st));
 #ifdef OTTERY_PTHREADS
     if (pthread_mutex_init(&st->mutex, NULL))
-      return -1;
+      return OTTERY_ERR_LOCK_INIT;
 #elif defined(OTTERY_CRITICAL_SECTION)
     if (InitializeCriticalSectionAndSpinCount(&st->mutex, 3000) == 0)
-      return -1;
+      return OTTERY_ERR_LOCK_INIT;
 #endif
     if (prf->state_len > MAX_STATE_LEN)
-      return -1;
+      return OTTERY_ERR_INTERNAL;
     memcpy(&st->prf, prf, sizeof(*prf));
   }
-  if (ottery_os_randbytes_(st->buffer, prf->state_bytes) < 0)
-    return -1;
+  int err;
+  if ((err = ottery_os_randbytes_(st->buffer, prf->state_bytes)))
+    return err;
   prf->setup(st->state, st->buffer);
   st->block_counter = 0;
 
@@ -302,10 +303,10 @@ ottery_st_stir(struct ottery_state *st)
   UNLOCK(st);
 }
 
-static void (*ottery_fatal_handler)(const char *error) = NULL;
+static void (*ottery_fatal_handler)(int) = NULL;
 
 static void
-ottery_fatal(const char *error)
+ottery_fatal(int error)
 {
   if (ottery_fatal_handler)
     ottery_fatal_handler(error);
@@ -314,7 +315,7 @@ ottery_fatal(const char *error)
 }
 
 void
-ottery_set_fatal_handler(void (*fn)(const char *))
+ottery_set_fatal_handler(void (*fn)(int))
 {
   ottery_fatal_handler = fn;
 }
@@ -327,15 +328,16 @@ ottery_st_rand_lock_and_check(struct ottery_state *st)
 {
 #ifndef OTTERY_NO_INIT_CHECK
   if (UNLIKELY(st->magic != MAGIC(st))) {
-    ottery_fatal("RNG was not initialized!");
+    ottery_fatal(OTTERY_ERR_STATE_INIT);
   }
 #endif
 
   LOCK(st);
 #ifndef OTTERY_NO_PID_CHECK
   if (UNLIKELY(st->pid != getpid())) {
-    if (ottery_st_initialize(st, NULL, 1) < 0)
-      ottery_fatal("PID changed, but can't reinitialize the RNG!");
+    int err;
+    if ((err = ottery_st_initialize(st, NULL, 1)))
+      ottery_fatal(OTTERY_ERR_FLAG_POSTFORK_RESEED|err);
   }
 #endif
 }
@@ -455,8 +457,9 @@ static struct ottery_state ottery_global_state_;
 
 #define CHECK_INIT() do {                                       \
     if (!ottery_global_state_initialized_) {                    \
-      if (ottery_init(NULL))                                    \
-        ottery_fatal("Failed to initialize global RNG");        \
+      int err;                                                  \
+      if ((err=ottery_init(NULL)))                              \
+        ottery_fatal(OTTERY_ERR_FLAG_GLOBAL_PRNG_INIT|err);     \
     }                                                           \
   } while (0)
 
