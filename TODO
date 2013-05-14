@@ -78,14 +78,18 @@ BEFORE FINAL VERSION
 
   - Do something about L1 cache pressure.
 
-  - Use AESNI instead of chacha when it's available?
+  X Use AESNI instead of chacha when it's available?
     o Port implementation (see branch 'aesni')
-    - Test implementation
-    - Use it when appropriate.
+    o Benchmark implementation.
+      (NOT FASTER THAN CHACHA.)
+    X Test implementation
+    X Use it when appropriate.
 
-  - Windows port
-    - Windows threads
-    - No need for fork detection.
+  o Windows port
+    o Windows threads
+    o No need for fork detection.
+    - Good build process
+    - Actually test on windows
 
   - Other entropy sources besides /dev/urandom
     - User-specified device

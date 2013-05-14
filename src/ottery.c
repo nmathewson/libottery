@@ -13,10 +13,18 @@
 #if defined(__APPLE__) && !defined(OTTERY_NO_SPINLOCKS)
 #define OTTERY_OSATOMIC
 #include <libkern/OSAtomic.h>
+#elif defined(_WIN32)
+#define OTTERY_CRITICAL_SECTION
+#include <windows.h>
 #else
 #define OTTERY_PTHREADS
 #include <pthread.h>
 #endif
+#endif /* OTTERY_NO_LOCKS */
+
+#ifdef _WIN32
+/* On Windows, there is no fork(), so we don't need to worry about forking. */
+#define OTTERY_NO_PID_CHECK
 #endif
 
 int
@@ -54,6 +62,8 @@ struct __attribute__((aligned(16))) ottery_state {
   pid_t pid;
 #if defined(OTTERY_OSATOMIC)
   OSSpinLock mutex;
+#elif defined(OTTERY_CRITICAL_SECTION)
+  CRITICAL_SECTION mutex;
 #elif defined(OTTERY_PTHREADS)
   pthread_mutex_t mutex;
 #endif
@@ -82,6 +92,13 @@ ottery_memclear_(void *mem, size_t len)
   } while (0)
 #define UNLOCK(st) do {                             \
     pthread_mutex_unlock(&(st)->mutex);             \
+  } while (0)
+#elif defined(OTTERY_CRITICAL_SECTION)
+#define LOCK(st) do { \
+    EnterCriticalSection(&(st)->mutex); \
+  } while (0)
+#define UNLOCK(st) do { \
+    LeaveCriticalSection(&(st)->mutex); \
   } while (0)
 #elif defined(OTTERY_OSATOMIC)
 #define LOCK(st) do {                           \
@@ -170,6 +187,9 @@ ottery_st_initialize(struct ottery_state *st,
 #ifdef OTTERY_PTHREADS
     if (pthread_mutex_init(&st->mutex, NULL))
       return -1;
+#elif defined(OTTERY_CRITICAL_SECTION)
+    if (InitializeCriticalSectionAndSpinCount(&st->mutex, 3000) == 0)
+      return -1;
 #endif
     if (prf->state_len > MAX_STATE_LEN)
       return -1;
@@ -239,6 +259,8 @@ ottery_st_wipe(struct ottery_state *st)
 {
 #ifdef OTTERY_PTHREADS
   pthread_mutex_destroy(&st->mutex);
+#elif defined(OTTERY_CRITICAL_SECTION)
+  DeleteCriticalSection(&st->mutex);
 #endif
   ottery_memclear_(st, sizeof(struct ottery_state));
 }
