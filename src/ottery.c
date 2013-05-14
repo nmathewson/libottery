@@ -322,35 +322,6 @@ ottery_st_rand_lock_and_check(struct ottery_state *st)
 #endif
 }
 
-#if 0
-static inline void
-ottery_st_rand_bytes_small(struct ottery_state *st, void *out_,
-                           size_t n)
-{
-  ottery_st_rand_lock_and_check(st);
-
-  uint8_t *out = out_;
-  if (n + st->pos < st->prf.output_len) {
-    memcpy(out, st->buffer+st->pos, n);
-    st->pos += n;
-  } else if (n + st->pos == st->prf.output_len) {
-    memcpy(out, st->buffer+st->pos, n);
-    ottery_st_nextblock_nolock(st, st->buffer);
-    st->pos = 0;
-  } else {
-    unsigned cpy = st->prf.output_len - st->pos;
-    memcpy(out, st->buffer+st->pos, cpy);
-    n -= cpy;
-    out += cpy;
-    ottery_st_nextblock_nolock(st, st->buffer);
-    memcpy(out, st->buffer, n);
-    st->pos = n;
-  }
-
-  UNLOCK(st);
-}
-#endif
-
 static inline void
 ottery_st_rand_bytes_from_buf(struct ottery_state *st, uint8_t *out,
                               size_t n)
