@@ -130,10 +130,12 @@ ottery_memclear_(void *mem, size_t len)
 #error How do I lock?
 #endif
 
+#define OTTERY_PRF_DEFAULT ottery_prf_chacha20_
+
 int
 ottery_config_init(struct ottery_config *cfg)
 {
-  cfg->impl = &ottery_prf_chacha20_;
+  cfg->impl = &OTTERY_PRF_DEFAULT;
   return 0;
 }
 
@@ -199,6 +201,9 @@ ottery_st_initialize(struct ottery_state *st,
                      int reinit)
 {
   if (!reinit) {
+    if (((uintptr_t)st) & 0xf)
+      return OTTERY_ERR_STATE_ALIGNMENT;
+
     memset(st, 0, sizeof(*st));
 #ifdef OTTERY_PTHREADS
     if (pthread_mutex_init(&st->mutex, NULL))
@@ -207,8 +212,19 @@ ottery_st_initialize(struct ottery_state *st,
     if (InitializeCriticalSectionAndSpinCount(&st->mutex, 3000) == 0)
       return OTTERY_ERR_LOCK_INIT;
 #endif
-    if (prf->state_len > MAX_STATE_LEN)
+
+    /* Check invariants for PRF. */
+    if ((prf->state_len > MAX_STATE_LEN) ||
+        (prf->state_bytes > MAX_STATE_BYTES) ||
+        (prf->state_bytes > prf->output_len) ||
+        (prf->output_len > MAX_OUTPUT_LEN))
       return OTTERY_ERR_INTERNAL;
+
+    /* Check whether some of our compiler assumptions are right. */
+    if ((sizeof(struct ottery_state) > 1024) ||
+        (sizeof(struct ottery_config) > 1024))
+      return OTTERY_ERR_INTERNAL;
+
     memcpy(&st->prf, prf, sizeof(*prf));
   }
   int err;
@@ -231,7 +247,7 @@ ottery_st_init(struct ottery_state *st, const struct ottery_config *cfg)
   if (cfg) {
     return ottery_st_initialize(st, cfg->impl, 0);
   } else {
-    return ottery_st_initialize(st, &ottery_prf_chacha20_, 0);
+    return ottery_st_initialize(st, &OTTERY_PRF_DEFAULT, 0);
   }
 }
 
