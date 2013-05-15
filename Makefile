@@ -8,7 +8,8 @@ TESTS =  test/test_vectors test/bench_rng test/dump_bytes test/test_memclear
 
 all: $(TESTS) libottery.a
 
-OTTERY_OBJS = src/chacha8.o src/chacha12.o src/chacha20.o src/ottery.o
+OTTERY_OBJS = src/chacha8.o src/chacha12.o src/chacha20.o src/ottery.o \
+	src/ottery_osrng.o
 TEST_OBJS = test/test_vectors.o test/bench_rng.o \
 	test/dump_bytes.o test/streams.o test/test_memclear.o
 
