@@ -65,9 +65,8 @@ ottery_os_randbytes_(uint8_t *out, size_t outlen)
    * it has emitted.  If we assume that the OS PRNG isn't cryptographically
    * weak, blocking in that case is simple overkill.
    *
-   * It would be best if there were an alternative that blocked if the the
-   * PRNG had _never_ been seeded.  But most operating systems don't have
-   * that.
+   * It would be best if there were an alternative that blocked if the PRNG
+   * had _never_ been seeded.  But most operating systems don't have that.
    */
   int fd;
   ssize_t n;
