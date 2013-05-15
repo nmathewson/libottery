@@ -541,7 +541,6 @@ ottery_st_rand_bytes(struct ottery_state *st, void *out_,
   UNLOCK(st);
 }
 
-#if defined (__amd64) || defined(__i386)
 /**
  * Assign an integer type from bytes at a possibly unaligned pointer.
  *
@@ -549,15 +548,9 @@ ottery_st_rand_bytes(struct ottery_state *st, void *out_,
  * @param r the integer lvalue to write to.
  * @param p a pointer to the bytes to read from.
  **/
-/* Unalignd integer access is allowed and fast */
-#define INT_ASSIGN_PTR(type, r, p) do {         \
-    r = *(type*)(p);                            \
-  } while (0)
-#else
 #define INT_ASSIGN_PTR(type, r, p) do {         \
     memcpy(&r, p, sizeof(type));                \
   } while (0)
-#endif
 
 /**
  * Shared code for implementing rand_unsigned() and rand_uint64().
