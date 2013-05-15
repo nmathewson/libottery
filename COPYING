@@ -1,0 +1,10 @@
+Libottery is dedicated to the public domain under the CC0 public domain
+dedication; see doc/cc0.txt for full information, or
+      <http://creativecommons.org/publicdomain/zero/1.0/>
+if you did not receive a copy.
+
+
+Libottery contains two implementations of the ChaCha stream cipher: a fast
+one by Ted Krovetz and an extra-portable one by Dan Bernstein.  They are both
+in the public domain.  See doc/krovetz/readme.txt for Ted Krovetz's public
+domain dedication.
