@@ -30,7 +30,7 @@ BEFORE FIRST VERSION
     o Initial state-based thing.
     o Initial static thing
 
-  . Working headers
+  o Working headers
   o Build with more warnings
   o Pluggable backends.
   o Tests for chacha12
@@ -50,24 +50,44 @@ BEFORE FIRST VERSION
     . Test with dieharder, to see if I screwed up.
     - 100% test coverage.
 
-  - DOCUMENTATION
-    - Document APIs.
-    - Finish the readme
-    - comment it
+  o DOCUMENTATION
+    o Document APIs.
+    o Finish the readme
+    o comment all the code
+
+  - CONSISTENCY
+    - Uncrustify
 
 BEFORE FINAL VERSION
+
+  - Ability to make a tiny tiny runtime for embedded applications.
+
+  - Make sure that the reinitialization logic is threadsafe.
+
+  - Separate the function for reseeding and reinitializing.
 
   - Waste fewer bytes when stirring.
 
   - Detect CPU features at runtime.
     - In particular, detecting SSE3/SSE2 could be a bit of a win.
 
+  - Build with sse3/sse2 in separate modules.
+
   - Separate threaded/nonthreaded libraries.
 
-  - Handle fork even better
+  - Make rand_bytes() better handle the case where, after alignment, n is
+    less than output_len?
+
+  - Remove needless stirring for large rand_bytes() calls.
+
+  - On stir, kill buffer up to pos?
+
+  - Handle fork even better. Ideas:
     - mutex/state in a shared mmap?
-    - pthread_atfork?
-    - Ignore when we have a state object
+    . pthread_atfork?
+      (Hm, it appears that sensible libcs make getpid() pretty fast, so this
+       isn't a win the way I did it at first.)
+    - Ignore when we have a state object??
 
   - Handle thread-safety even better
     - ability to disable locking.
@@ -92,8 +112,9 @@ BEFORE FINAL VERSION
     - Actually test on windows
 
   . Other entropy sources besides /dev/urandom
-    - User-specified device
+    - User-specified /dev/*random
     - Syscall/ioctl
+    - rdrand instruction.
     o That windows thing.
     - User promises to seed (dangerous)
 
