@@ -95,6 +95,11 @@ struct __attribute__((aligned(16))) ottery_state {
   /**@}*/
 };
 
+static void ottery_fatal(int error);
+static inline void ottery_st_rand_lock_and_check(struct ottery_state *st)
+  __attribute__((always_inline));
+static void ottery_st_stir_nolock(struct ottery_state *st);
+
 size_t
 ottery_get_sizeof_config(void)
 {
@@ -211,8 +216,6 @@ ottery_config_set_manual_prf_(struct ottery_config *cfg,
   cfg->impl = prf;
 }
 
-static void ottery_st_stir_nolock(struct ottery_state *st);
-
 /**
  * As ottery_st_nextblock_nolock(), but never stir the state.
  */
@@ -325,11 +328,15 @@ ottery_st_init(struct ottery_state *st, const struct ottery_config *cfg)
 void
 ottery_st_add_seed(struct ottery_state *st, const uint8_t *seed, size_t n)
 {
+#ifndef OTTERY_NO_INIT_CHECK
+  if (UNLIKELY(st->magic != MAGIC(st))) {
+    ottery_fatal(OTTERY_ERR_STATE_INIT);
+  }
+#endif
+
   /* If the user passed NULL, then we should reseed from the operating
    * system. */
   uint8_t tmp_seed[MAX_STATE_BYTES];
-
-  /* XXXX check for initialization */
 
   if (! seed) {
     unsigned state_bytes;
@@ -439,9 +446,6 @@ ottery_set_fatal_handler(void (*fn)(int))
 {
   ottery_fatal_handler = fn;
 }
-
-static inline void ottery_st_rand_lock_and_check(struct ottery_state *st)
-  __attribute__((always_inline));
 
 /**
  * Shared prologue for functions generating random bytes from an
