@@ -3,8 +3,12 @@ dedication; see doc/cc0.txt for full information, or
       <http://creativecommons.org/publicdomain/zero/1.0/>
 if you did not receive a copy.
 
-
 Libottery contains two implementations of the ChaCha stream cipher: a fast
 one by Ted Krovetz and an extra-portable one by Dan Bernstein.  They are both
 in the public domain.  See doc/krovetz/readme.txt for Ted Krovetz's public
 domain dedication.
+
+Some of the unit tests for Libottery use the tinytest test
+infrastructure. See test/tinytest.c for the license that tinytest uses.  This
+license applies only to the files test/tinytest.c, test/tinytest.h, and
+test_tinytest_macros.c; it does not affect the rest of Libottery.
