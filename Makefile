@@ -4,14 +4,16 @@ CFLAGS=-Wall -W -Wextra -g -O3 -pthread
 # -mfpu=neon
 # -pthread
 
-TESTS =  test/test_vectors test/bench_rng test/dump_bytes test/test_memclear
+TESTS =  test/test_vectors test/bench_rng test/dump_bytes test/test_memclear \
+	test/test_shallow
 
 all: $(TESTS) libottery.a
 
 OTTERY_OBJS = src/chacha8.o src/chacha12.o src/chacha20.o src/ottery.o \
 	src/ottery_osrng.o
 TEST_OBJS = test/test_vectors.o test/bench_rng.o \
-	test/dump_bytes.o test/streams.o test/test_memclear.o
+	test/dump_bytes.o test/streams.o test/test_memclear.o \
+	test/tinytest.o test/test_shallow.o
 
 libottery.a: $(OTTERY_OBJS)
 	ar rcs libottery.a $(OTTERY_OBJS) && ranlib libottery.a
@@ -43,10 +45,16 @@ test/dump_bytes: test/dump_bytes.o libottery.a
 test/test_memclear: test/test_memclear.o libottery.a
 	$(CC) $(CFLAGS) -Isrc test/test_memclear.o libottery.a -o test/test_memclear
 
-check: $(TESTS) test/test_vectors.actual test/test_vectors.actual-nosimd
+test/test_shallow: test/test_shallow.o test/tinytest.o libottery.a
+	$(CC) $(CFLAGS) -Isrc test/test_shallow.o test/tinytest.o libottery.a -o test/test_shallow
+
+check: $(TESTS) test/test_vectors.actual test/test_vectors.actual-nosimd \
+	test/test_shallow
+
 	@cmp test/test_vectors.expected test/test_vectors.actual && echo OKAY || BAD
 	@cmp test/test_vectors.expected test/test_vectors.actual-nosimd && echo OKAY || echo BAD
 	@./test/test_memclear
+	@./test/test_shallow --quiet && echo "OKAY"
 
 clean:
 	rm -f src/*.o test/*.o $(TESTS) libottery.a
@@ -63,11 +71,17 @@ src/chacha8.o: src/chacha8.c src/ottery-internal.h src/ottery-config.h \
   src/chacha_krovetz.c src/chacha_merged.c src/chacha_merged_ecrypt.h
 src/ottery.o: src/ottery.c src/ottery-internal.h src/ottery-config.h \
   src/ottery.h src/ottery_st.h
+src/ottery_osrng.o: src/ottery_osrng.c src/ottery-internal.h \
+  src/ottery-config.h src/ottery.h
 
 test/bench_rng.o: test/bench_rng.c src/ottery.h src/ottery_st.h
 test/dump_bytes.o: test/dump_bytes.c src/ottery.h
 test/streams.o: test/streams.c test/streams.h src/ottery-internal.h \
   src/ottery-config.h
 test/test_memclear.o: test/test_memclear.c
+test/test_shallow.o: test/test_shallow.c src/ottery.h src/ottery_st.h \
+  src/ottery-internal.h src/ottery-config.h test/tinytest.h \
+  test/tinytest_macros.h
 test/test_vectors.o: test/test_vectors.c src/ottery-internal.h \
   src/ottery-config.h src/ottery.h test/streams.h
+test/tinytest.o: test/tinytest.c test/tinytest.h test/tinytest_macros.h

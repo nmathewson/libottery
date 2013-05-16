@@ -48,7 +48,9 @@ BEFORE FIRST VERSION
     . Add a benchmarking/timing feature
       - do it right.
     . Test with dieharder, to see if I screwed up.
-    - 100% test coverage.
+      - Better dumpbytes output.  Use all backends, different sizes,
+        multiple threads...
+    o 100% test coverage.
 
   o DOCUMENTATION
     o Document APIs.

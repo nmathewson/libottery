@@ -5,6 +5,9 @@
 .#*
 \#*
 *.dSYM
+*.gcov
+*.gcda
+*.gcno
 
 libottery.a
 
@@ -17,3 +20,4 @@ test/bench_rng
 test/dump_bytes
 test/test_stateful
 test/test_memclear
+test/test_shallow
