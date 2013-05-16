@@ -297,8 +297,8 @@ void
 test_fork(void *arg)
 {
   (void) arg;
-#ifdef _WIN32
-  tt_skip(); 
+#if defined(_WIN32) || defined(OTTERY_NO_PID_CHECK)
+  tt_skip();
  end:
   ;
 #else
@@ -468,12 +468,15 @@ test_fatal(void *arg)
 {
   (void)arg;
   __attribute__((aligned(16))) struct ottery_state st;
-  uint8_t buf[8];
+  int tested=0;
 
   ottery_set_fatal_handler(fatal_handler);
   memset(&st, 0xff, sizeof(st));
 
-  /* Fatal errors from */
+#ifndef OTTERY_NO_INIT_CHECK
+  uint8_t buf[8];
+  ++tested;
+  /* Fatal errors from uninitialized states */
   got_fatal_err = 0;
   ottery_st_add_seed(&st, (const uint8_t*)"xyz", 3);
   tt_int_op(got_fatal_err, ==, OTTERY_ERR_STATE_INIT);
@@ -485,7 +488,10 @@ test_fatal(void *arg)
   got_fatal_err = 0;
   ottery_st_rand_bytes(&st, buf, 8);
   tt_int_op(got_fatal_err, ==, OTTERY_ERR_STATE_INIT);
+#endif
 
+#ifndef OTTERY_NO_PID_CHECK
+  ++tested;
   /* Okay, now we're going to fake out the initialization-failure-postfork
    * code. */
   got_fatal_err = 0;
@@ -497,6 +503,10 @@ test_fatal(void *arg)
   ottery_st_rand_unsigned(&st);
   tt_int_op(got_fatal_err, ==,
             OTTERY_ERR_ACCESS_STRONG_RNG|OTTERY_ERR_FLAG_POSTFORK_RESEED);
+#endif
+
+  if (!tested)
+    tt_skip();
 
  end:
   ;
