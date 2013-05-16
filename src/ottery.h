@@ -91,8 +91,10 @@ int ottery_init(const struct ottery_config *cfg);
  * it's useful to periodically add more raw entropy to a well-seeded
  * cryptographically strong PRNG.
  *
- * @param seed Bytes to add to the state.
- * @param n The number of bytes to add.
+ * @param seed Bytes to add to the state. If this value is NULL, we take
+ *    more random bytes from the OS.
+ * @param n The number of bytes to add. If this value is 0, we take more
+ *    random bytes from the OS, regardless of the value of seed.
  */
 void ottery_add_seed(const uint8_t *seed, size_t n);
 

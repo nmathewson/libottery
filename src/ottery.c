@@ -282,7 +282,7 @@ ottery_st_add_seed(struct ottery_state *st, const uint8_t *seed, size_t n)
    * system. */
   uint8_t tmp_seed[MAX_STATE_BYTES];
 
-  if (! seed) {
+  if (! seed || ! n) {
     unsigned state_bytes;
     /* Hold the lock for only a moment here: we don't want to be holding
      * it while we call the OS RNG. */
@@ -293,9 +293,6 @@ ottery_st_add_seed(struct ottery_state *st, const uint8_t *seed, size_t n)
     seed = tmp_seed;
     n = state_bytes;
   }
-
-  if (n == 0)
-    return;
 
   LOCK(st);
   /* The algorithm here is really easy. We grab a block of output from the
