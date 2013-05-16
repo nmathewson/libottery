@@ -280,7 +280,7 @@ test_range(void *arg)
     tt_int_op(OTTERY_RAND_RANGE64(quite_big), <=, quite_big);
     if (OTTERY_RAND_RANGE64(quite_big) > (((uint64_t)1)<<40))
       ++got_a_big_one;
-    if (OTTERY_RAND_RANGE(3000000000) > 2000000000)
+    if (OTTERY_RAND_RANGE(3000000000U) > 2000000000U)
       ++got_a_big_small_one;
   }
   for (i=0; i<5; ++i) {
@@ -296,7 +296,12 @@ test_range(void *arg)
 void
 test_fork(void *arg)
 {
-  (void)arg;
+  (void) arg;
+#ifdef _WIN32
+  tt_skip(); 
+ end:
+  ;
+#else
   uint8_t buf[256];
   uint8_t buf2[256];
   int fd[2] = {-1, -1};
@@ -329,6 +334,7 @@ test_fork(void *arg)
     close(fd[0]);
   if (fd[1] >= 0)
     close(fd[1]);
+#endif
 }
 
 void

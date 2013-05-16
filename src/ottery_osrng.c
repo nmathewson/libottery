@@ -22,6 +22,7 @@ int
 ottery_os_randbytes_(const char *urandom_fname, uint8_t *out, size_t outlen)
 {
 #ifdef _WIN32
+  (void)urandom_fname;
   /* On Windows, CryptGenRandom is supposed to be a well-seeded
    * cryptographically strong random number generator. */
   HCRYPTPROV provider;
