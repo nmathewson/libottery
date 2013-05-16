@@ -320,8 +320,7 @@ ottery_st_add_seed(struct ottery_state *st, const uint8_t *seed, size_t n)
   UNLOCK(st);
 
   /* If we used stack-allocated seed material, wipe it. */
-  if (seed == tmp_seed)
-    ottery_memclear_(tmp_seed, sizeof(tmp_seed));
+  ottery_memclear_(tmp_seed, sizeof(tmp_seed));
 }
 
 void
