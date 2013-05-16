@@ -172,10 +172,11 @@ void ottery_stir(void);
  * order to keep the program from operating insecurely.  If you want,
  * you can provide another function to call instead.
  *
- * If your function does not itself abort() or exit() the process, or
- * throw an exception (assuming some C family that has exceptions),
- * libottery will continue running in a potentially insecure manner, so
- * be very careful here.
+ * If your function does not itself abort() or exit() the process, or throw an
+ * exception (assuming some C family that has exceptions), libottery will
+ * continue running insecurely -- it might return predictable random numbers,
+ * leak secrets, or just return 0 for everything -- so you should really be
+ * very careful here.
  *
  * (The alternative to fatal errors would have been having all the
  * ottery_rand_* functions able to return an error, and requiring users

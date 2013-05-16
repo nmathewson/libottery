@@ -40,7 +40,7 @@
 #define MAGIC(ptr) ( ((uint32_t)(uintptr_t)(ptr)) ^ MAGIC_BASIS )
 
 static void ottery_fatal(int error);
-static inline void ottery_st_rand_lock_and_check(struct ottery_state *st)
+static inline int ottery_st_rand_lock_and_check(struct ottery_state *st)
   __attribute__((always_inline));
 static void ottery_st_stir_nolock(struct ottery_state *st);
 
@@ -294,6 +294,7 @@ ottery_st_add_seed(struct ottery_state *st, const uint8_t *seed, size_t n)
 #ifndef OTTERY_NO_INIT_CHECK
   if (UNLIKELY(st->magic != MAGIC(st))) {
     ottery_fatal(OTTERY_ERR_STATE_INIT);
+    return;
   }
 #endif
 
@@ -413,12 +414,13 @@ ottery_set_fatal_handler(void (*fn)(int))
  * ottery_state.  Make sure that the state is initialized, lock it, and
  * reseed it (if the PID has changed).
  */
-static inline void
+static inline int
 ottery_st_rand_lock_and_check(struct ottery_state *st)
 {
 #ifndef OTTERY_NO_INIT_CHECK
   if (UNLIKELY(st->magic != MAGIC(st))) {
     ottery_fatal(OTTERY_ERR_STATE_INIT);
+    return -1;
   }
 #endif
 
@@ -426,10 +428,14 @@ ottery_st_rand_lock_and_check(struct ottery_state *st)
 #ifndef OTTERY_NO_PID_CHECK
   if (UNLIKELY(st->pid != getpid())) {
     int err;
-    if ((err = ottery_st_initialize(st, &st->prf, 1)))
+    if ((err = ottery_st_initialize(st, NULL, 1))) {
       ottery_fatal(OTTERY_ERR_FLAG_POSTFORK_RESEED|err);
+      UNLOCK(st);
+      return -1;
+    }
   }
 #endif
+  return 0;
 }
 
 /**
@@ -464,7 +470,8 @@ void
 ottery_st_rand_bytes(struct ottery_state *st, void *out_,
                      size_t n)
 {
-  ottery_st_rand_lock_and_check(st);
+  if (ottery_st_rand_lock_and_check(st))
+    return;
 
   uint8_t *out = out_;
 
@@ -520,7 +527,8 @@ ottery_st_rand_bytes(struct ottery_state *st, void *out_,
  * @param inttype The type of integer to generate.
  **/
 #define OTTERY_RETURN_RAND_INTTYPE(st, inttype) do {                    \
-    ottery_st_rand_lock_and_check(st);                                  \
+    if (ottery_st_rand_lock_and_check(st))                              \
+      return (inttype)0;                                                \
     inttype result;                                                     \
     if (sizeof(inttype) + (st)->pos < (st)->prf.output_len) {           \
       INT_ASSIGN_PTR(inttype, result, (st)->buffer + (st)->pos);        \
@@ -581,11 +589,13 @@ static int ottery_global_state_initialized_ = 0;
 static struct ottery_state ottery_global_state_;
 
 /** Initialize ottery_global_state_ if it has not been initialize. */
-#define CHECK_INIT() do {                                       \
-      if (UNLIKELY(!ottery_global_state_initialized_))	 {      \
+#define CHECK_INIT(rv) do {                                     \
+    if (UNLIKELY(!ottery_global_state_initialized_)) {          \
       int err;                                                  \
-      if ((err=ottery_init(NULL)))                              \
+      if ((err=ottery_init(NULL))) {                            \
         ottery_fatal(OTTERY_ERR_FLAG_GLOBAL_PRNG_INIT|err);     \
+        return rv ;                                             \
+      }                                                         \
     }                                                           \
   } while (0)
 
@@ -631,24 +641,24 @@ ottery_rand_bytes(void *out, size_t n)
 unsigned
 ottery_rand_unsigned(void)
 {
-  CHECK_INIT();
+  CHECK_INIT(0);
   return ottery_st_rand_unsigned(&ottery_global_state_);
 }
 uint64_t
 ottery_rand_uint64(void)
 {
-  CHECK_INIT();
+  CHECK_INIT(0);
   return ottery_st_rand_uint64(&ottery_global_state_);
 }
 unsigned
 ottery_rand_range(unsigned top)
 {
-  CHECK_INIT();
+  CHECK_INIT(0);
   return ottery_st_rand_range(&ottery_global_state_, top);
 }
 uint64_t
 ottery_rand_range64(uint64_t top)
 {
-  CHECK_INIT();
+  CHECK_INIT(0);
   return ottery_st_rand_range64(&ottery_global_state_, top);
 }
