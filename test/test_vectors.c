@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define OTTERY_INTERNAL
 #include "ottery-internal.h"
 #include "ottery.h"
 
