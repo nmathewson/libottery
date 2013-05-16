@@ -32,6 +32,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#define STATE() state
+#define USING_STATE() (state != NULL)
+#include "st_wrappers.h"
+
 char *state_allocation = NULL;
 struct ottery_state *state = NULL;
 
@@ -71,35 +75,6 @@ cleanup_state(const struct testcase_t *testcase, void *ptr)
 struct testcase_setup_t setup = {
   setup_state, cleanup_state
 };
-
-#define OTTERY_RAND_BYTES(out, n)               \
-  (state ?                                      \
-   ottery_st_rand_bytes(state, (out), (n)) :    \
-   ottery_rand_bytes((out),(n)))
-
-#define OTTERY_RAND_UNSIGNED()                  \
-  (state ? ottery_st_rand_unsigned(state) : ottery_rand_unsigned())
-
-#define OTTERY_RAND_UINT64()                                    \
-  (state ? ottery_st_rand_uint64(state) : ottery_rand_uint64())
-
-#define OTTERY_RAND_RANGE(n)                                    \
-  (state ? ottery_st_rand_range(state, (n)) : ottery_rand_range(n))
-
-#define OTTERY_RAND_RANGE64(n)                  \
-  (state ? ottery_st_rand_range64(state, (n)) : ottery_rand_range64(n))
-
-#define OTTERY_WIPE()                           \
-  (state ? ottery_st_wipe(state) : ottery_wipe())
-
-#define OTTERY_STIR()                                           \
-  (state ? ottery_st_stir(state) : ottery_stir())
-
-#define OTTERY_ADD_SEED(seed,n)                                  \
-  (state ? ottery_st_add_seed(state,(seed),(n)) : ottery_add_seed((seed),(n)))
-
-#define OTTERY_INIT(cfg)                                        \
-  (state ? ottery_st_init(state,(cfg)) : ottery_init(cfg))
 
 static void
 test_get_sizeof(void *arg)
