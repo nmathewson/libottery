@@ -42,12 +42,15 @@
  * we'd just use it for everything, and forget about having a userspace
  * PRNG.  Unfortunately, it typically isn't.
  *
+ * @param fname The filename to use as /dev/urandom. Ignored if this
+ *    is not a unix-like operating system. If this is NULL, we use
+ *    the default value.
  * @param bytes A buffer to receive random bytes.
  * @param n The number of bytes to write
  * @return 0 on success, or an error code on failure. On failure, it is not
  *   safe to treat the contents of the buffer as random at all.
  */
-int ottery_os_randbytes_(uint8_t *bytes, size_t n);
+int ottery_os_randbytes_(const char *fname, uint8_t *bytes, size_t n);
 
 #if ! defined(OTTERY_NO_VECS)          \
        && (defined(__ARM_NEON__) ||    \
@@ -106,6 +109,9 @@ struct ottery_prf {
 struct ottery_config {
   /** The PRF that we should use.  If NULL, we use the default. */
   const struct ottery_prf *impl;
+
+  /** The filename for urandom to use. If NULL, we use the default. */
+  const char *urandom_fname;
 };
 
 struct __attribute__((aligned(16))) ottery_state {
@@ -142,6 +148,10 @@ struct __attribute__((aligned(16))) ottery_state {
    * ottery_st_rand_lock_and_check(). */
   pid_t pid;
   /**
+   * The filename for urandom to use. If NULL, we use the default.
+   */
+  const char *urandom_fname;
+  /**
    * @brief Locks for this structure.
    *
    * This lock will not necessarily be recursive.  It's probably a
@@ -164,7 +174,15 @@ struct ottery_config;
  * For testing: manually supply a PRF.
  */
 void ottery_config_set_manual_prf_(struct ottery_config *cfg,
-                                     const struct ottery_prf *prf);
+                                   const struct ottery_prf *prf);
+
+/**
+ * For testing: override the use of /dev/urandom for initial
+ * RNG seeding.  The fname pointe must remain value for the lifetime
+ * of the ottery state.  Has no effect when /dev/urandom is not used.
+ */
+void ottery_config_set_urandom_device_(struct ottery_config *cfg,
+                                       const char *fname);
 
 /**
  * @brief pure-C portable ChaCha implementations.

@@ -19,7 +19,7 @@
 #include <unistd.h>
 
 int
-ottery_os_randbytes_(uint8_t *out, size_t outlen)
+ottery_os_randbytes_(const char *urandom_fname, uint8_t *out, size_t outlen)
 {
 #ifdef _WIN32
   /* On Windows, CryptGenRandom is supposed to be a well-seeded
@@ -58,7 +58,9 @@ ottery_os_randbytes_(uint8_t *out, size_t outlen)
 #ifndef O_CLOEXEC
 #define O_CLOEXEC 0
 #endif
-  fd = open("/dev/urandom", O_RDONLY|O_CLOEXEC);
+  if (!urandom_fname)
+    urandom_fname = "/dev/urandom";
+  fd = open(urandom_fname, O_RDONLY|O_CLOEXEC);
   if (fd < 0)
     return OTTERY_ERR_INIT_STRONG_RNG;
   if ((n = read(fd, out, outlen)) < 0 || (size_t)n != outlen)

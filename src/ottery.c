@@ -111,6 +111,7 @@ int
 ottery_config_init(struct ottery_config *cfg)
 {
   cfg->impl = &OTTERY_PRF_DEFAULT;
+  cfg->urandom_fname = NULL;
   return 0;
 }
 
@@ -160,6 +161,13 @@ ottery_config_set_manual_prf_(struct ottery_config *cfg,
   cfg->impl = prf;
 }
 
+void
+ottery_config_set_urandom_device_(struct ottery_config *cfg,
+                                  const char *fname)
+{
+  cfg->urandom_fname = fname;
+}
+
 /**
  * As ottery_st_nextblock_nolock(), but never stir the state.
  */
@@ -194,20 +202,30 @@ ottery_st_nextblock_nolock(struct ottery_state *st, uint8_t *target)
  * Initialize or reinitialize a PRNG state.
  *
  * @param st The state to initialize or reinitialize.
- * @param prf The PRF to use. (Ignored for reinit)
+ * @param prf The configuration to use. (Ignored for reinit)
  * @return An OTTERY_ERR_* value (zero on success, nonzero on failure).
  */
 static int
 ottery_st_initialize(struct ottery_state *st,
-                     const struct ottery_prf *prf,
+                     const struct ottery_config *config,
                      int reinit)
 {
+  const struct ottery_prf *prf;
   if (!reinit) {
+    const char *urandom_fname;
     /* We really need our state to be aligned. If it isn't, let's give an
      * error now, and not a crash when the SIMD instructions start to fail.
      */
     if (((uintptr_t)st) & 0xf)
       return OTTERY_ERR_STATE_ALIGNMENT;
+
+    if (config) {
+      urandom_fname = config->urandom_fname;
+      prf = config->impl;
+    } else {
+      prf = &OTTERY_PRF_DEFAULT;
+      urandom_fname = NULL;
+    }
 
     memset(st, 0, sizeof(*st));
 
@@ -235,13 +253,18 @@ ottery_st_initialize(struct ottery_state *st,
         (sizeof(struct ottery_config) > 1024))
       return OTTERY_ERR_INTERNAL;
 
+    st->urandom_fname = urandom_fname;
+
     /* Copy the PRF into place. */
     memcpy(&st->prf, prf, sizeof(*prf));
+  } else {
+    prf = &st->prf;
   }
   /* Now seed the PRF: Generate some random bytes from the OS, and use them
    * as whatever keys/nonces/whatever the PRF wants to have. */
   int err;
-  if ((err = ottery_os_randbytes_(st->buffer, prf->state_bytes)))
+  if ((err = ottery_os_randbytes_(st->urandom_fname,
+                                  st->buffer, prf->state_bytes)))
     return err;
   prf->setup(st->state, st->buffer);
 
@@ -262,11 +285,7 @@ ottery_st_initialize(struct ottery_state *st,
 int
 ottery_st_init(struct ottery_state *st, const struct ottery_config *cfg)
 {
-  if (cfg) {
-    return ottery_st_initialize(st, cfg->impl, 0);
-  } else {
-    return ottery_st_initialize(st, &OTTERY_PRF_DEFAULT, 0);
-  }
+  return ottery_st_initialize(st, cfg, 0);
 }
 
 void
@@ -284,12 +303,14 @@ ottery_st_add_seed(struct ottery_state *st, const uint8_t *seed, size_t n)
 
   if (! seed || ! n) {
     unsigned state_bytes;
+    const char *urandom_fname;
     /* Hold the lock for only a moment here: we don't want to be holding
      * it while we call the OS RNG. */
     LOCK(st);
     state_bytes = st->prf.state_bytes;
+    urandom_fname = st->urandom_fname;
     UNLOCK(st);
-    ottery_os_randbytes_(tmp_seed, state_bytes);
+    ottery_os_randbytes_(st->urandom_fname, tmp_seed, state_bytes);
     seed = tmp_seed;
     n = state_bytes;
   }
