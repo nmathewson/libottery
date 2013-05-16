@@ -311,7 +311,7 @@ ottery_st_add_seed(struct ottery_state *st, const uint8_t *seed, size_t n)
     state_bytes = st->prf.state_bytes;
     urandom_fname = st->urandom_fname;
     UNLOCK(st);
-    ottery_os_randbytes_(st->urandom_fname, tmp_seed, state_bytes);
+    ottery_os_randbytes_(urandom_fname, tmp_seed, state_bytes);
     seed = tmp_seed;
     n = state_bytes;
   }
