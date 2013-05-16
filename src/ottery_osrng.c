@@ -11,6 +11,7 @@
    work in doc/cc0.txt.  If not, see
       <http://creativecommons.org/publicdomain/zero/1.0/>.
 */
+#define OTTERY_INTERNAL
 #include "ottery-internal.h"
 #include "ottery.h"
 #include <sys/stat.h>
@@ -53,6 +54,7 @@ ottery_os_randbytes_(uint8_t *out, size_t outlen)
    */
   int fd;
   ssize_t n;
+  int result = 0;
 #ifndef O_CLOEXEC
 #define O_CLOEXEC 0
 #endif
@@ -60,9 +62,9 @@ ottery_os_randbytes_(uint8_t *out, size_t outlen)
   if (fd < 0)
     return OTTERY_ERR_INIT_STRONG_RNG;
   if ((n = read(fd, out, outlen)) < 0 || (size_t)n != outlen)
-    return OTTERY_ERR_ACCESS_STRONG_RNG;
+    result = OTTERY_ERR_ACCESS_STRONG_RNG;
   close(fd);
-  return 0;
+  return result;
 #endif
 }
 
