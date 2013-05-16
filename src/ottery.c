@@ -544,8 +544,8 @@ ottery_st_rand_range(struct ottery_state *st, unsigned upper)
 uint64_t
 ottery_st_rand_range64(struct ottery_state *st, uint64_t upper)
 {
-  unsigned divisor = UINT64_MAX / upper;
-  unsigned n;
+  uint64_t divisor = UINT64_MAX / upper;
+  uint64_t n;
   do {
     n = (ottery_st_rand_uint64(st) / divisor);
   } while (n > upper);
