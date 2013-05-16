@@ -405,7 +405,7 @@ ottery_st_rand_lock_and_check(struct ottery_state *st)
 #ifndef OTTERY_NO_PID_CHECK
   if (UNLIKELY(st->pid != getpid())) {
     int err;
-    if ((err = ottery_st_initialize(st, NULL, 1)))
+    if ((err = ottery_st_initialize(st, &st->prf, 1)))
       ottery_fatal(OTTERY_ERR_FLAG_POSTFORK_RESEED|err);
   }
 #endif
