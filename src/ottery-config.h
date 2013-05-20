@@ -53,4 +53,10 @@
  */
 /* #undef OTTERY_NO_SPINLOCKS */
 
+/**
+ * If OTTERY_NO_CLEAR_AFTER_YIELD is defined, then when we copy data from
+ * a buffer, we *do not* clear the buffer immediately afterward.
+ */
+/* #undef OTTERY_NO_CLEAR_AFTER_YIELD */
+
 #endif

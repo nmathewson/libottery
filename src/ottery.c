@@ -56,6 +56,14 @@ ottery_get_sizeof_state(void)
   return sizeof(struct ottery_state);
 }
 
+#ifndef OTTERY_NO_CLEAR_AFTER_YIELD
+/** Used to zero out the contents of our buffer after we've just given a few
+ * to the user. */
+#define CLEARBUF(ptr,n) do { memset((ptr), 0, (n)); } while(0)
+#else
+#define CLEARBUF(ptr,n) ((void)0)
+#endif
+
 /**
  * Clear all bytes stored in a structure. Unlike memset, the compiler is not
  * going to optimize this out of existence because the target is about to go
@@ -454,6 +462,7 @@ ottery_st_rand_bytes_from_buf(struct ottery_state *st, uint8_t *out,
 {
   if (n + st->pos < st->prf.output_len) {
     memcpy(out, st->buffer+st->pos, n);
+    CLEARBUF(st->buffer+st->pos, n);
     st->pos += n;
   } else {
     unsigned cpy = st->prf.output_len - st->pos;
@@ -462,6 +471,7 @@ ottery_st_rand_bytes_from_buf(struct ottery_state *st, uint8_t *out,
     out += cpy;
     ottery_st_nextblock_nolock(st, st->buffer);
     memcpy(out, st->buffer, n);
+    CLEARBUF(st->buffer, n);
     st->pos = n;
   }
 }
@@ -532,6 +542,7 @@ ottery_st_rand_bytes(struct ottery_state *st, void *out_,
     inttype result;                                                     \
     if (sizeof(inttype) + (st)->pos < (st)->prf.output_len) {           \
       INT_ASSIGN_PTR(inttype, result, (st)->buffer + (st)->pos);        \
+      CLEARBUF((st)->buffer + (st)->pos, sizeof(inttype));              \
       (st)->pos += sizeof(inttype);                                     \
     } else {                                                            \
       /* Our handling of this case here is significantly simpler */     \
@@ -540,6 +551,7 @@ ottery_st_rand_bytes(struct ottery_state *st, void *out_,
       /* is at most 8 bytes long, that's not such a big deal. */        \
       ottery_st_nextblock_nolock(st, st->buffer);                       \
       INT_ASSIGN_PTR(inttype, result, (st)->buffer);                    \
+      CLEARBUF((st)->buffer, sizeof(inttype));                          \
       (st)->pos = sizeof(inttype);                                      \
     }                                                                   \
     UNLOCK(st);                                                         \
