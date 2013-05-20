@@ -257,8 +257,8 @@ ottery_st_initialize(struct ottery_state *st,
       return OTTERY_ERR_INTERNAL;
 
     /* Check whether some of our structure size assumptions are right. */
-    if ((sizeof(struct ottery_state) > 1024) ||
-        (sizeof(struct ottery_config) > 1024))
+    if ((sizeof(struct ottery_state) > OTTERY_STATE_DUMMY_SIZE_) ||
+        (sizeof(struct ottery_config) > OTTERY_CONFIG_DUMMY_SIZE_))
       return OTTERY_ERR_INTERNAL;
 
     st->urandom_fname = urandom_fname;

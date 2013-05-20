@@ -20,6 +20,9 @@
 
 struct ottery_config;
 
+/** Size reserved for struct ottery_state */
+#define OTTERY_STATE_DUMMY_SIZE_ 1024
+
 #ifndef OTTERY_INTERNAL
 /**
  * The state for a libottery PRNG.
@@ -36,7 +39,7 @@ struct ottery_config;
  */
 struct __attribute__((aligned(16))) ottery_state {
   /** Nothing to see here */
-  uint8_t dummy_[1024];
+  uint8_t dummy_[OTTERY_STATE_DUMMY_SIZE_];
 };
 #endif
 

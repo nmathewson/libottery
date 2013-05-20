@@ -236,6 +236,9 @@ int ottery_config_init(struct ottery_config *cfg);
 int ottery_config_force_implementation(struct ottery_config *cfg,
                                        const char *impl);
 
+/** Size reserved for struct ottery_config */
+#define OTTERY_CONFIG_DUMMY_SIZE_ 1024
+
 #ifndef OTTERY_INTERNAL
 /**
  * A configuration object for setting up a libottery instance.
@@ -249,7 +252,7 @@ int ottery_config_force_implementation(struct ottery_config *cfg,
  */
 struct ottery_config {
   /** Nothing to see here */
-  uint8_t dummy_[1024];
+  uint8_t dummy_[OTTERY_CONFIG_DUMMY_SIZE_];
 };
 #endif
 
