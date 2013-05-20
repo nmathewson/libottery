@@ -38,14 +38,13 @@ stream_generate(struct stream *stream,
                 uint32_t skip_bytes)
 {
   __attribute__((aligned(16))) uint8_t buf[MAX_OUTPUT_LEN];
-
   uint32_t counter = skip_bytes / stream->prf.output_len;
   skip_bytes -= counter * stream->prf.output_len;
   while (output_len) {
     stream->prf.generate(stream->state, buf, counter);
     ++counter;
     if (stream->prf.output_len - skip_bytes > output_len) {
-      memcpy(output, buf + skip_bytes, output_len - skip_bytes);
+      memcpy(output, buf + skip_bytes, output_len);
       output_len = 0;
     } else {
       memcpy(output, buf + skip_bytes , stream->prf.output_len - skip_bytes);

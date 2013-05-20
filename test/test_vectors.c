@@ -50,6 +50,7 @@ experiment(const u8 *key, const u8 *nonce, unsigned skip,
   dumphex(" nonce", nonce, 8);
   printf("offset: %d\n", skip);
 
+  memset(stream, 0, sizeof(stream));
   stream_generate(&state, stream, 512, skip);
   dumphex(NULL, stream, 512);
 }
