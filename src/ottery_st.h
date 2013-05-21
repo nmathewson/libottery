@@ -21,7 +21,7 @@
 struct ottery_config;
 
 /** Size reserved for struct ottery_state */
-#define OTTERY_STATE_DUMMY_SIZE_ 1024
+#define OTTERY_STATE_DUMMY_SIZE_ 1536
 
 #ifndef OTTERY_INTERNAL
 /**
@@ -105,8 +105,11 @@ void ottery_st_wipe(struct ottery_state *st);
  * later on will not be able to recover bytes that have previously been
  * returned by any of the ottery_st_rand_* functions.
  *
- * You shouldn't need to call this function in ordinary use; libottery
- * self-stirs every so often.
+ * Libttery is forward-secure by default, so unless you have manually
+ * recompiled libottery with the OTTERY_NO_CLEAR_AFTER_YIELD option, this
+ * function isn't necessary and has no effect.  Even *with* the
+ * OTTERY_NO_CLEAR_AFTER_YIELD, this function isn't necessary in ordinary
+ * operation: the libottery state is implicitly "stirred" every 1k or so.
  *
  * @param st The state to stir.
  */

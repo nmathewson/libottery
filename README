@@ -106,14 +106,11 @@ Details
 
 A libottery PRNG seeds itself from your operating system's (hopefully)
 secure random number generator.  This seed is used as the key and nonce
-for a (hopefully) strong, fast stream cipher.  After some amount of
-output, or whenever you explicitly "stir" the RNG, it generate a little
-more output, and uses that output to replace its key and nonce.  Every
-time this happens, the old state becomes unrecoverable from the new
-state.  (This is (basically) equivalent to the CTR_DRBG construction from
-http://csrc.nist.gov/publications/nistpubs/800-90A/SP800-90A.pdf , if
-you drop the requirement that the stream generator be a block cipher in
-counter mode.)
+for a (hopefully) strong, fast stream cipher.  Every time it generates a
+"block" (about 1024 bytes), it uses a portion of its own output to
+replace its key and nonce, so that the key it used to make those bytes
+is unrecoverable.  After it extracts bytes from the RNG, it clears them
+from its internal buffers.
 
 By default, I'm trying to make libottery as safe to use as possible.
 Therefore, I am making it threadsafe by default, and forksafe by

@@ -62,7 +62,7 @@ static void ECRYPT_ivsetup(ECRYPT_ctx *x,const u8 *iv)
   x->input[15] = U8TO32_LITTLE(iv + 4);
 }
 
-#define IDX_STEP    4
+#define IDX_STEP    16
 #define OUTPUT_LEN  (IDX_STEP * 64)
 
 /** Generate OUTPUT_LEN bytes of output using the key, nonce, and counter in x,
@@ -192,15 +192,12 @@ chacha_merged_generate(void *state_, uint8_t *output, uint32_t idx)
   chacha_merged_getblocks(x, output);
 }
 
-#define STIR_AFTER (256 / IDX_STEP)
-
 const struct ottery_prf ottery_prf_chacha = {
   NAME,
   "merged",
   STATE_LEN,
   STATE_BYTES,
   OUTPUT_LEN,
-  STIR_AFTER,
   chacha_merged_state_setup,
   chacha_merged_generate,
 };
@@ -210,5 +207,4 @@ const struct ottery_prf ottery_prf_chacha = {
 #undef STATE_BYTES
 #undef OUTPUT_LEN
 #undef IDX_STEP
-#undef STIR_AFTER
 #undef ottery_prf_chacha

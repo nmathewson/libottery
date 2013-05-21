@@ -21,6 +21,10 @@
 #include <unistd.h>
 #include <limits.h>
 
+/* I've added a few assertions to sanity-check for debugging, but they should
+ * never ever ever trigger.  It's fine to build this code with NDEBUG. */
+#include <assert.h>
+
 #ifdef _WIN32
 /* On Windows, there is no fork(), so we don't need to worry about forking. */
 #define OTTERY_NO_PID_CHECK
@@ -80,7 +84,6 @@ ottery_memclear_(void *mem, size_t len)
   while (len--)
     *cp++ = 0;
 }
-
 
 #if defined(OTTERY_PTHREADS)
 /** Acquire the lock for the state "st". */
@@ -177,33 +180,34 @@ ottery_config_set_urandom_device_(struct ottery_config *cfg,
 }
 
 /**
- * As ottery_st_nextblock_nolock(), but never stir the state.
+ * As ottery_st_nextblock_nolock(), but fill the entire block with
+ * entropy, and don't try to rekey the state.
  */
 static void
-ottery_st_nextblock_nolock_nostir(struct ottery_state *st, uint8_t *target)
+ottery_st_nextblock_nolock_norekey(struct ottery_state *st)
 {
-  st->prf.generate(st->state, target, st->block_counter);
+  st->prf.generate(st->state, st->buffer, st->block_counter);
   ++st->block_counter;
 }
 
 /**
- * Generate (st->output_len) bytes of pseudorandom data from the PRF.
- * Advance the block counter as appropriate. If the block counter becomes
- * too high, stir the state.
+ * Generate (st->output_len) bytes of pseudorandom data from the PRF into
+ * (st->buffer).  Use the first st->prf.state_bytes of those bytes to replace
+ * the PRF state and advance (st->pos) to point after them.
  *
  * This function does not acquire the lock on the state; use it within
  * another function that does.
  *
  * @param st The state to use when generating the block.
- * @param target The location to write to. Must be aligned to a 16-byte
- *    boundary.
  */
 static void
-ottery_st_nextblock_nolock(struct ottery_state *st, uint8_t *target)
+ottery_st_nextblock_nolock(struct ottery_state *st)
 {
-  ottery_st_nextblock_nolock_nostir(st, target);
-  if (UNLIKELY(st->block_counter >= st->prf.stir_after))
-    ottery_st_stir_nolock(st);
+  ottery_st_nextblock_nolock_norekey(st);
+  st->prf.setup(st->state, st->buffer);
+  CLEARBUF(st->buffer, st->prf.state_bytes);
+  st->block_counter = 0;
+  st->pos = st->prf.state_bytes;
 }
 
 /**
@@ -278,8 +282,7 @@ ottery_st_initialize(struct ottery_state *st,
 
   /* Generate the first block of output. */
   st->block_counter = 0;
-  ottery_st_nextblock_nolock(st, st->buffer);
-  st->pos=0;
+  ottery_st_nextblock_nolock(st);
 
   st->pid = getpid();
 
@@ -333,7 +336,7 @@ ottery_st_add_seed(struct ottery_state *st, const uint8_t *seed, size_t n)
   while (n) {
     unsigned i;
     size_t m = n > st->prf.state_bytes ? st->prf.state_bytes : n;
-    ottery_st_nextblock_nolock_nostir(st, st->buffer);
+    ottery_st_nextblock_nolock_norekey(st);
     for (i = 0; i < m; ++i) {
       st->buffer[i] ^= seed[i];
     }
@@ -344,8 +347,7 @@ ottery_st_add_seed(struct ottery_state *st, const uint8_t *seed, size_t n)
   }
 
   /* Now make sure that st->buffer is set up with the new state. */
-  ottery_st_nextblock_nolock(st, st->buffer);
-  st->pos = 0;
+  ottery_st_nextblock_nolock(st);
 
   UNLOCK(st);
 
@@ -375,18 +377,13 @@ ottery_st_wipe(struct ottery_state *st)
 static void
 ottery_st_stir_nolock(struct ottery_state *st)
 {
-  if (st->pos + st->prf.state_bytes > st->prf.output_len) {
-    /* If we don't have enough data to generate the required (state_bytes)
-     * worth of key material, we'll need to make one more block. */
-    ottery_st_nextblock_nolock_nostir(st, st->buffer);
-    st->pos = 0;
-  }
-
-  st->prf.setup(st->state, st->buffer + st->pos);
-  st->block_counter = 0;
-  ottery_st_nextblock_nolock_nostir(st, st->buffer);
-  st->pos=0;
+#ifdef OTTERY_NO_CLEAR_AFTER_YIELD
+  memset(st->buffer, 0, st->pos);
+#else
+  (void)st;
+#endif
 }
+
 
 void
 ottery_st_stir(struct ottery_state *st)
@@ -454,7 +451,7 @@ ottery_st_rand_lock_and_check(struct ottery_state *st)
  * @param st The state to use.
  * @param out A location to write to.
  * @param n The number of bytes to write. Must not be greater than
- *     st->prf.output_len.
+ *     st->prf.output_len*2 - st->prf.state_bytes - st->pos - 1.
  */
 static inline void
 ottery_st_rand_bytes_from_buf(struct ottery_state *st, uint8_t *out,
@@ -469,10 +466,11 @@ ottery_st_rand_bytes_from_buf(struct ottery_state *st, uint8_t *out,
     memcpy(out, st->buffer+st->pos, cpy);
     n -= cpy;
     out += cpy;
-    ottery_st_nextblock_nolock(st, st->buffer);
-    memcpy(out, st->buffer, n);
+    ottery_st_nextblock_nolock(st);
+    memcpy(out, st->buffer+st->pos, n);
     CLEARBUF(st->buffer, n);
-    st->pos = n;
+    st->pos += n;
+    assert(st->pos < st->prf.output_len);
   }
 }
 
@@ -484,37 +482,37 @@ ottery_st_rand_bytes(struct ottery_state *st, void *out_,
     return;
 
   uint8_t *out = out_;
+  size_t cpy;
 
-  if (n >= st->prf.output_len) {
-    /* We can generate at least a whole block, so let's try to write it
-     * directly to the output, and not to the buffer. */
-
-    if ( ((uintptr_t)out) & 0xf ) {
-      /* The output pointer is misaligned, but prf.generate probably
-       * requires an aligned pointer. So let's fill in the misaligned
-       * portion at the front. */
-      unsigned misalign = 16 - (((uintptr_t)out) & 0xf);
-      ottery_st_rand_bytes_from_buf(st, out, misalign);
-      out += misalign;
-      n -= misalign;
-    }
-
-    /* Now we can do our bulk-write directly. Note that this can advance
-     * the block_counter without changing the contents of st->buffer.
-     * That's okay: once st->buffer runs out, it will get regenerated using
-     * the new data. */
-    while (n >= st->prf.output_len) {
-      ottery_st_nextblock_nolock(st, out);
-      out += st->prf.output_len;
-      n -= st->prf.output_len;
-    }
-  }
-
-  /* If there's more to write, but less than a full (output_len) bytes,
-   * we should take it from our buffer. */
-  if (n) {
+  if (n + st->pos < st->prf.output_len * 2 - st->prf.state_bytes - 1) {
+    /* Fulfill it all from the buffer simply if possible. */
     ottery_st_rand_bytes_from_buf(st, out, n);
+    UNLOCK(st);
+    return;
   }
+
+  /* Okay. That's not going to happen.  Well, take what we can... */
+  cpy = st->prf.output_len - st->pos;
+  memcpy(out, st->buffer + st->pos, cpy);
+  out += cpy;
+  n -= cpy;
+
+  /* Then take whole blocks so long as we need them, without stirring... */
+  while (n >= st->prf.output_len) {
+    /* (We could save a memcpy here if we generated the block directly at out
+     * rather than doing the memcpy here. First we'd need to make sure that we
+     * had gotten the block aligned to a 16-byte boundary, though, and we'd
+     * have some other tricky bookkeeping to do. Let's call this good enough
+     * for now.) */
+    ottery_st_nextblock_nolock_norekey(st);
+    memcpy(out, st->buffer, st->prf.output_len);
+    out += st->prf.output_len;
+    n -= st->prf.output_len;
+  }
+
+  /* Then stir for the last part. */
+  ottery_st_nextblock_nolock(st);
+  ottery_st_rand_bytes_from_buf(st, out, n);
 
   UNLOCK(st);
 }
@@ -549,10 +547,10 @@ ottery_st_rand_bytes(struct ottery_state *st, void *out_,
       /* than that of ottery_st_rand_bytes_from_buf, at the expense */  \
       /* of wasting up to sizeof(inttype)-1 bytes. Since inttype */     \
       /* is at most 8 bytes long, that's not such a big deal. */        \
-      ottery_st_nextblock_nolock(st, st->buffer);                       \
-      INT_ASSIGN_PTR(inttype, result, (st)->buffer);                    \
+      ottery_st_nextblock_nolock(st);                                   \
+      INT_ASSIGN_PTR(inttype, result, (st)->buffer + (st)->pos);        \
       CLEARBUF((st)->buffer, sizeof(inttype));                          \
-      (st)->pos = sizeof(inttype);                                      \
+      (st)->pos += sizeof(inttype);                                     \
     }                                                                   \
     UNLOCK(st);                                                         \
     return result;                                                      \

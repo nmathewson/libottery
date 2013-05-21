@@ -142,8 +142,10 @@ struct chacha_state_krovetz {
   __attribute__ ((aligned (16))) uint8_t nonce[8];
 };
 
-/** Generates 64 * BPI bytes of output using the key and nonce in st and the
- * counter in block_idx, and store them in out.
+#define LOOP_ITERATIONS 4
+
+/** Generates 64 * BPI * LOOP_ITERATIONS bytes of output using the key and
+ * nonce in st and the counter in block_idx, and store them in out.
  */
 static int
 ottery_blocks_chacha_krovetz(
@@ -154,7 +156,7 @@ ottery_blocks_chacha_krovetz(
 {
     const unsigned char *k = st->key;
     const unsigned char *n = st->nonce;
-    unsigned i, *op=(unsigned *)out, *kp, *np;
+    unsigned i, j, *op=(unsigned *)out, *kp, *np;
     __attribute__ ((aligned (16))) unsigned chacha_const[] =
                                 {0x61707865,0x3320646E,0x79622D32,0x6B206574};
 #if ( __ARM_NEON__ || __SSE2__)
@@ -173,7 +175,7 @@ ottery_blocks_chacha_krovetz(
     vec s1 = ((vec *)kp)[0];
     vec s2 = ((vec *)kp)[1];
     vec s3 = NONCE(block_idx, np);
-    {
+    for (j = 0; j < LOOP_ITERATIONS; ++j) {
         vec v0,v1,v2,v3,v4,v5,v6,v7;
         v4 = v0 = s0; v5 = v1 = s1; v6 = v2 = s2; v3 = s3;
         v7 = v3 + ONE;
@@ -256,7 +258,7 @@ ottery_blocks_chacha_krovetz(
 
 #define STATE_LEN   (sizeof(struct chacha_state_krovetz))
 #define STATE_BYTES 40
-#define IDX_STEP    BPI
+#define IDX_STEP    (BPI * LOOP_ITERATIONS)
 #define OUTPUT_LEN  (IDX_STEP * 64)
 
 static void
@@ -274,15 +276,12 @@ chacha_krovetz_generate(void *state, uint8_t *output, uint32_t idx)
   ottery_blocks_chacha_krovetz(output, idx * IDX_STEP, st);
 }
 
-#define STIR_AFTER (256 / IDX_STEP)
-
 const struct ottery_prf ottery_prf_chacha = {
   NAME,
   "krovetz",
   STATE_LEN,
   STATE_BYTES,
   OUTPUT_LEN,
-  STIR_AFTER,
   chacha_krovetz_state_setup,
   chacha_krovetz_generate,
 };
@@ -292,7 +291,6 @@ const struct ottery_prf ottery_prf_chacha = {
 #undef STATE_BYTES
 #undef OUTPUT_LEN
 #undef IDX_STEP
-#undef STIR_AFTER
 #undef ottery_stream_chacha
 #undef ottery_prf_chacha
 

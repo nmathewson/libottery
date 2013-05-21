@@ -394,7 +394,7 @@ test_reseed_stir(void *arg)
         OTTERY_INIT(NULL);
     }
     OTTERY_RAND_BYTES(buf2, sizeof(buf2));
-    if (op == 0 && state) {
+    if ((op == 0 || op == 1) && state) {
       tt_assert(0 == memcmp(buf, buf2, sizeof(buf)));
     } else {
       tt_assert(memcmp(buf, buf2, sizeof(buf)));

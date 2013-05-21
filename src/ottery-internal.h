@@ -35,7 +35,7 @@
 /** Largest possible state_len value. */
 #define MAX_STATE_LEN 256
 /** Largest possible output_len value. */
-#define MAX_OUTPUT_LEN 256
+#define MAX_OUTPUT_LEN 1024
 
 /**
  * Interface to the operating system's strong RNG.  If this were fast,
@@ -85,8 +85,6 @@ struct ottery_prf {
    * function. It must be no larger than MAX_OUTPUT_LEN.
    */
   unsigned output_len;
-  /** Stir after this many invocations of the generate function. */
-  unsigned stir_after;
   /** Pointer to a function to to intialize a state structure for the PRF.
    *
    * @param state An object of size at least (state_len) that will
@@ -141,7 +139,7 @@ struct __attribute__((aligned(16))) ottery_state {
    * Index of the next byte in (buffer) to yield to the user.
    *
    * Invariant: this is less than prf.output_len. */
-  uint8_t pos;
+  uint16_t pos;
   /**
    * The pid of the process in which this PRF was most recently seeded
    * from the OS. We use this to avoid use-after-fork problems; see

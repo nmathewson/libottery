@@ -113,8 +113,11 @@ void ottery_wipe(void);
  * later on will not be able to recover bytes that have previously been
  * returned by any of the ottery_rand_* functions.
  *
- * You shouldn't need to call this function in ordinary use; libottery
- * self-stirs every so often.
+ * Libottery is forward-secure by default, so unless you have manually
+ * recompiled libottery with the OTTERY_NO_CLEAR_AFTER_YIELD option, this
+ * function isn't necessary and has no effect.  Even *with* the
+ * OTTERY_NO_CLEAR_AFTER_YIELD, this function isn't necessary in ordinary
+ * operation: the libottery state is implicitly "stirred" every 1k or so.
  */
 void ottery_stir(void);
 
