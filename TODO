@@ -48,8 +48,14 @@ BEFORE FIRST VERSION
     . Add a benchmarking/timing feature
       - do it right.
     . Test with dieharder, to see if I screwed up.
-      - Better dumpbytes output.  Use all backends, different sizes,
+      . Better dumpbytes output.  Use all backends, different sizes,
         multiple threads...
+        . Implement better dump_bytes
+          - Make it explain itself.
+        . Test it.
+    . Specify and clone in a more spec-y language; make sure it calls itself
+      properly.
+    - Make a test_deep.
     o 100% test coverage.
 
   o DOCUMENTATION
@@ -62,13 +68,15 @@ BEFORE FIRST VERSION
 
 BEFORE FINAL VERSION
 
+  . Option to avoid leaving stuff on the stack.
+
   - Ability to make a tiny tiny runtime for embedded applications.
 
   - Make sure that the reinitialization logic is threadsafe.
 
   - Separate the function for reseeding and reinitializing.
 
-  - Waste fewer bytes when stirring.
+  o Waste fewer bytes when stirring.
 
   - Detect CPU features at runtime.
     - In particular, detecting SSE3/SSE2 could be a bit of a win.
@@ -77,12 +85,12 @@ BEFORE FINAL VERSION
 
   - Separate threaded/nonthreaded libraries.
 
-  - Make rand_bytes() better handle the case where, after alignment, n is
+  X Make rand_bytes() better handle the case where, after alignment, n is
     less than output_len?
 
-  - Remove needless stirring for large rand_bytes() calls.
+  o Remove needless stirring for large rand_bytes() calls.
 
-  - On stir, kill buffer up to pos?
+  o On stir, kill buffer up to pos?
 
   - Handle fork even better. Ideas:
     - mutex/state in a shared mmap?
