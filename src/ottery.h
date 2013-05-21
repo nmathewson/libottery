@@ -29,7 +29,7 @@ struct ottery_state;
  * @param buf The buffer to fill.
  * @param n The number of bytes to write.
  */
-void ottery_rand_bytes(void *out, size_t n);
+void ottery_rand_bytes(void *buf, size_t n);
 /**
  * Generate a random number of type unsigned.
  *
@@ -217,6 +217,7 @@ void ottery_set_fatal_handler(void (*fn)(int errorcode));
  * You must call this function on any ottery_config structure before it
  * can be passed to ottery_init() or ottery_st_init().
  *
+ * @param cfg The configuration object to initialize.
  * @return Zero on success, or one of the OTTERY_ERR_* error codes on
  *    failure.
  */

@@ -122,7 +122,7 @@ void ottery_st_stir(struct ottery_state *st);
  * @param buf The buffer to fill.
  * @param n The number of bytes to write.
  */
-void ottery_st_rand_bytes(struct ottery_state *st, void *out, size_t n);
+void ottery_st_rand_bytes(struct ottery_state *st, void *buf, size_t n);
 /**
  * Use an ottery_state structure to generate a random number of type unsigned.
  *
@@ -134,6 +134,7 @@ unsigned ottery_st_rand_unsigned(struct ottery_state *st);
 /**
  * Use an ottery_state structure to generate a random number of type uint64_t.
  *
+ * @param st The state structure to use.
  * @return A random number between 0 and UINT64_MAX included,
  *   chosen uniformly.
  */
@@ -142,6 +143,7 @@ uint64_t ottery_st_rand_uint64(struct ottery_state *st);
  * Use an ottery_state structure to generate a random number of type unsigned
  * in a given range.
  *
+ * @param st The state structure to use.
  * @param top The upper bound of the range (inclusive).
  * @return A random number no larger than top, and no less than 0,
  *   chosen uniformly.
@@ -151,6 +153,7 @@ unsigned ottery_st_rand_range(struct ottery_state *st, unsigned top);
  * Use an ottery_state structure to generate a random number of type uint64_t
  * in a given range.
  *
+ * @param st The state structure to use.
  * @param top The upper bound of the range (inclusive).
  * @return A random number no larger than top, and no less than 0,
  *   chosen uniformly.
