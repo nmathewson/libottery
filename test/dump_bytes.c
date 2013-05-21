@@ -32,12 +32,6 @@ int use_global_state = 0;
 static int generator_param = 0;
 static int (*generate)(uint8_t *buf) = NULL;
 
-static void
-usage(void)
-{
-  /*XXXX*/
-}
-
 static int gen_rand_bytes(uint8_t *buf);
 static int gen_randnum_bytes(uint8_t *buf);
 static int gen_u32(uint8_t *buf);
@@ -62,6 +56,21 @@ static const struct {
   { "chop_range16", 1, chop_range16 },
   { NULL, 0, NULL },
 };
+
+static void
+usage(void)
+{
+  int i;
+  puts("dump_bytes [-i implementation] [-s strategy] [-T]");
+  puts("   implementations include CHACHA{8,12,20}{,-SIMD,-NOSIMD}");
+  puts("   strategies are:");
+  for (i=0; strategies[i].name; ++i) {
+    printf("      %s%s\n", strategies[i].name,
+           strategies[i].takes_argument ? ":<N>" : "");
+  }
+  puts("   recommended usage is:");
+  puts("      dump_bytes [options] | dieharder -g 200 -a ");
+}
 
 static int
 parse_strategy(const char *s)
@@ -187,8 +196,11 @@ main(int argc, char **argv)
     return 1;
   }
 
-  while ((ch = getopt(argc, argv, "i:s:TG")) != -1) {
+  while ((ch = getopt(argc, argv, "i:s:TGh?")) != -1) {
     switch (ch) {
+    case '?': case 'h':
+      usage();
+      return 0;
     case 'i':
       if (ottery_config_force_implementation(&cfg, optarg) < 0) {
         fprintf(stderr, "Unsupported/unrecognized PRF \"%s\"\n", optarg);
@@ -210,6 +222,7 @@ main(int argc, char **argv)
       break;
     default:
       usage();
+      return 1;
     }
   }
 

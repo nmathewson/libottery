@@ -50,8 +50,8 @@ BEFORE FIRST VERSION
     . Test with dieharder, to see if I screwed up.
       . Better dumpbytes output.  Use all backends, different sizes,
         multiple threads...
-        . Implement better dump_bytes
-          - Make it explain itself.
+        o Implement better dump_bytes
+          o Make it explain itself.
         . Test it.
     . Specify and clone in a more spec-y language; make sure it calls itself
       properly.
