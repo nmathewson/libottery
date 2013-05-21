@@ -182,6 +182,8 @@ test_rand_big_buf(void *arg)
   test_single_buf(80);
   test_single_buf(120);
   test_single_buf(1024);
+  test_single_buf(2048);
+  test_single_buf(4096);
 }
 
 static void
