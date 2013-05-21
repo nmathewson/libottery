@@ -47,6 +47,9 @@ static void ottery_fatal(int error);
 static inline int ottery_st_rand_lock_and_check(struct ottery_state *st)
   __attribute__((always_inline));
 static void ottery_st_stir_nolock(struct ottery_state *st);
+#ifndef OTTERY_NO_WIPE_STACK
+static void ottery_wipe_stack_(void) __attribute__((noinline));
+#endif
 
 size_t
 ottery_get_sizeof_config(void)
@@ -69,6 +72,12 @@ ottery_get_sizeof_state(void)
 #endif
 
 /**
+ * Volatile pointer to memset: we use this to keep the compiler from
+ * eliminating our call to memset.
+ */
+void * (* volatile memset_volatile)(void *, int, size_t) = memset;
+
+/**
  * Clear all bytes stored in a structure. Unlike memset, the compiler is not
  * going to optimize this out of existence because the target is about to go
  * out of scope.
@@ -80,10 +89,32 @@ ottery_get_sizeof_state(void)
 static void
 ottery_memclear_(void *mem, size_t len)
 {
-  volatile uint8_t *cp = mem;
-  while (len--)
-    *cp++ = 0;
+  memset_volatile(mem, 0, len);
 }
+
+#ifndef OTTERY_NO_WIPE_STACK
+
+/* Chosen more or less arbitrarily */
+#define WIPE_STACK_LEN 512
+
+/**
+ * Try to clear memory on the stack to clean up after our PRF. This can't
+ * easily be done in standard C, so we're doing an ugly hack in hopes that it
+ * actually helps.
+ *
+ * This should never be necessary in a correct program, but if your program is
+ * doing something stupid like leaking uninitialized stack, it might keep an
+ * attacker from exploiting that.
+ **/
+static void
+ottery_wipe_stack_(void)
+{
+  char buf[WIPE_STACK_LEN];
+  memset_volatile(buf, 0, sizeof(buf));
+}
+#else
+#define ottery_wipe_stack_() ((void)0)
+#endif
 
 #if defined(OTTERY_PTHREADS)
 /** Acquire the lock for the state "st". */
@@ -187,6 +218,7 @@ static void
 ottery_st_nextblock_nolock_norekey(struct ottery_state *st)
 {
   st->prf.generate(st->state, st->buffer, st->block_counter);
+  ottery_wipe_stack_();
   ++st->block_counter;
 }
 

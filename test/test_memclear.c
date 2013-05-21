@@ -27,13 +27,13 @@ const char buf[16] = "What's a Ftumch?";
 static inline void ottery_memclear_(void *mem, size_t len)
   __attribute__((always_inline));
 
+void * (* volatile memset_volatile)(void *, int, size_t) = memset;
+
 /* I'm copying this here so that it has the best chance of getting inlined. */
 static inline void
 ottery_memclear_(void *mem, size_t len)
 {
-  volatile uint8_t *cp = mem;
-  while (len--)
-    *cp++ = 0;
+  memset_volatile(mem, 0, len);
 }
 
 /* This function exists mainly to fill the stack up with a predictable

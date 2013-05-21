@@ -59,4 +59,10 @@
  */
 /* #undef OTTERY_NO_CLEAR_AFTER_YIELD */
 
+/**
+ * If OTTERY_NO_WIPE_STACK is defined, do not attempt to wipe the stack
+ * after calling the cryptographic core.
+ */
+/* #undef OTTERY_NO_WIPE_STACK */
+
 #endif
