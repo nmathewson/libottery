@@ -1,5 +1,18 @@
 #!/usr/bin/python
 #
+#   Libottery by Nick Mathewson.
+#
+#   This software has been dedicated to the public domain under the CC0
+#   public domain dedication.
+#
+#   To the extent possible under law, the person who associated CC0 with
+#   libottery has waived all copyright and related or neighboring rights
+#   to libottery.
+#
+#   You should have received a copy of the CC0 legalcode along with this
+#   work in doc/cc0.txt.  If not, see
+#      <http://creativecommons.org/publicdomain/zero/1.0/>.
+#
 # Here's a minimal chacha implementation, based on the paper, in
 # Python.  Its only purpose here is to validate the output of the C
 # implementation.  If you use this for crypto, you're a bad person.
