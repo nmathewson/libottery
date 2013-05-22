@@ -250,6 +250,8 @@ test_range(void *arg)
   for (i = 0; i < 1000; ++i) {
     tt_int_op(OTTERY_RAND_RANGE(5), <=, 5);
     count[OTTERY_RAND_RANGE(5)] += 1;
+    tt_int_op(OTTERY_RAND_RANGE(0), ==, 0);
+    tt_int_op(OTTERY_RAND_RANGE64(0), ==, 0);
     tt_int_op(OTTERY_RAND_RANGE(10), <=, 10);
     tt_int_op(OTTERY_RAND_RANGE(100), <=, 100);
     tt_int_op(OTTERY_RAND_RANGE64(100), <=, 100);
