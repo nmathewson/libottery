@@ -15,6 +15,13 @@ TEST_OBJS = test/test_vectors.o test/bench_rng.o \
 	test/dump_bytes.o test/streams.o test/test_memclear.o \
 	test/tinytest.o test/test_shallow.o test/test_deep.o
 
+UNCRUSTIFY_FILES = src/chacha8.c src/chacha12.c src/chacha20.c \
+	src/ottery.c src/ottery_osrng.c src/ottery.h src/ottery_st.h \
+	src/ottery-config.h src/ottery-internal.h \
+	test/bench_rng.c test/dump_bytes.c test/streams.c test/test_deep.c \
+	test/test_memclear.c test/test_shallow.c test/test_vectors.c \
+	test/streams.h test/st_wrappers.h
+
 libottery.a: $(OTTERY_OBJS)
 	ar rcs libottery.a $(OTTERY_OBJS) && ranlib libottery.a
 
@@ -66,6 +73,8 @@ clean:
 doxygen:
 	doxygen etc/doxygen.conf
 
+uncrustify:
+	uncrustify -c etc/uncrustify.cfg --replace -l C $(UNCRUSTIFY_FILES)
 
 src/chacha12.o: src/chacha12.c src/ottery-internal.h src/ottery-config.h \
   src/chacha_krovetz.c src/chacha_merged.c src/chacha_merged_ecrypt.h
