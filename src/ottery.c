@@ -574,10 +574,13 @@ ottery_st_rand_bytes(struct ottery_state *st, void *out_,
     if (ottery_st_rand_lock_and_check(st))                              \
       return (inttype)0;                                                \
     inttype result;                                                     \
-    if (sizeof(inttype) + (st)->pos < (st)->prf.output_len) {           \
+    if (sizeof(inttype) + (st)->pos <= (st)->prf.output_len) {          \
       INT_ASSIGN_PTR(inttype, result, (st)->buffer + (st)->pos);        \
       CLEARBUF((st)->buffer + (st)->pos, sizeof(inttype));              \
       (st)->pos += sizeof(inttype);                                     \
+      if (st->pos == (st)->prf.output_len) {                            \
+        ottery_st_nextblock_nolock(st);                                 \
+      }                                                                 \
     } else {                                                            \
       /* Our handling of this case here is significantly simpler */     \
       /* than that of ottery_st_rand_bytes_from_buf, at the expense */  \
