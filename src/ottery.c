@@ -331,13 +331,13 @@ ottery_st_init(struct ottery_state *st, const struct ottery_config *cfg)
   return ottery_st_initialize(st, cfg, 0);
 }
 
-void
+int
 ottery_st_add_seed(struct ottery_state *st, const uint8_t *seed, size_t n)
 {
 #ifndef OTTERY_NO_INIT_CHECK
   if (UNLIKELY(st->magic != MAGIC(st))) {
     ottery_fatal(OTTERY_ERR_STATE_INIT);
-    return;
+    return OTTERY_ERR_STATE_INIT;
   }
 #endif
 
@@ -354,7 +354,9 @@ ottery_st_add_seed(struct ottery_state *st, const uint8_t *seed, size_t n)
     state_bytes = st->prf.state_bytes;
     urandom_fname = st->urandom_fname;
     UNLOCK(st);
-    ottery_os_randbytes_(urandom_fname, tmp_seed, state_bytes);
+    int r;
+    if ((r = ottery_os_randbytes_(urandom_fname, tmp_seed, state_bytes)))
+      return r;
     seed = tmp_seed;
     n = state_bytes;
   }
@@ -385,6 +387,8 @@ ottery_st_add_seed(struct ottery_state *st, const uint8_t *seed, size_t n)
 
   /* If we used stack-allocated seed material, wipe it. */
   ottery_memclear_(tmp_seed, sizeof(tmp_seed));
+
+  return 0;
 }
 
 void
@@ -650,11 +654,11 @@ ottery_init(const struct ottery_config *cfg)
   return n;
 }
 
-void
+int
 ottery_add_seed(const uint8_t *seed, size_t n)
 {
-  CHECK_INIT();
-  ottery_st_add_seed(&ottery_global_state_, seed, n);
+  CHECK_INIT(0);
+  return ottery_st_add_seed(&ottery_global_state_, seed, n);
 }
 
 void

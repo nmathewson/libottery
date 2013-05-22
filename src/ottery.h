@@ -95,8 +95,9 @@ int ottery_init(const struct ottery_config *cfg);
  *    more random bytes from the OS.
  * @param n The number of bytes to add. If this value is 0, we take more
  *    random bytes from the OS, regardless of the value of seed.
+ * @return Zero on success, or one of the OTTERY_ERR_* error codes on failure.
  */
-void ottery_add_seed(const uint8_t *seed, size_t n);
+int ottery_add_seed(const uint8_t *seed, size_t n);
 
 /**
  * Destroy the libottery global state and release any resources that it might

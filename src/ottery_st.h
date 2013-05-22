@@ -84,8 +84,9 @@ int ottery_st_init(struct ottery_state *st, const struct ottery_config *cfg);
  * @param st The state which will receive more entropy.
  * @param seed Bytes to add to the state.
  * @param n The number of bytes to add.
+ * @return Zero on success, or one of the OTTERY_ERR_* error codes on failure.
  */
-void ottery_st_add_seed(struct ottery_state *st, const uint8_t *seed, size_t n);
+int ottery_st_add_seed(struct ottery_state *st, const uint8_t *seed, size_t n);
 
 /**
  * Destroy an ottery_state structure and release any resources that it might
