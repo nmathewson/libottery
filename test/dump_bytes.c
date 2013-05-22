@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
 struct ottery_state state;
 
@@ -40,6 +41,7 @@ static int gen_u32_odd(uint8_t *buf);
 static int gen_u64_odd(uint8_t *buf);
 static int chop_range8(uint8_t *buf);
 static int chop_range16(uint8_t *buf);
+static int range16(uint8_t *buf);
 
 static const struct {
   const char *name;
@@ -54,6 +56,7 @@ static const struct {
   { "u64_odd", 0, gen_u64_odd },
   { "chop_range8", 1, chop_range8 },
   { "chop_range16", 1, chop_range16 },
+  { "range16", 0, range16 },
   { NULL, 0, NULL },
 };
 
@@ -181,6 +184,18 @@ chop_range16(uint8_t *buf)
     u = OTTERY_RAND_RANGE(generator_param);
   } while (u > 65535);
   u16 = (uint16_t)u;
+  memcpy(buf, &u16, 2);
+  return 2;
+}
+
+static int
+range16(uint8_t *buf)
+{
+  unsigned u;
+  uint16_t u16;
+  u = OTTERY_RAND_RANGE(65535);
+  assert(u <= 65535);
+  u16 = u;
   memcpy(buf, &u16, 2);
   return 2;
 }
