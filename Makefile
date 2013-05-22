@@ -88,12 +88,15 @@ src/ottery_osrng.o: src/ottery_osrng.c src/ottery-internal.h \
   src/ottery-config.h src/ottery.h
 
 test/bench_rng.o: test/bench_rng.c src/ottery.h src/ottery_st.h
-dump_bytes.o: test/dump_bytes.c src/ottery.h src/ottery_st.h \
+test/dump_bytes.o: test/dump_bytes.c src/ottery.h src/ottery_st.h \
   test/st_wrappers.h
 test/streams.o: test/streams.c test/streams.h src/ottery-internal.h \
   src/ottery-config.h
+test/test_deep.o: test/test_deep.c src/ottery.h src/ottery_st.h \
+  src/ottery-internal.h src/ottery-config.h test/tinytest.h \
+  test/tinytest_macros.h test/st_wrappers.h
 test/test_memclear.o: test/test_memclear.c
-test_shallow.o: test/test_shallow.c src/ottery.h src/ottery_st.h \
+test/test_shallow.o: test/test_shallow.c src/ottery.h src/ottery_st.h \
   src/ottery-internal.h src/ottery-config.h test/tinytest.h \
   test/tinytest_macros.h test/st_wrappers.h
 test/test_vectors.o: test/test_vectors.c src/ottery-internal.h \
