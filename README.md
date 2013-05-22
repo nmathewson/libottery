@@ -28,8 +28,6 @@ When it goes fast, it goes fast because of Ted Krovetz's implementation.
 
 
 WARNING WARNING WARNING
-WARNING WARNING WARNING
-WARNING WARNING WARNING
 -----------------------
 
 YOU WOULD HAVE TO BE SOME KIND OF LUNATIC TO USE THIS IN PRODUCTION CODE
@@ -63,8 +61,8 @@ production: good!  That's the point.)
 How to build it
 ---------------
 
-   make
-   make check
+    make
+    make check
 
 If that doesn't work, use GNU make. If that doesn't work, edit the
 makefile.  If that doesn't work, debug the program.
@@ -80,23 +78,23 @@ other places eventually.  Interoperability with free platforms.
 How to use it (the basics)
 --------------------------
 
-   /* Include the main header. */
-   #include <ottery.h>
+    /* Include the main header. */
+    #include <ottery.h>
 
-   /* Get a random value between 0 and UINT_MAX, inclusive. */
-   unsigned u = ottery_rand_unsigned();
+    /* Get a random value between 0 and UINT_MAX, inclusive. */
+    unsigned u = ottery_rand_unsigned();
 
-   /* Get a random value between 0 and 1337, inclusive. */
-   unsigned u2 = ottery_rand_range(1337);
+    /* Get a random value between 0 and 1337, inclusive. */
+    unsigned u2 = ottery_rand_range(1337);
 
-   /* Get 128 random bytes. */
-   unsigned char buf[128];
-   ottery_rand_bytes(buf, sizeof(buf));
+    /* Get 128 random bytes. */
+    unsigned char buf[128];
+    ottery_rand_bytes(buf, sizeof(buf));
 
 
 You can build your program with:
 
-   gcc -Wall -O2 -g myprog.c -o myprog -lottery
+    gcc -Wall -O2 -g myprog.c -o myprog -lottery
 
 See the comments in ottery.h and ottery_st.h for more information.
 
