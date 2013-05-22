@@ -41,7 +41,7 @@
  * the classic 'lorem ipsum' text translation, and a 4-character
  * vigenere key. It is, obviously, not a good RNG. */
 
-const char LOREM[] =
+const unsigned char *LOREM = (const unsigned char *)
   "Nor again is there anyone who loves or pursues or desires to obtain pain "
   "of itself, because it is pain, but because occasionally circumstances "
   "occur in which toil and pain can procure him some great pleasure. To "
@@ -54,8 +54,8 @@ const char LOREM[] =
  * excerpted in the classic "Lorem ipsum" text, translated by H. Rackham
  * in 1914, quoted on lipsum.com. 512 characters long. */
 
-char
-rotate_char(char c1, int rotation)
+unsigned char
+rotate_char(unsigned char c1, int rotation)
 {
   if (!isalpha(c1)) {
     uint8_t r = ' ' + rotation;
@@ -86,7 +86,7 @@ dummy_prf_setup(void *state_, const uint8_t *bytes)
   int i;
   for (i = 0; i < 4; ++i) {
     int r;
-    char ch = (char)bytes[i];
+    unsigned char ch = bytes[i];
     if (islower(ch)) {
       r = ch - 'a';
     } else if (isupper(ch)) {
@@ -105,7 +105,7 @@ dummy_prf_generate(void *state_, uint8_t *output, uint32_t idx)
 {
   struct dummy_prf_state *state = state_;
   int i;
-  const char *start = LOREM + 64*(idx & 7);
+  const unsigned char *start = LOREM + 64*(idx & 7);
 
   for (i = 0; i < 64; i += 4) {
     output[i + 0] = rotate_char(start[i + 0], state->rotation[0]);
