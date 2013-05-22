@@ -10,14 +10,14 @@
    You should have received a copy of the CC0 legalcode along with this
    work in doc/cc0.txt.  If not, see
       <http://creativecommons.org/publicdomain/zero/1.0/>.
-*/
+ */
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/time.h>
 
-#if !(                      \
-  defined(__APPLE__) ||     \
-  defined(__FreeBSD__) ||   \
+#if !(                    \
+  defined(__APPLE__) ||   \
+  defined(__FreeBSD__) || \
   defined(__NetBSD__))
 #define NO_ARC4RANDOM
 #endif
@@ -35,20 +35,20 @@
 
 #define N 10000000
 
-#define TIME_UNSIGNED_RNG(rng_fn) do {          \
-    struct timeval start, end;                  \
-    unsigned accumulator = 0;                   \
-    int i;                                      \
-    gettimeofday(&start, NULL);                 \
-    for (i=0; i < N; ++i) {                     \
-      accumulator += (unsigned)( rng_fn );      \
-    }                                           \
-    gettimeofday(&end, NULL);                   \
-    uint64_t usec = end.tv_sec - start.tv_sec;  \
-    usec *= 1000000;\
-    usec += end.tv_usec - start.tv_usec;        \
+#define TIME_UNSIGNED_RNG(rng_fn) do {                           \
+    struct timeval start, end;                                   \
+    unsigned accumulator = 0;                                    \
+    int i;                                                       \
+    gettimeofday(&start, NULL);                                  \
+    for (i = 0; i < N; ++i) {                                    \
+      accumulator += (unsigned)(rng_fn);                         \
+    }                                                            \
+    gettimeofday(&end, NULL);                                    \
+    uint64_t usec = end.tv_sec - start.tv_sec;                   \
+    usec *= 1000000;                                             \
+    usec += end.tv_usec - start.tv_usec;                         \
     printf("%s: %f nsec per call\n", __func__, (usec*1000.0)/N); \
-  } while (0)
+} while (0)
 
 struct ottery_state s8;
 struct ottery_state s12;
@@ -57,56 +57,56 @@ struct ottery_state s20;
 void
 time_chacharand8(void)
 {
-  TIME_UNSIGNED_RNG( (ottery_st_rand_unsigned(&s8)) );
+  TIME_UNSIGNED_RNG((ottery_st_rand_unsigned(&s8)));
 }
 
 void
 time_chacharand12(void)
 {
-  TIME_UNSIGNED_RNG( (ottery_st_rand_unsigned(&s12)) );
+  TIME_UNSIGNED_RNG((ottery_st_rand_unsigned(&s12)));
 }
 
 void
 time_chacharand20(void)
 {
-  TIME_UNSIGNED_RNG( (ottery_st_rand_unsigned(&s20)) );
+  TIME_UNSIGNED_RNG((ottery_st_rand_unsigned(&s20)));
 }
 
 void
 time_arc4random(void)
 {
 #ifndef NO_ARC4RANDOM
-  TIME_UNSIGNED_RNG( (arc4random()) );
+  TIME_UNSIGNED_RNG((arc4random()));
 #endif
 }
 
 void
 time_libc_random(void)
 {
-  TIME_UNSIGNED_RNG( (random()) );
+  TIME_UNSIGNED_RNG((random()));
 }
 
 void
 time_chacharand8_u64(void)
 {
-  TIME_UNSIGNED_RNG( (ottery_st_rand_uint64(&s8)) );
+  TIME_UNSIGNED_RNG((ottery_st_rand_uint64(&s8)));
 }
 
 void
 time_chacharand12_u64(void)
 {
-  TIME_UNSIGNED_RNG( (ottery_st_rand_uint64(&s8)) );
+  TIME_UNSIGNED_RNG((ottery_st_rand_uint64(&s8)));
 }
 
 void
 time_chacharand20_u64(void)
 {
-  TIME_UNSIGNED_RNG( (ottery_st_rand_uint64(&s20)) );
+  TIME_UNSIGNED_RNG((ottery_st_rand_uint64(&s20)));
 }
 void
 time_libc_random_u64(void)
 {
-  TIME_UNSIGNED_RNG( (((uint64_t)random()) << 32) + random() );
+  TIME_UNSIGNED_RNG((((uint64_t)random()) << 32) + random());
 }
 
 
@@ -124,7 +124,7 @@ void
 time_arc4random_u64(void)
 {
 #ifndef NO_ARC4RANDOM
-  TIME_UNSIGNED_RNG( (arc4random_u64()) );
+  TIME_UNSIGNED_RNG((arc4random_u64()));
 #endif
 }
 
@@ -141,35 +141,35 @@ void
 time_openssl_random(void)
 {
 #ifndef NO_OPENSSL
-  TIME_UNSIGNED_RNG( (openssl_random()) );
+  TIME_UNSIGNED_RNG((openssl_random()));
 #endif
 }
 
 #undef N
 #define N 100000
 
-#define TIME_BUF(buf_sz, rng_fn) do {                \
-    struct timeval start, end;                  \
-    unsigned char buf[buf_sz];                  \
-    int i;                                      \
-    gettimeofday(&start, NULL);                 \
-    for (i=0; i < N; ++i) {                     \
-      rng_fn;                                   \
-    }                                           \
-    gettimeofday(&end, NULL);                   \
-    uint64_t usec = end.tv_sec - start.tv_sec;  \
-    usec *= 1000000;\
-    usec += end.tv_usec - start.tv_usec;        \
+#define TIME_BUF(buf_sz, rng_fn) do {                            \
+    struct timeval start, end;                                   \
+    unsigned char buf[buf_sz];                                   \
+    int i;                                                       \
+    gettimeofday(&start, NULL);                                  \
+    for (i = 0; i < N; ++i) {                                    \
+      rng_fn;                                                    \
+    }                                                            \
+    gettimeofday(&end, NULL);                                    \
+    uint64_t usec = end.tv_sec - start.tv_sec;                   \
+    usec *= 1000000;                                             \
+    usec += end.tv_usec - start.tv_usec;                         \
     printf("%s: %f nsec per call\n", __func__, (usec*1000.0)/N); \
-                                                  \
-  } while (0)
+                                                                 \
+} while (0)
 
 static inline void
 libc_random_buf(void *b, size_t n)
 {
   unsigned *cp = b;
   unsigned i;
-  for (i=0;i<n/sizeof(unsigned);++i) {
+  for (i = 0; i < n/sizeof(unsigned); ++i) {
     *cp++ = random();
   }
 }

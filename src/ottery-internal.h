@@ -10,7 +10,7 @@
    You should have received a copy of the CC0 legalcode along with this
    work in doc/cc0.txt.  If not, see
       <http://creativecommons.org/publicdomain/zero/1.0/>.
-*/
+ */
 #ifndef OTTERY_INTERNAL_H_HEADER_INCLUDED_
 #define OTTERY_INTERNAL_H_HEADER_INCLUDED_
 #include <stdint.h>
@@ -52,10 +52,10 @@
  */
 int ottery_os_randbytes_(const char *fname, uint8_t *bytes, size_t n);
 
-#if ! defined(OTTERY_NO_VECS)          \
-       && (defined(__ARM_NEON__) ||    \
-           defined(__ALTIVEC__)  ||    \
-           defined(__SSE2__))
+#if !defined(OTTERY_NO_VECS)   \
+  && (defined(__ARM_NEON__) || \
+  defined(__ALTIVEC__)  ||     \
+  defined(__SSE2__))
 #define OTTERY_HAVE_SIMD_IMPL
 #endif
 

@@ -10,7 +10,7 @@
    You should have received a copy of the CC0 legalcode along with this
    work in doc/cc0.txt.  If not, see
       <http://creativecommons.org/publicdomain/zero/1.0/>.
-*/
+ */
 #define OTTERY_INTERNAL
 #include "ottery-internal.h"
 #include "ottery.h"
@@ -41,11 +41,11 @@
 
 /** Macro: yield the correct magic number for an ottery_state, based on
  * its position in RAM. */
-#define MAGIC(ptr) ( ((uint32_t)(uintptr_t)(ptr)) ^ MAGIC_BASIS )
+#define MAGIC(ptr) (((uint32_t)(uintptr_t)(ptr)) ^ MAGIC_BASIS)
 
 static void ottery_fatal(int error);
 static inline int ottery_st_rand_lock_and_check(struct ottery_state *st)
-  __attribute__((always_inline));
+__attribute__((always_inline));
 static void ottery_st_stir_nolock(struct ottery_state *st);
 #ifndef OTTERY_NO_WIPE_STACK
 static void ottery_wipe_stack_(void) __attribute__((noinline));
@@ -66,7 +66,7 @@ ottery_get_sizeof_state(void)
 #ifndef OTTERY_NO_CLEAR_AFTER_YIELD
 /** Used to zero out the contents of our buffer after we've just given a few
  * to the user. */
-#define CLEARBUF(ptr,n) do { memset((ptr), 0, (n)); } while(0)
+#define CLEARBUF(ptr,n) do { memset((ptr), 0, (n)); } while (0)
 #else
 #define CLEARBUF(ptr,n) ((void)0)
 #endif
@@ -75,7 +75,7 @@ ottery_get_sizeof_state(void)
  * Volatile pointer to memset: we use this to keep the compiler from
  * eliminating our call to memset.
  */
-void * (* volatile memset_volatile)(void *, int, size_t) = memset;
+void * (*volatile memset_volatile)(void *, int, size_t) = memset;
 
 /**
  * Clear all bytes stored in a structure. Unlike memset, the compiler is not
@@ -118,27 +118,27 @@ ottery_wipe_stack_(void)
 
 #if defined(OTTERY_PTHREADS)
 /** Acquire the lock for the state "st". */
-#define LOCK(st) do {                           \
-    pthread_mutex_lock(&(st)->mutex);           \
-  } while (0)
+#define LOCK(st) do {                 \
+    pthread_mutex_lock(&(st)->mutex); \
+} while (0)
 /** Release the lock for the state "st". */
-#define UNLOCK(st) do {                             \
-    pthread_mutex_unlock(&(st)->mutex);             \
-  } while (0)
+#define UNLOCK(st) do {                 \
+    pthread_mutex_unlock(&(st)->mutex); \
+} while (0)
 #elif defined(OTTERY_CRITICAL_SECTION)
-#define LOCK(st) do { \
+#define LOCK(st) do {                   \
     EnterCriticalSection(&(st)->mutex); \
-  } while (0)
-#define UNLOCK(st) do { \
+} while (0)
+#define UNLOCK(st) do {                 \
     LeaveCriticalSection(&(st)->mutex); \
-  } while (0)
+} while (0)
 #elif defined(OTTERY_OSATOMIC)
-#define LOCK(st) do {                           \
-    OSSpinLockLock(&(st)->mutex);               \
-  } while(0)
-#define UNLOCK(st) do {                         \
-    OSSpinLockUnlock(&(st)->mutex);            \
-  } while(0)
+#define LOCK(st) do {             \
+    OSSpinLockLock(&(st)->mutex); \
+} while (0)
+#define UNLOCK(st) do {             \
+    OSSpinLockUnlock(&(st)->mutex); \
+} while (0)
 #elif defined(OTTERY_NO_LOCKS)
 #define LOCK(st) ((void)0)
 #define UNLOCK(st) ((void)0)
@@ -345,7 +345,7 @@ ottery_st_add_seed(struct ottery_state *st, const uint8_t *seed, size_t n)
    * system. */
   uint8_t tmp_seed[MAX_STATE_BYTES];
 
-  if (! seed || ! n) {
+  if (!seed || !n) {
     unsigned state_bytes;
     const char *urandom_fname;
     /* Hold the lock for only a moment here: we don't want to be holding
@@ -560,9 +560,9 @@ ottery_st_rand_bytes(struct ottery_state *st, void *out_,
  * @param r the integer lvalue to write to.
  * @param p a pointer to the bytes to read from.
  **/
-#define INT_ASSIGN_PTR(type, r, p) do {         \
-    memcpy(&r, p, sizeof(type));                \
-  } while (0)
+#define INT_ASSIGN_PTR(type, r, p) do { \
+    memcpy(&r, p, sizeof(type));        \
+} while (0)
 
 /**
  * Shared code for implementing rand_unsigned() and rand_uint64().
@@ -570,30 +570,30 @@ ottery_st_rand_bytes(struct ottery_state *st, void *out_,
  * @param st The state to use.
  * @param inttype The type of integer to generate.
  **/
-#define OTTERY_RETURN_RAND_INTTYPE(st, inttype) do {                    \
-    if (ottery_st_rand_lock_and_check(st))                              \
-      return (inttype)0;                                                \
-    inttype result;                                                     \
-    if (sizeof(inttype) + (st)->pos <= (st)->prf.output_len) {          \
-      INT_ASSIGN_PTR(inttype, result, (st)->buffer + (st)->pos);        \
-      CLEARBUF((st)->buffer + (st)->pos, sizeof(inttype));              \
-      (st)->pos += sizeof(inttype);                                     \
-      if (st->pos == (st)->prf.output_len) {                            \
-        ottery_st_nextblock_nolock(st);                                 \
-      }                                                                 \
-    } else {                                                            \
-      /* Our handling of this case here is significantly simpler */     \
-      /* than that of ottery_st_rand_bytes_from_buf, at the expense */  \
-      /* of wasting up to sizeof(inttype)-1 bytes. Since inttype */     \
-      /* is at most 8 bytes long, that's not such a big deal. */        \
-      ottery_st_nextblock_nolock(st);                                   \
-      INT_ASSIGN_PTR(inttype, result, (st)->buffer + (st)->pos);        \
-      CLEARBUF((st)->buffer, sizeof(inttype));                          \
-      (st)->pos += sizeof(inttype);                                     \
-    }                                                                   \
-    UNLOCK(st);                                                         \
-    return result;                                                      \
-    } while (0)
+#define OTTERY_RETURN_RAND_INTTYPE(st, inttype) do {                   \
+    if (ottery_st_rand_lock_and_check(st))                             \
+      return (inttype)0;                                               \
+    inttype result;                                                    \
+    if (sizeof(inttype) + (st)->pos <= (st)->prf.output_len) {         \
+      INT_ASSIGN_PTR(inttype, result, (st)->buffer + (st)->pos);       \
+      CLEARBUF((st)->buffer + (st)->pos, sizeof(inttype));             \
+      (st)->pos += sizeof(inttype);                                    \
+      if (st->pos == (st)->prf.output_len) {                           \
+        ottery_st_nextblock_nolock(st);                                \
+      }                                                                \
+    } else {                                                           \
+      /* Our handling of this case here is significantly simpler */    \
+      /* than that of ottery_st_rand_bytes_from_buf, at the expense */ \
+      /* of wasting up to sizeof(inttype)-1 bytes. Since inttype */    \
+      /* is at most 8 bytes long, that's not such a big deal. */       \
+      ottery_st_nextblock_nolock(st);                                  \
+      INT_ASSIGN_PTR(inttype, result, (st)->buffer + (st)->pos);       \
+      CLEARBUF((st)->buffer, sizeof(inttype));                         \
+      (st)->pos += sizeof(inttype);                                    \
+    }                                                                  \
+    UNLOCK(st);                                                        \
+    return result;                                                     \
+} while (0)
 
 unsigned
 ottery_st_rand_unsigned(struct ottery_state *st)
@@ -638,15 +638,15 @@ static int ottery_global_state_initialized_ = 0;
 static struct ottery_state ottery_global_state_;
 
 /** Initialize ottery_global_state_ if it has not been initialize. */
-#define CHECK_INIT(rv) do {                                     \
-    if (UNLIKELY(!ottery_global_state_initialized_)) {          \
-      int err;                                                  \
-      if ((err=ottery_init(NULL))) {                            \
-        ottery_fatal(OTTERY_ERR_FLAG_GLOBAL_PRNG_INIT|err);     \
-        return rv ;                                             \
-      }                                                         \
-    }                                                           \
-  } while (0)
+#define CHECK_INIT(rv) do {                                 \
+    if (UNLIKELY(!ottery_global_state_initialized_)) {      \
+      int err;                                              \
+      if ((err = ottery_init(NULL))) {                      \
+        ottery_fatal(OTTERY_ERR_FLAG_GLOBAL_PRNG_INIT|err); \
+        return rv;                                          \
+      }                                                     \
+    }                                                       \
+} while (0)
 
 int
 ottery_init(const struct ottery_config *cfg)

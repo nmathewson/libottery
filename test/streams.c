@@ -10,7 +10,7 @@
    You should have received a copy of the CC0 legalcode along with this
    work in doc/cc0.txt.  If not, see
       <http://creativecommons.org/publicdomain/zero/1.0/>.
-*/
+ */
 #include "streams.h"
 #include <assert.h>
 #include <string.h>
@@ -47,7 +47,7 @@ stream_generate(struct stream *stream,
       memcpy(output, buf + skip_bytes, output_len);
       output_len = 0;
     } else {
-      memcpy(output, buf + skip_bytes , stream->prf.output_len - skip_bytes);
+      memcpy(output, buf + skip_bytes, stream->prf.output_len - skip_bytes);
       output_len -= stream->prf.output_len - skip_bytes;
       output += stream->prf.output_len - skip_bytes;
       skip_bytes = 0;

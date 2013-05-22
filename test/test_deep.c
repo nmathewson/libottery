@@ -10,7 +10,7 @@
    You should have received a copy of the CC0 legalcode along with this
    work in doc/cc0.txt.  If not, see
       <http://creativecommons.org/publicdomain/zero/1.0/>.
-*/
+ */
 /**
  * @file test_deepw.c
  *
@@ -42,14 +42,14 @@
  * vigenere key. It is, obviously, not a good RNG. */
 
 const char LOREM[] =
-"Nor again is there anyone who loves or pursues or desires to obtain pain "
-"of itself, because it is pain, but because occasionally circumstances "
-"occur in which toil and pain can procure him some great pleasure. To "
-"take a trivial example, which of us ever undertakes laborious physical "
-"exercise, except to obtain some advantage from it? But who has any right "
-"to find fault with a man who chooses to enjoy a pleasure that has no "
-"annoying consequences, or one who avoids a pain that produces no "
-"resultant pleasure?seb";
+  "Nor again is there anyone who loves or pursues or desires to obtain pain "
+  "of itself, because it is pain, but because occasionally circumstances "
+  "occur in which toil and pain can procure him some great pleasure. To "
+  "take a trivial example, which of us ever undertakes laborious physical "
+  "exercise, except to obtain some advantage from it? But who has any right "
+  "to find fault with a man who chooses to enjoy a pleasure that has no "
+  "annoying consequences, or one who avoids a pain that produces no "
+  "resultant pleasure?seb";
 /* Translation of a part of Cicero's de Finibus Bonoum et Malorum
  * excerpted in the classic "Lorem ipsum" text, translated by H. Rackham
  * in 1914, quoted on lipsum.com. 512 characters long. */
@@ -131,7 +131,7 @@ struct ottery_prf dummy_prf =  {
    "Nor again is there anyone who loves or pursues or desires to obt"
    "Nbf1atozn-wj gvvrr.rnlcee-kyo-zfvrg1oe.gueglef.fr-rvsvfvs-hf bpk"
    "Ebs%rtbne-jx1gijir!felpsv-xmf-mtmrt%fe!uletzvf!ti-ejjvsjj-ut1bcy"
-*/
+ */
 /* ================================================== */
 
 char *state_allocation = NULL;
@@ -155,7 +155,7 @@ setup_state(const struct testcase_t *testcase)
   if (testcase->flags & OT_ENABLE_STATE) {
     state_allocation = malloc(ottery_get_sizeof_state() + 16);
     const int misalign = (int) (((uintptr_t)state_allocation) & 0xf);
-    state = (struct ottery_state *)( state_allocation + ((16-misalign)&0xf) );
+    state = (struct ottery_state *)(state_allocation + ((16-misalign)&0xf));
     if (ottery_st_init(state, &cfg))
       return NULL;
   } else {
@@ -348,15 +348,15 @@ test_buf_long_1(void *arg)
   buf[303] = 0;
 
   tt_str_op(buf, ==,
-   "nyone who loves or pursues or desires to obt" /* 44 */
-    /* Now we generate a bunch of blocks with the new key of "Nor " */
-   "Nbf1atozn-wj gvvrr.rnlcee-kyo-zfvrg1oe.gueglef.fr-rvsvfvs-hf bpk"/*108*/
-   "avb1pnwe bt1iggvls.1brqrufs1ig.zs-dria.1bhh1brqrufs1opqrsvceayzp"/*172*/
-   " pwichajtnbtef.fcpii vb1wuwth-hfiy.rnq.gavb1cnb1pectues1hva1sbav"/*236*/
-   " tfvag.glrojues1 Gc1tnyv n.krvjzay.vxnaglr.1wuwth-cw hg1eisi hbu"/*300*/
-   /* next key is eehr, rotations are [17, 4 , 4, 7 ]. The last 3 bytes made
-    * with this key are: */
-   "krg" /*303*/);
+            "nyone who loves or pursues or desires to obt" /* 44 */
+            /* Now we generate a bunch of blocks with the new key of "Nor " */
+            "Nbf1atozn-wj gvvrr.rnlcee-kyo-zfvrg1oe.gueglef.fr-rvsvfvs-hf bpk" /*108*/
+            "avb1pnwe bt1iggvls.1brqrufs1ig.zs-dria.1bhh1brqrufs1opqrsvceayzp" /*172*/
+            " pwichajtnbtef.fcpii vb1wuwth-hfiy.rnq.gavb1cnb1pectues1hva1sbav" /*236*/
+            " tfvag.glrojues1 Gc1tnyv n.krvjzay.vxnaglr.1wuwth-cw hg1eisi hbu" /*300*/
+            /* next key is eehr, rotations are [17, 4 , 4, 7 ]. The last 3 bytes made
+             * with this key are: */
+            "krg" /*303*/);
 
   if (USING_STATE()) {
     struct ottery_state *st = STATE();
@@ -387,10 +387,10 @@ struct testcase_t misc_tests[] = {
   END_OF_TESTCASES
 };
 
-#define COMMON_TESTS(flags)                                            \
-  { "uints", test_uints, TT_FORK|flags, &setup, NULL },                \
-  { "add_seed", test_add_seed, TT_FORK|flags, &setup, NULL },          \
-  { "buf_short", test_buf_short, TT_FORK|flags, &setup, NULL },        \
+#define COMMON_TESTS(flags)                                     \
+  { "uints", test_uints, TT_FORK|flags, &setup, NULL },         \
+  { "add_seed", test_add_seed, TT_FORK|flags, &setup, NULL },   \
+  { "buf_short", test_buf_short, TT_FORK|flags, &setup, NULL }, \
   { "buf_long_1", test_buf_long_1, TT_FORK|flags, &setup, NULL }
 
 struct testcase_t stateful_tests[] = {

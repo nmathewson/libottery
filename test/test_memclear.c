@@ -10,7 +10,7 @@
    You should have received a copy of the CC0 legalcode along with this
    work in doc/cc0.txt.  If not, see
       <http://creativecommons.org/publicdomain/zero/1.0/>.
-*/
+ */
 
 /* This is a horrible hack to try to see whether ottery_memclear_ successfully
  * avoids getting eliminated.  Modern compilers have a fun tendency to refuse
@@ -25,9 +25,9 @@ const char buf[16] = "What's a Ftumch?";
 #define TOTAL 1430528
 
 static inline void ottery_memclear_(void *mem, size_t len)
-  __attribute__((always_inline));
+__attribute__((always_inline));
 
-void * (* volatile memset_volatile)(void *, int, size_t) = memset;
+void * (*volatile memset_volatile)(void *, int, size_t) = memset;
 
 /* I'm copying this here so that it has the best chance of getting inlined. */
 static inline void
@@ -45,10 +45,10 @@ f1(void)
   int i;
   uint8_t mem[N];
   uint32_t r = 0;
-  for (i=0; i<N; i += 16) {
+  for (i = 0; i < N; i += 16) {
     memcpy(mem+i, buf, 16);
   }
-  for (i=0; i<N; ++i) {
+  for (i = 0; i < N; ++i) {
     r += mem[i];
   }
   ottery_memclear_(mem, sizeof(mem));
@@ -63,7 +63,7 @@ f2(void)
 {
   int i;
   uint8_t mem[N];
-  for (i=0;i<N-16;++i) {
+  for (i = 0; i < N-16; ++i) {
     if (!memcmp(mem+i, buf, 16))
       return i;
   }

@@ -57,14 +57,15 @@ BEFORE FIRST VERSION
       properly.
     o Make a test_deep.
     o 100% test coverage.
+      (Well, there are 1-2 non-covered lines, but that's okay.)
 
   o DOCUMENTATION
     o Document APIs.
     o Finish the readme
     o comment all the code
 
-  - CONSISTENCY
-    - Uncrustify
+  o CONSISTENCY
+    o Uncrustify
 
 BEFORE FINAL VERSION
 

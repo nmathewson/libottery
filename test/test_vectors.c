@@ -10,7 +10,7 @@
    You should have received a copy of the CC0 legalcode along with this
    work in doc/cc0.txt.  If not, see
       <http://creativecommons.org/publicdomain/zero/1.0/>.
-*/
+ */
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,7 +26,7 @@ typedef unsigned char u8;
 void
 dumphex(const char *label, const u8 *bytes, int n)
 {
-  int m=0;
+  int m = 0;
   if (label) printf("%s: ", label);
   while (n--) {
     printf("%02x", *bytes++);
@@ -55,12 +55,12 @@ experiment(const u8 *key, const u8 *nonce, unsigned skip,
   dumphex(NULL, stream, 512);
 }
 
-#define X(key,nonce,skip)                                               \
-  do {                                                                  \
-    int i;                                                              \
-    for (i = 0; prfs[i]; ++i) {                                         \
-      experiment((const u8*)(key),(const u8*)(nonce),(skip), prfs[i]);  \
-    }                                                                   \
+#define X(key,nonce,skip)                                              \
+  do {                                                                 \
+    int i;                                                             \
+    for (i = 0; prfs[i]; ++i) {                                        \
+      experiment((const u8*)(key),(const u8*)(nonce),(skip), prfs[i]); \
+    }                                                                  \
   } while (0)
 
 const struct ottery_prf *prfs_best[] = {

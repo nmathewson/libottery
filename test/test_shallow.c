@@ -10,7 +10,7 @@
    You should have received a copy of the CC0 legalcode along with this
    work in doc/cc0.txt.  If not, see
       <http://creativecommons.org/publicdomain/zero/1.0/>.
-*/
+ */
 /**
  * @file test_shallow.c
  *
@@ -49,7 +49,7 @@ setup_state(const struct testcase_t *testcase)
   if (testcase->flags & OT_ENABLE_STATE) {
     state_allocation = malloc(ottery_get_sizeof_state() + 16);
     const int misalign = (int) (((uintptr_t)state_allocation) & 0xf);
-    state = (struct ottery_state *)( state_allocation + ((16-misalign)&0xf) );
+    state = (struct ottery_state *)(state_allocation + ((16-misalign)&0xf));
     ottery_st_init(state, NULL);
   }
   return (void*) 1;
@@ -134,23 +134,23 @@ test_single_buf(size_t n)
   for (offset = 0; offset < 16; ++offset) {
     memset(b, 0, n+32);
     memset(sum, 0, n);
-    for (i=0; i<100; ++i) {
+    for (i = 0; i < 100; ++i) {
       OTTERY_RAND_BYTES(b + offset, n);
 
       /* Make sure that it doesn't write outside of its range. */
-      for (j=0; j<offset; ++j) {
+      for (j = 0; j < offset; ++j) {
         tt_int_op(b[j], ==, 0);
       }
-      for (j=n+offset; j<n+32; ++j) {
+      for (j = n+offset; j < n+32; ++j) {
         tt_int_op(b[j], ==, 0);
       }
 
       /* Make sure every in-range byte sometimes gets written to. */
-      for (j=0; j<n; ++j) {
+      for (j = 0; j < n; ++j) {
         sum[j] |= b[offset+j];
       }
     }
-    for (j=0; j<n; ++j) {
+    for (j = 0; j < n; ++j) {
       tt_int_op(sum[j], ==, 0xff);
     }
   }
@@ -191,14 +191,14 @@ test_rand_uint(void *arg)
 {
   (void)arg;
   int i;
-  unsigned acc = 0, dec=(unsigned)-1;
-  uint64_t acc64 = 0, dec64=(uint64_t)-1;
+  unsigned acc = 0, dec = (unsigned)-1;
+  uint64_t acc64 = 0, dec64 = (uint64_t)-1;
   uint8_t buf;
   /* Not much we can do to black-box test rand_unsinged and rand_uint64 other
      than to make sure that they don't crash and that the values are
      random-ish. For real results, we'll need the deep tests, plus statistical
      examining of dump_bytes.c output.
-  */
+   */
 
   for (i = 0; i < 100; ++i) {
     unsigned u = OTTERY_RAND_UNSIGNED();
@@ -247,7 +247,7 @@ test_range(void *arg)
   int got_a_big_one = 0;
   (void)arg;
 
-  for (i=0;i<1000;++i) {
+  for (i = 0; i < 1000; ++i) {
     tt_int_op(OTTERY_RAND_RANGE(5), <=, 5);
     count[OTTERY_RAND_RANGE(5)] += 1;
     tt_int_op(OTTERY_RAND_RANGE(10), <=, 10);
@@ -260,7 +260,7 @@ test_range(void *arg)
     if (OTTERY_RAND_RANGE(3000000000U) > 2000000000U)
       ++got_a_big_small_one;
   }
-  for (i=0; i<5; ++i) {
+  for (i = 0; i < 5; ++i) {
     tt_int_op(0, !=, count[i]);
   }
   tt_int_op(got_a_big_one, !=, 0);
@@ -281,7 +281,7 @@ test_fork(void *arg)
 #else
   uint8_t buf[256];
   uint8_t buf2[256];
-  int fd[2] = {-1, -1};
+  int fd[2] = { -1, -1 };
   pid_t p;
 
   if (pipe(fd) < 0)
@@ -445,7 +445,7 @@ test_fatal(void *arg)
 {
   (void)arg;
   __attribute__((aligned(16))) struct ottery_state st;
-  int tested=0;
+  int tested = 0;
 
   ottery_set_fatal_handler(fatal_handler);
   memset(&st, 0xff, sizeof(st));

@@ -10,7 +10,7 @@
    You should have received a copy of the CC0 legalcode along with this
    work in doc/cc0.txt.  If not, see
       <http://creativecommons.org/publicdomain/zero/1.0/>.
-*/
+ */
 #include <unistd.h>
 #include "ottery.h"
 #include "ottery_st.h"
@@ -64,7 +64,7 @@ usage(void)
   puts("dump_bytes [-i implementation] [-s strategy] [-T]");
   puts("   implementations include CHACHA{8,12,20}{,-SIMD,-NOSIMD}");
   puts("   strategies are:");
-  for (i=0; strategies[i].name; ++i) {
+  for (i = 0; strategies[i].name; ++i) {
     printf("      %s%s\n", strategies[i].name,
            strategies[i].takes_argument ? ":<N>" : "");
   }
@@ -82,7 +82,7 @@ parse_strategy(const char *s)
   }
 
   int i;
-  for (i=0; strategies[i].name; ++i) {
+  for (i = 0; strategies[i].name; ++i) {
     if (!strncmp(strategies[i].name, s, len) && strlen(s) == len) {
       if (!colon != !strategies[i].takes_argument) {
         fprintf(stderr, "missing or unexpected argument for %s\n",
@@ -114,7 +114,7 @@ gen_randnum_bytes(uint8_t *buf)
   uint8_t x;
   do {
     OTTERY_RAND_BYTES(&x, 1);
-  } while (! x);
+  } while (!x);
   OTTERY_RAND_BYTES(buf, x);
   return x;
 }

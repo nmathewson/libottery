@@ -10,7 +10,7 @@
    You should have received a copy of the CC0 legalcode along with this
    work in doc/cc0.txt.  If not, see
       <http://creativecommons.org/publicdomain/zero/1.0/>.
-*/
+ */
 #ifndef STREAMS_H_HEADER_INCLUDED_
 #define STREAMS_H_HEADER_INCLUDED_
 
