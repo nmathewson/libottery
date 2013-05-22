@@ -43,6 +43,9 @@ I *will* break backward compatibility more than once. (Probably.)
 I *will* change something you were depending on. (Or at least, I won't
 promise not to.)
 
+There *might* be horrible security bugs left in it. If there are, I
+won't be very embarrassed: I told you not to use it yet!
+
 If it breaks, you *don't* get to keep both pieces!  I will come over and
 break the pieces into even smaller pieces, then break something else that
 you actually liked, then point at them and laugh and laugh and laugh.
@@ -121,7 +124,7 @@ mistakes.
 Getting good performance for large-sized requests is a simple matter of
 choosing a fast secure stream generator.  Fortunately, we have a bunch
 of those.  Right now, libottery uses Dan Bernstein's ChaCha cipher,
-where a event naive implementation is pretty fast, and an optimized one
+where even a naive implementation is pretty fast, and an optimized one
 can be downright scary.
 
 For small request performance (say, somebody wants to generate a bunch
