@@ -27,7 +27,7 @@ int use_global_state = 0;
 #define USING_STATE() (use_global_state)
 #include "st_wrappers.h"
 
-#define BUF_LEN 8192
+#define MAX_OUTPUT_LEN 8192
 
 static int generator_param = 0;
 static int (*generate)(uint8_t *buf) = NULL;
@@ -102,7 +102,7 @@ parse_strategy(const char *s)
 static int
 gen_rand_bytes(uint8_t *buf)
 {
-  if (generator_param == 0 || generator_param > BUF_LEN)
+  if (generator_param == 0 || generator_param > MAX_OUTPUT_LEN)
     return -1;
   OTTERY_RAND_BYTES(buf, generator_param);
   return generator_param;
@@ -238,17 +238,27 @@ main(int argc, char **argv)
 
   if (!generate) {
     generate = gen_rand_bytes;
-    generator_param = BUF_LEN;
+    generator_param = MAX_OUTPUT_LEN;
   }
+
+#define BUF_LEN (MAX_OUTPUT_LEN * 2)
 
   while (1) {
     uint8_t buf[BUF_LEN];
+    uint8_t *cp = buf;
     int n = generate(buf);
     if (n < 0) {
       fprintf(stderr, "Invalid parameter\n");
       return 1;
     }
-    write(1, buf, n);
+    int remaining = BUF_LEN - n;
+    cp += n;
+    while (remaining >= MAX_OUTPUT_LEN) {
+      n = generate(cp);
+      cp += n;
+      remaining -= n;
+    }
+    write(1, buf, (cp-buf));
   }
 
   return 0;
