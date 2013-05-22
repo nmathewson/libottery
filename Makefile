@@ -5,7 +5,7 @@ CFLAGS=-Wall -W -Wextra -g -O3 -pthread
 # -pthread
 
 TESTS =  test/test_vectors test/bench_rng test/dump_bytes test/test_memclear \
-	test/test_shallow
+	test/test_shallow test/test_deep
 
 all: $(TESTS) libottery.a
 
@@ -13,7 +13,7 @@ OTTERY_OBJS = src/chacha8.o src/chacha12.o src/chacha20.o src/ottery.o \
 	src/ottery_osrng.o
 TEST_OBJS = test/test_vectors.o test/bench_rng.o \
 	test/dump_bytes.o test/streams.o test/test_memclear.o \
-	test/tinytest.o test/test_shallow.o
+	test/tinytest.o test/test_shallow.o test/test_deep.o
 
 libottery.a: $(OTTERY_OBJS)
 	ar rcs libottery.a $(OTTERY_OBJS) && ranlib libottery.a
@@ -48,6 +48,9 @@ test/test_memclear: test/test_memclear.o libottery.a
 test/test_shallow: test/test_shallow.o test/tinytest.o libottery.a
 	$(CC) $(CFLAGS) -Isrc test/test_shallow.o test/tinytest.o libottery.a -o test/test_shallow
 
+test/test_deep: test/test_deep.o test/tinytest.o libottery.a
+	$(CC) $(CFLAGS) -Isrc test/test_deep.o test/tinytest.o libottery.a -o test/test_deep
+
 check: $(TESTS) test/test_vectors.actual test/test_vectors.actual-nosimd \
 	test/test_shallow
 
@@ -55,6 +58,7 @@ check: $(TESTS) test/test_vectors.actual test/test_vectors.actual-nosimd \
 	@cmp test/test_vectors.expected test/test_vectors.actual-nosimd && echo OKAY || echo BAD
 	@./test/test_memclear
 	@./test/test_shallow --quiet && echo "OKAY"
+	@./test/test_deep --quiet && echo "OKAY"
 
 clean:
 	rm -f src/*.o test/*.o $(TESTS) libottery.a

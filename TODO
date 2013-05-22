@@ -46,7 +46,7 @@ BEFORE FIRST VERSION
 
   - TESTING
     . Add a benchmarking/timing feature
-      - do it right.
+      - do it right. Use a CPU timer, not gettimeofday.
     . Test with dieharder, to see if I screwed up.
       . Better dumpbytes output.  Use all backends, different sizes,
         multiple threads...
@@ -55,7 +55,7 @@ BEFORE FIRST VERSION
         . Test it.
     . Specify and clone in a more spec-y language; make sure it calls itself
       properly.
-    - Make a test_deep.
+    o Make a test_deep.
     o 100% test coverage.
 
   o DOCUMENTATION

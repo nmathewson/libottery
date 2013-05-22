@@ -21,3 +21,4 @@ test/dump_bytes
 test/test_stateful
 test/test_memclear
 test/test_shallow
+test/test_deep
