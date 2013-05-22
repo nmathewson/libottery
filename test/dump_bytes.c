@@ -61,7 +61,7 @@ static void
 usage(void)
 {
   int i;
-  puts("dump_bytes [-i implementation] [-s strategy] [-T]");
+  puts("dump_bytes [-i implementation] [-s strategy]");
   puts("   implementations include CHACHA{8,12,20}{,-SIMD,-NOSIMD}");
   puts("   strategies are:");
   for (i = 0; strategies[i].name; ++i) {
@@ -190,6 +190,11 @@ main(int argc, char **argv)
 {
   int ch;
   struct ottery_config cfg;
+
+  if (argc == 1) {
+    usage();
+    return 1;
+  }
 
   if (ottery_config_init(&cfg)) {
     fprintf(stderr, "Couldn't initialize ottery_config");
