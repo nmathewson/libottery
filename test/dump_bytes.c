@@ -130,7 +130,7 @@ gen_u32(uint8_t *buf)
 static int
 gen_u64(uint8_t *buf)
 {
-  uint64_t u = OTTERY_RAND_UNSIGNED();
+  uint64_t u = OTTERY_RAND_UINT64();
   memcpy(buf, &u, sizeof(u));
   return sizeof(u);
 }
@@ -149,7 +149,7 @@ gen_u32_odd(uint8_t *buf)
 static int
 gen_u64_odd(uint8_t *buf)
 {
-  uint64_t u = OTTERY_RAND_UNSIGNED();
+  uint64_t u = OTTERY_RAND_UINT64();
   uint8_t x;
   memcpy(buf, &u, sizeof(u));
   if ((u & 7) == 0)
