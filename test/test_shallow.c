@@ -241,7 +241,7 @@ static void
 test_range(void *arg)
 {
   int i;
-  int count[5];
+  int count[6];
   const uint64_t quite_big = ((uint64_t)1)<<60;
   int got_a_big_small_one = 0;
   int got_a_big_one = 0;
@@ -260,7 +260,7 @@ test_range(void *arg)
     if (OTTERY_RAND_RANGE(3000000000U) > 2000000000U)
       ++got_a_big_small_one;
   }
-  for (i = 0; i < 5; ++i) {
+  for (i = 0; i <= 5; ++i) {
     tt_int_op(0, !=, count[i]);
   }
   tt_int_op(got_a_big_one, !=, 0);
