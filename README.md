@@ -188,7 +188,7 @@ Digression: What's wrong with your favorite cryptography library's PRNG?
 ------------------------------------------------------------------------
 
 Probably nothing in terms of its security, assuming it does a reasonable
-job of seeing itself.  But odds are good that it's pretty slow, which
+job of seeding itself.  But odds are good that it's pretty slow, which
 can make trouble for programmers: in performance critical code that eats
 a ton of random numbers, they're going to find yourself tempted to just
 use random(), because really, what could it matter?
