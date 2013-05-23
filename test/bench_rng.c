@@ -22,6 +22,13 @@
 #define NO_ARC4RANDOM
 #endif
 
+#ifdef _WIN32
+#define NO_URANDOM
+#else
+#include <unistd.h>
+#include <fcntl.h>
+#endif
+
 #ifndef NO_OPENSSL
 #define OPENSSL
 #if defined(__APPLE__) && defined(__GNUC__)
@@ -54,6 +61,30 @@ struct ottery_state s8;
 struct ottery_state s12;
 struct ottery_state s20;
 
+#ifndef NO_URANDOM
+int urandom_fd = -1;
+
+static void
+urandom_buf(void *buf, size_t n)
+{
+  read(urandom_fd, buf, n);
+}
+static unsigned
+urandom_unsigned(void)
+{
+  unsigned u;
+  read(urandom_fd, (void*)&u, sizeof(u));
+  return u;
+}
+static uint64_t
+urandom_u64(void)
+{
+  uint64_t u;
+  read(urandom_fd, (void*)&u, sizeof(u));
+  return u;
+}
+#endif
+
 void
 time_chacharand8(void)
 {
@@ -71,6 +102,14 @@ time_chacharand20(void)
 {
   TIME_UNSIGNED_RNG((ottery_st_rand_unsigned(&s20)));
 }
+
+#ifndef NO_URANDOM
+void
+time_urandom(void)
+{
+  TIME_UNSIGNED_RNG((urandom_unsigned()));
+}
+#endif
 
 void
 time_arc4random(void)
@@ -103,6 +142,13 @@ time_chacharand20_u64(void)
 {
   TIME_UNSIGNED_RNG((ottery_st_rand_uint64(&s20)));
 }
+#ifndef NO_URANDOM
+void
+time_urandom_u64(void)
+{
+  TIME_UNSIGNED_RNG((urandom_u64()));
+}
+#endif
 void
 time_libc_random_u64(void)
 {
@@ -218,6 +264,13 @@ time_chacharand20_buf16(void)
 {
   TIME_BUF(16, (ottery_st_rand_bytes(&s20, buf, sizeof(buf))));
 }
+#ifndef NO_URANDOM
+void
+time_urandom_buf16(void)
+{
+  TIME_BUF(16, (urandom_buf(buf, sizeof(buf))));
+}
+#endif
 void
 time_arc4random_buf16(void)
 {
@@ -253,6 +306,13 @@ time_chacharand20_buf1024(void)
 {
   TIME_BUF(1024, (ottery_st_rand_bytes(&s20, buf, sizeof(buf))));
 }
+#ifndef NO_URANDOM
+void
+time_urandom_buf1024(void)
+{
+  TIME_BUF(1024, (urandom_buf(buf, sizeof(buf))));
+}
+#endif
 void
 time_arc4random_buf1024(void)
 {
@@ -318,6 +378,14 @@ main(int argc, char **argv)
   time_arc4random_onebyte();
   time_arc4random_buf16();
   time_arc4random_buf1024();
+
+#ifndef NO_URANDOM
+  urandom_fd = open("/dev/urandom", O_RDONLY);
+  time_urandom();
+  time_urandom_u64();
+  time_urandom_buf16();
+  time_urandom_buf1024();
+#endif
 
   time_libc_random();
   time_libc_random_u64();
