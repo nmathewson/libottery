@@ -43,7 +43,6 @@
  * its position in RAM. */
 #define MAGIC(ptr) (((uint32_t)(uintptr_t)(ptr)) ^ MAGIC_BASIS)
 
-static void ottery_fatal(int error);
 static inline int ottery_st_rand_lock_and_check(struct ottery_state *st)
 __attribute__((always_inline));
 static void ottery_st_stir_nolock(struct ottery_state *st);
@@ -336,7 +335,7 @@ ottery_st_add_seed(struct ottery_state *st, const uint8_t *seed, size_t n)
 {
 #ifndef OTTERY_NO_INIT_CHECK
   if (UNLIKELY(st->magic != MAGIC(st))) {
-    ottery_fatal(OTTERY_ERR_STATE_INIT);
+    ottery_fatal_error_(OTTERY_ERR_STATE_INIT);
     return OTTERY_ERR_STATE_INIT;
   }
 #endif
@@ -433,10 +432,8 @@ ottery_st_stir(struct ottery_state *st)
  * ottery_set_fatal_handler() for more information. */
 static void (*ottery_fatal_handler)(int) = NULL;
 
-/** Called when a fatal error has occurred: Die horribly, or invoke
- * ottery_fatal_handler. */
-static void
-ottery_fatal(int error)
+void
+ottery_fatal_error_(int error)
 {
   if (ottery_fatal_handler)
     ottery_fatal_handler(error);
@@ -460,7 +457,7 @@ ottery_st_rand_lock_and_check(struct ottery_state *st)
 {
 #ifndef OTTERY_NO_INIT_CHECK
   if (UNLIKELY(st->magic != MAGIC(st))) {
-    ottery_fatal(OTTERY_ERR_STATE_INIT);
+    ottery_fatal_error_(OTTERY_ERR_STATE_INIT);
     return -1;
   }
 #endif
@@ -470,7 +467,7 @@ ottery_st_rand_lock_and_check(struct ottery_state *st)
   if (UNLIKELY(st->pid != getpid())) {
     int err;
     if ((err = ottery_st_initialize(st, NULL, 1))) {
-      ottery_fatal(OTTERY_ERR_FLAG_POSTFORK_RESEED|err);
+      ottery_fatal_error_(OTTERY_ERR_FLAG_POSTFORK_RESEED|err);
       UNLOCK(st);
       return -1;
     }
@@ -631,85 +628,4 @@ ottery_st_rand_range64(struct ottery_state *st, uint64_t upper)
   } while (n > upper);
 
   return n;
-}
-
-/** Flag: true iff ottery_global_state_ is initialized. */
-static int ottery_global_state_initialized_ = 0;
-/** A global state to use for the ottery_* functions that don't take a
- * state. */
-static struct ottery_state ottery_global_state_;
-
-/** Initialize ottery_global_state_ if it has not been initialize. */
-#define CHECK_INIT(rv) do {                                 \
-    if (UNLIKELY(!ottery_global_state_initialized_)) {      \
-      int err;                                              \
-      if ((err = ottery_init(NULL))) {                      \
-        ottery_fatal(OTTERY_ERR_FLAG_GLOBAL_PRNG_INIT|err); \
-        return rv;                                          \
-      }                                                     \
-    }                                                       \
-} while (0)
-
-int
-ottery_init(const struct ottery_config *cfg)
-{
-  int n = ottery_st_init(&ottery_global_state_, cfg);
-  if (n == 0)
-    ottery_global_state_initialized_ = 1;
-  return n;
-}
-
-int
-ottery_add_seed(const uint8_t *seed, size_t n)
-{
-  CHECK_INIT(0);
-  return ottery_st_add_seed(&ottery_global_state_, seed, n);
-}
-
-void
-ottery_wipe(void)
-{
-  if (ottery_global_state_initialized_) {
-    ottery_global_state_initialized_ = 0;
-    ottery_st_wipe(&ottery_global_state_);
-  }
-}
-
-void
-ottery_stir(void)
-{
-  CHECK_INIT();
-  ottery_st_stir(&ottery_global_state_);
-}
-
-void
-ottery_rand_bytes(void *out, size_t n)
-{
-  CHECK_INIT();
-  ottery_st_rand_bytes(&ottery_global_state_, out, n);
-}
-
-unsigned
-ottery_rand_unsigned(void)
-{
-  CHECK_INIT(0);
-  return ottery_st_rand_unsigned(&ottery_global_state_);
-}
-uint64_t
-ottery_rand_uint64(void)
-{
-  CHECK_INIT(0);
-  return ottery_st_rand_uint64(&ottery_global_state_);
-}
-unsigned
-ottery_rand_range(unsigned top)
-{
-  CHECK_INIT(0);
-  return ottery_st_rand_range(&ottery_global_state_, top);
-}
-uint64_t
-ottery_rand_range64(uint64_t top)
-{
-  CHECK_INIT(0);
-  return ottery_st_rand_range64(&ottery_global_state_, top);
 }

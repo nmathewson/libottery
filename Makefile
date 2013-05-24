@@ -10,7 +10,7 @@ TESTS =  test/test_vectors test/bench_rng test/dump_bytes test/test_memclear \
 all: $(TESTS) libottery.a
 
 OTTERY_OBJS = src/chacha8.o src/chacha12.o src/chacha20.o src/ottery.o \
-	src/ottery_osrng.o
+	src/ottery_osrng.o src/ottery_global.o
 TEST_OBJS = test/test_vectors.o test/bench_rng.o \
 	test/dump_bytes.o test/streams.o test/test_memclear.o \
 	test/tinytest.o test/test_shallow.o test/test_deep.o
@@ -84,6 +84,8 @@ src/chacha8.o: src/chacha8.c src/ottery-internal.h src/ottery-config.h \
   src/chacha_krovetz.c src/chacha_merged.c src/chacha_merged_ecrypt.h
 src/ottery.o: src/ottery.c src/ottery-internal.h src/ottery-config.h \
   src/ottery.h src/ottery_st.h
+src/ottery_global.o: src/ottery_global.c src/ottery-internal.h \
+ src/ottery-config.h src/ottery.h src/ottery_st.h
 src/ottery_osrng.o: src/ottery_osrng.c src/ottery-internal.h \
   src/ottery-config.h src/ottery.h
 

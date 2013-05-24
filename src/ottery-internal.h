@@ -182,6 +182,10 @@ void ottery_config_set_manual_prf_(struct ottery_config *cfg,
 void ottery_config_set_urandom_device_(struct ottery_config *cfg,
                                        const char *fname);
 
+/** Called when a fatal error has occurred: Die horribly, or invoke
+ * ottery_fatal_handler. */
+void ottery_fatal_error_(int error);
+
 /**
  * @brief pure-C portable ChaCha implementations.
  *
