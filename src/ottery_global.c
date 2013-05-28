@@ -12,6 +12,7 @@
       <http://creativecommons.org/publicdomain/zero/1.0/>.
  */
 #define OTTERY_INTERNAL
+#include <stdlib.h>
 #include "ottery-internal.h"
 #include "ottery.h"
 #include "ottery_st.h"
