@@ -1,0 +1,117 @@
+NOTES:
+
+  * This describes what I think we do, not necessarily what we should do.
+
+  * This describes what I think we do, not necessarily what we actually do.
+
+THE SPEC:
+
+
+  We have three layers: an OS layer, a PRF layer and a PRNG layer.
+
+  The OS layer:
+
+    We assume one or more high-quality but slow sources of random bytes
+    from the operating system. On Windows we use CryptGenRandom.  On
+    non-Windows platforms we use /dev/urandom.
+
+    When use the OS layer to generate an n-byte value, we say:
+      OSRAND(n) -> bytes
+
+  The PRF layer:
+
+    The pesudorandom function, PRF, is a function taking an KEY_LEN byte
+    key and a N_ctr bit counter, and producing PRF_OUTPUT_LEN bytes of
+    output for each counter value.
+
+    We say PRF(key,ctr) -> bytes.
+
+    Our actual pseudorandom function is the core of either ChaCha8,
+    ChaCha12, or ChaCha20, with a 40-byte key and a 32-bit counter,
+    producing 64 bytes of output per counter value.  (We never use the
+    high 32 bits of the ChaCha counter; we split the 40 byte key into a
+    32-byte ChaCha key and an 8 byte ChaCha nonce. This probably doesn't
+    actually get 320-bit security.)
+
+    Sometimes we generate multiple PRF output blocks at once.  When we
+    do, we write it as:
+       PRF(key,ctr..ctr+N) -> bytes
+    which is equivalent to
+       PRF(key,ctr) || PRF(key,ctr+1) || ... || PRF(key,ctr+N)
+    where || denotes concatenation.
+
+  The PRNG layer:
+
+    The PRNG has a state consisting of a PRF key K and a
+    buffer BUF of up to BUF_LEN bytes, where BUF_LEN + KEY_LEN is equal to
+    N_BLOCKS * PRF_OUTPUT_LEN for some N_BLOCKS >= 1.
+
+    We write a PRNG state as (K, BUF).
+
+    To "Stir" the PRNG, replace its state as follows:
+        Generate  PRF(K, 0..(N_BLOCKS-1)) -> Output
+        Take the first KEY_LEN bytes of Output as the new value of K.
+        Take the remainder of Output as the new value of BUF.
+
+    To "Construct" a PRNG, construct a PRNG state as
+        (OSRAND(KEY_LEN), nil).
+    and then Stir the PRNG to get the initial state.
+
+    "Removing" N bytes from BUF means to extract the first N bytes of
+    BUF, deleting them from the buffer.  If possible, this deletion
+    should be done destructively, so that the bytes no longer exist
+    in the underlying memory.
+
+    To fulfill a "Tiny Request" of N bytes from the PRNG state:
+    (for N much less than BUF_LEN)
+        If there are fewer than N bytes in BUF, then Stir the PRNG.
+        Remove the first N bytes from BUF, and give them to the user.
+
+    [The above approach is used for requests for small integers of known
+    size.]
+
+    To fulfill a "Small Request" of N bytes, where N is no more than
+    BUF_LEN + Len(BUF) - 1
+        If N is less than Len(BUF):
+            Remove and return N bytes from BUF.
+        Else:
+            Let A = BUF.
+            Stir the RNG.
+            Let B = Remove  N - Len(A) bytes from BUF.
+            Return A || B
+
+    To fulfill a "Big Request" of N bytes, for N greater than or equal
+    to BUF_LEN:
+        Let A = the entire contents of BUF.
+        Let BYTES_NEEDED = (N + KEY_LEN - Len(A))
+        Let BLOCK_LEN = N_BLOCKS * PRF_OUTPUT_LEN
+        Let BLOCKS_NEEDED = BYTES_NEEDED divided by BLOCK_LEN, rounding up.
+
+        Let OUTPUT = PRF(K, 0..(BLOCKS_NEEDED-1))
+        Divide OUTPUT into:
+             B = the first (N_BLOCKS-1) * BLOCK_LEN bytes of OUTPUT.
+             K' = The next KEY_LEN bytes of OUTPUT
+             BUF' = The remainder of OUTPUT.
+
+        Let N' = N - Len(B) - Len(A)
+        Let C = Remove N' bytes from BUF'.
+        Replace K with K'; replace BUF with BUF'.  If BUF is empty, Stir.
+        Return A || B || C.
+
+     (When asked for a number of bytes, we call it a "Small request" if
+     we can, and if not, we treat it as a "Big request".)
+
+
+     To add N bytes of additional seed S to the state:
+
+        Pad S with 0 bytes to a multiple of KEY_LEN.
+
+        While S is nonempty:
+          Let X = the first KEY_LEN bytes of PRF(K, 0).
+          Let Y = Remove the first KEY_LEN bytes from S.
+          Replace K with X xor Y.
+
+        Stir.
+
+
+
