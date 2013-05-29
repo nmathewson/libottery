@@ -50,14 +50,25 @@ qround (a,b,c,d) =
            b'' = rotate (b' `xor` c'') 7
         in (a'', b'', c'', d'')
 
--- Compute a chacha double-round on a 16-tuple of words.
-tworounds :: (Word32, Word32, Word32, Word32, Word32, Word32, Word32, Word32,
-          Word32, Word32, Word32, Word32, Word32, Word32, Word32, Word32)->(
+data ChaChaState = ChaChaState (
           Word32, Word32, Word32, Word32, Word32, Word32, Word32, Word32,
           Word32, Word32, Word32, Word32, Word32, Word32, Word32, Word32)
 
-tworounds (x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,x15) =
-      let (x0' , x4' , x8' ,  x12')  = qround (x0 , x4 , x8 , x12)
+listToState [x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,x15] =
+   ChaChaState (x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,x15)
+
+stateToList s =
+    [x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,x15]
+    where
+      ChaChaState (x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,x15) = s
+
+-- Compute a chacha double-round on a 16-tuple of words.
+tworounds :: ChaChaState -> ChaChaState
+tworounds state =
+      let
+          ChaChaState (x0,x1,x2,x3,x4,x5,x6,x7,
+                       x8,x9,x10,x11,x12,x13,x14,x15) = state
+          (x0' , x4' , x8' ,  x12')  = qround (x0 , x4 , x8 , x12)
           (x1' , x5' , x9' ,  x13')  = qround (x1 , x5 , x9 , x13)
           (x2' , x6' , x10',  x14')  = qround (x2 , x6 , x10, x14)
           (x3' , x7' , x11',  x15')  = qround (x3 , x7 , x11, x15)
@@ -67,16 +78,12 @@ tworounds (x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,x15) =
           (x2'', x7'', x8'',  x13'') = qround (x2',x7',x8', x13')
           (x3'', x4'', x9'',  x14'') = qround (x3',x4',x9', x14')
 
-       in (x0'',x1'',x2'',x3'',x4'',x5'',x6'',x7'',
+       in ChaChaState (x0'',x1'',x2'',x3'',x4'',x5'',x6'',x7'',
            x8'',x9'',x10'',x11'',x12'',x13'',x14'',x15'')
 
--- add two 16-word tuples.
-plus (x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,x15) (
-     y0,y1,y2,y3,y4,y5,y6,y7,y8,y9,y10,y11,y12,y13,y14,y15) =
-     (x0+y0,x1+y1,x2+y2,x3+y3,
-      x4+y4,x5+y5,x6+y6,x7+y7,
-      x8+y8,x9+y9,x10+y10,x11+y11,
-      x12+y12,x13+y13,x14+y14,x15+y15)
+-- add two ChaCha states.
+plus x y =
+  listToState [ x+y | (x,y) <- zip (stateToList x) (stateToList y) ]
 
 -- Compute N rounds of the ChaCha function on a 16-tuple of words.
 chachafn rounds input =
@@ -104,21 +111,23 @@ wordsToBytes (w:rest) =
          d = fromIntegral ((w `shiftR` 24) .&. 255)
       in a:b:c:d : wordsToBytes rest
 
+data ChaChaKey = ChaChaKey (Word32,Word32,Word32,Word32,Word32,Word32,Word32,Word32,Word32,Word32)
+
 -- Given a number of rounds, a chacha key-and-nonce (as a 10-tuple of Word32),
 -- and a block counter, return a list of Word32 for the block.
-chachaWords :: Integer -> (Word32,Word32,Word32,Word32,Word32,Word32,Word32,Word32,Word32,Word32) -> Word32 -> [Word32]
-chachaWords rounds (k0,k1,k2,k3,k4,k5,k6,k7,n0,n1) ctr =
-     let sigma0 = 1634760805 :: Word32
+chachaWords :: Integer -> ChaChaKey -> Word32 -> [Word32]
+chachaWords rounds key ctr =
+      stateToList (chachafn rounds inp)
+      where
+         ChaChaKey (k0,k1,k2,k3,k4,k5,k6,k7,n0,n1) = key
+         sigma0 = 1634760805 :: Word32
          sigma1 = 857760878 :: Word32
          sigma2 = 2036477234 :: Word32
          sigma3 = 1797285236 :: Word32
-         inp = (sigma0, sigma1, sigma2, sigma3,
+         inp = ChaChaState (sigma0, sigma1, sigma2, sigma3,
                 k0,k1,k2,k3,
                 k4,k5,k6,k7,
                 ctr,0,n0,n1)
-         (o0,o1,o2,o3,o4,o5,o6,o7,
-          o8,o9,o10,o11,o12,o13,o14,o15) = chachafn rounds inp
-      in [o0,o1,o2,o3,o4,o5,o6,o7,o8,o9,o10,o11,o12,o13,o14,o15]
 
 -- Hex encoding/decoding. Is there a library for this?  There really
 -- should be.
@@ -187,10 +196,12 @@ data PRF a = PRF { keyLen :: Int,
 
 -- Convert a 40-byte sequence into a 10-tuple of Word32 as used for a key
 -- by chaChaWords.
-chachaKey :: [Word8] -> (Word32,Word32,Word32,Word32,Word32,Word32,Word32,Word32,Word32,Word32)
+chachaKey :: [Word8] -> ChaChaKey
 chachaKey bytes =
-	  let [k0,k1,k2,k3,k4,k5,k6,k7,n0,n1] = bytesToWords bytes
-	   in (k0,k1,k2,k3,k4,k5,k6,k7,n0,n1)
+	  let
+              [k0,k1,k2,k3,k4,k5,k6,k7,n0,n1] = bytesToWords bytes
+	   in
+              ChaChaKey (k0,k1,k2,k3,k4,k5,k6,k7,n0,n1)
 
 -- A ChaCha-based PRF.
 chachaPRF rounds = PRF { keyLen = 40,
