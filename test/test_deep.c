@@ -222,12 +222,12 @@ test_uints(void *arg)
   /* XXXX Assuming sizeof(unsigned) == 4.  Must write a different unit
    * test wshen it isn't. */
 
-  tt_int_op(OTTERY_RAND_UNSIGNED(), ==, get_u("agai"));
-  tt_int_op(OTTERY_RAND_UNSIGNED(), ==, get_u("n is"));
-  tt_int_op(OTTERY_RAND_UNSIGNED(), ==, get_u(" the"));
+  tt_int_op(OTTERY_RAND_UINT32(), ==, get_u("agai"));
+  tt_int_op(OTTERY_RAND_UINT32(), ==, get_u("n is"));
+  tt_int_op(OTTERY_RAND_UINT32(), ==, get_u(" the"));
   tt_assert(OTTERY_RAND_UINT64() == get_u64("re anyon"));
   tt_assert(OTTERY_RAND_UINT64() == get_u64("e who lo"));
-  tt_int_op(OTTERY_RAND_UNSIGNED(), ==, get_u("ves "));
+  tt_int_op(OTTERY_RAND_UINT32(), ==, get_u("ves "));
   tt_assert(OTTERY_RAND_UINT64() == get_u64("or pursu"));
   tt_assert(OTTERY_RAND_UINT64() == get_u64("es or de"));
   tt_assert(OTTERY_RAND_UINT64() == get_u64("sires to"));
@@ -238,16 +238,16 @@ test_uints(void *arg)
   tt_assert(OTTERY_RAND_UINT64() == get_u64(" gvvrr.r"));
   tt_assert(OTTERY_RAND_UINT64() == get_u64("nlcee-ky"));
   tt_assert(OTTERY_RAND_UINT64() == get_u64("o-zfvrg1"));
-  tt_int_op(OTTERY_RAND_UNSIGNED(), ==, get_u("oe.g"));
-  tt_int_op(OTTERY_RAND_UNSIGNED(), ==, get_u("uegl"));
-  tt_int_op(OTTERY_RAND_UNSIGNED(), ==, get_u("ef.f"));
+  tt_int_op(OTTERY_RAND_UINT32(), ==, get_u("oe.g"));
+  tt_int_op(OTTERY_RAND_UINT32(), ==, get_u("uegl"));
+  tt_int_op(OTTERY_RAND_UINT32(), ==, get_u("ef.f"));
   tt_assert(OTTERY_RAND_UINT64() == get_u64("r-rvsvfv"));
   /* This time, we consume the last of the buffer exactly: */
   tt_assert(OTTERY_RAND_UINT64() == get_u64("s-hf bpk"));
 
   /* And let's make sure that the next block starts right */
   tt_assert(OTTERY_RAND_UINT64() == get_u64("rtbne-jx"));
-  tt_int_op(OTTERY_RAND_UNSIGNED(), ==, get_u("1gij"));
+  tt_int_op(OTTERY_RAND_UINT32(), ==, get_u("1gij"));
 
   /* Now let's make sure we like the state, if we can. */
   if (USING_STATE()) {

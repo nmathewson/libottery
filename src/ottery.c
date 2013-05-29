@@ -598,6 +598,12 @@ ottery_st_rand_unsigned(struct ottery_state *st)
   OTTERY_RETURN_RAND_INTTYPE(st, unsigned);
 }
 
+uint32_t
+ottery_st_rand_uint32(struct ottery_state *st)
+{
+  OTTERY_RETURN_RAND_INTTYPE(st, uint32_t);
+}
+
 uint64_t
 ottery_st_rand_uint64(struct ottery_state *st)
 {

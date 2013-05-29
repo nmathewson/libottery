@@ -192,6 +192,7 @@ test_rand_uint(void *arg)
   (void)arg;
   int i;
   unsigned acc = 0, dec = (unsigned)-1;
+  uint32_t acc32 = 0, dec32 = (uint32_t)-1;
   uint64_t acc64 = 0, dec64 = (uint64_t)-1;
   uint8_t buf;
   /* Not much we can do to black-box test rand_unsinged and rand_uint64 other
@@ -202,35 +203,46 @@ test_rand_uint(void *arg)
 
   for (i = 0; i < 100; ++i) {
     unsigned u = OTTERY_RAND_UNSIGNED();
+    uint32_t u32 = OTTERY_RAND_UINT32();
     uint64_t u64 = OTTERY_RAND_UINT64();
     acc |= u;
+    acc32 |= u32;
     acc64 |= u64;
     dec &= u;
+    dec32 &= u32;
     dec64 &= u64;
   }
 
   tt_int_op(acc, ==, (unsigned)-1);
+  tt_assert(acc32 == (uint32_t)-1);
   tt_assert(acc64 == (uint64_t)-1);
   tt_int_op(dec, ==, 0);
+  tt_assert(dec32 == 0);
   tt_assert(dec64 == 0);
 
   acc = 0;
+  acc32 = 0;
   acc64 = 0;
   dec = (unsigned)-1;
+  dec32 = (unsigned)-1;
   dec64 = (uint64_t)-1;
   for (i = 0; i < 100; ++i) {
     unsigned u = OTTERY_RAND_UNSIGNED();
+    unsigned u32 = OTTERY_RAND_UINT32();
     uint64_t u64 = OTTERY_RAND_UINT64();
     OTTERY_RAND_BYTES(&buf, 1); /* make sure unaligned works. */
     acc |= u;
+    acc32 |= u32;
     acc64 |= u64;
     dec &= u;
+    dec32 &= u32;
     dec64 &= u64;
-
   }
   tt_int_op(acc, ==, (unsigned)-1);
+  tt_assert(acc32 == (uint32_t)-1);
   tt_assert(acc64 == (uint64_t)-1);
   tt_int_op(dec, ==, 0);
+  tt_assert(dec32 == 0);
   tt_assert(dec64 == 0);
 
  end:

@@ -85,6 +85,12 @@ ottery_rand_unsigned(void)
   CHECK_INIT(0);
   return ottery_st_rand_unsigned(&ottery_global_state_);
 }
+uint32_t
+ottery_rand_uint32(void)
+{
+  CHECK_INIT(0);
+  return ottery_st_rand_uint32(&ottery_global_state_);
+}
 uint64_t
 ottery_rand_uint64(void)
 {

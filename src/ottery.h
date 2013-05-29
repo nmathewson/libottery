@@ -38,6 +38,13 @@ void ottery_rand_bytes(void *buf, size_t n);
  */
 unsigned ottery_rand_unsigned(void);
 /**
+ * Generate a random number of type uint32_t.
+ *
+ * @return A random number between 0 and UINT32_MAX included,
+ *   chosen uniformly.
+ */
+uint32_t ottery_rand_uint32(void);
+/**
  * Generate a random number of type uint64_t.
  *
  * @return A random number between 0 and UINT64_MAX included,

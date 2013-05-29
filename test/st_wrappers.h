@@ -7,6 +7,9 @@
 #define OTTERY_RAND_UNSIGNED() \
   (USING_STATE() ? ottery_st_rand_unsigned(STATE()) : ottery_rand_unsigned())
 
+#define OTTERY_RAND_UINT32() \
+  (USING_STATE() ? ottery_st_rand_uint32(STATE()) : ottery_rand_uint32())
+
 #define OTTERY_RAND_UINT64() \
   (USING_STATE() ? ottery_st_rand_uint64(STATE()) : ottery_rand_uint64())
 

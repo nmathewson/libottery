@@ -133,6 +133,14 @@ void ottery_st_rand_bytes(struct ottery_state *st, void *buf, size_t n);
  */
 unsigned ottery_st_rand_unsigned(struct ottery_state *st);
 /**
+ * Use an ottery_state structure to generate a random number of type uint32_t.
+ *
+ * @param st The state structure to use.
+ * @return A random number between 0 and UINT32_MAX included,
+ *   chosen uniformly.
+ */
+uint32_t ottery_st_rand_uint32(struct ottery_state *st);
+/**
  * Use an ottery_state structure to generate a random number of type uint64_t.
  *
  * @param st The state structure to use.
