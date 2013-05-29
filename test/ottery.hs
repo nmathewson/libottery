@@ -1,9 +1,22 @@
--- Attempt to reimplement the libottery spec in Haskell.
+{-
+   This software has been dedicated to the public domain under the CC0
+   public domain dedication.
 
+   To the extent possible under law, the person who associated CC0 with
+   libottery has waived all copyright and related or neighboring rights
+   to libottery.
+
+   You should have received a copy of the CC0 legalcode along with this
+   work in doc/cc0.txt.  If not, see
+      <http://creativecommons.org/publicdomain/zero/1.0/>.
+-}
+
+-- An attempt to reimplement the libottery spec in Haskell.
 
 -- I'm really bad at Haskell, so watch out.  It's here for testing.
 -- If you use this for real crypto, you're building your edifice on a
--- foundation of sticks and thatch.
+-- foundation of sticks and thatch and inefficiency and side-channel
+-- attacks.
 
 -- (I'm using Haskell here because it's a good way to turn specs into code.
 -- Though I'm probably doing that wrong.)
@@ -13,8 +26,14 @@ import Data.Word
 import Data.Bits
 
 
--- Here's the ChaCha block function.
+{-
+   Here's the ChaCha block function that implements the ChaCha8,
+   ChaCha12, and ChaCha20 stream ciphers.  See above about not using
+   this in production environments.
+-}
 
+
+-- Apply the function 'fn' to 'x' N times.
 nTimes fn 0 x = x
 nTimes fn n x = nTimes fn (n - 1) (fn x)
 
@@ -85,7 +104,7 @@ wordsToBytes (w:rest) =
          d = fromIntegral ((w `shiftR` 24) .&. 255)
       in a:b:c:d : wordsToBytes rest
 
--- Given a number of rounds, a chacha key and nonce (as a 10-tuple of Word32),
+-- Given a number of rounds, a chacha key-and-nonce (as a 10-tuple of Word32),
 -- and a block counter, return a list of Word32 for the block.
 chachaWords :: Integer -> (Word32,Word32,Word32,Word32,Word32,Word32,Word32,Word32,Word32,Word32) -> Word32 -> [Word32]
 chachaWords rounds (k0,k1,k2,k3,k4,k5,k6,k7,n0,n1) ctr =
@@ -101,7 +120,8 @@ chachaWords rounds (k0,k1,k2,k3,k4,k5,k6,k7,n0,n1) ctr =
           o8,o9,o10,o11,o12,o13,o14,o15) = chachafn rounds inp
       in [o0,o1,o2,o3,o4,o5,o6,o7,o8,o9,o10,o11,o12,o13,o14,o15]
 
--- Hex encoding/decoding. Is there a library for this?
+-- Hex encoding/decoding. Is there a library for this?  There really
+-- should be.
 
 hexval '0' = 0
 hexval '1' = 1
@@ -137,15 +157,23 @@ hexDigit 13 = 'd'
 hexDigit 14 = 'e'
 hexDigit 15 = 'f'
 
+-- Convert a hex string to a list of bytes
 fromHex :: String -> [Word8]
 fromHex "" = []
 fromHex (a:b:rest) = ((hexval a) * 16 + hexval b) : fromHex rest
 
+-- Convert a list of bytes to a hex string.
 toHex :: [Word8] -> String
 toHex [] = ""
 toHex (byte:rest) = hexDigit (byte `div` 16) : hexDigit (byte .&. 15) : toHex rest
 
--- Now define an intermediate PRF type.
+{- Now define an intermediate PRF type.
+
+   A PRF has a a given key
+   length, an output length, a PRF function that takes a key and a
+   counter to make a block, and a key setup function that converts a
+   bytestring into a key.
+-}
 
 data PRF a = PRF { keyLen :: Int,
 	  	   bytesPerBlock :: Int,
@@ -153,11 +181,18 @@ data PRF a = PRF { keyLen :: Int,
 		   keyFunc :: ( [Word8] -> a )
                  }
 
+{-
+  Wrap the ChaCha block function up as a PRF.
+-}
+
+-- Convert a 40-byte sequence into a 10-tuple of Word32 as used for a key
+-- by chaChaWords.
 chachaKey :: [Word8] -> (Word32,Word32,Word32,Word32,Word32,Word32,Word32,Word32,Word32,Word32)
 chachaKey bytes =
 	  let [k0,k1,k2,k3,k4,k5,k6,k7,n0,n1] = bytesToWords bytes
 	   in (k0,k1,k2,k3,k4,k5,k6,k7,n0,n1)
 
+-- A ChaCha-based PRF.
 chachaPRF rounds = PRF { keyLen = 40,
 		         bytesPerBlock = 64,
 		         func = \k ctr -> wordsToBytes (chachaWords 8 k ctr),
@@ -168,20 +203,33 @@ chacha8PRF = chachaPRF 8
 chacha12PRF = chachaPRF 12
 chacha20PRF = chachaPRF 20
 
--- And now at last, our PRNG.
+{-
+   And now at last, our PRNG.  A PRNG state has a current key (which changes
+   a lot), a number of blocks to extract every time we invoke the PRF
+   (which parameterizes the forward-secrecy vs efficiency tradeoff), a PRF,
+   and a buffer of bytes that we've generated but which we haven't given
+   to the user yet.
+-}
 
 data PRNG a = PRNG { key :: a,
                      blocksPerCall :: Int,
                      prf :: PRF a,
                      buf :: [Word8] }
 
--- Internal prng functions
+{-
+  Internal prng functions
+-}
 
+-- Yield nBlocks blocks of data from the PRF.  It's vital to re-key after
+-- calling this function.
 generate prng nBlocks =
      concat [ (func (prf prng)) (key prng) (fromIntegral ctr) | ctr <- [0..nBlocks-1] ]
 
+-- Helper: how many bytes should we get getting per call to generate?
 bytesPerCall prng = (blocksPerCall prng) * (bytesPerBlock (prf prng))
 
+-- Pull n buffered bytes from a prng, and return the PRNG's new state and the
+-- returned bytes.  Gives an error if the n bytes are not buffered.
 extract :: PRNG a -> Int -> (PRNG a, [Word8])
 extract prng n
 	| (n <= length (buf prng)) =
@@ -194,12 +242,18 @@ extract prng n
         | otherwise = error "Tried to extract too many bytes!"
 
 
+-- Get a small number of bytes from the prng, stirring first if they aren't
+-- thre.  This is how libottery implements requests for uint32 and uint64.
+-- Return the new prng state and the requested bytes.
 getTiny :: PRNG a -> Int -> (PRNG a, [Word8])
 getTiny prng n
 	| (n <= length (buf prng)) = extract prng n
         | otherwise = extract (stir prng) n
 
-
+-- Get a few bytes from the prng, extracting greedily from the buffer
+-- at first, and then stirring to make more. This how libottery
+-- answers small requests for a number of bytes.
+-- Return the new prng state and the requested bytes.
 getSmall :: PRNG a -> Int -> (PRNG a, [Word8])
 getSmall prng n
         | (n <= length (buf prng)) = extract prng n
@@ -209,8 +263,13 @@ getSmall prng n
 		 (prng'', remainder) = extract prng' (n - length oldBuf)
 	      in (prng'' , (oldBuf ++ remainder) )
 
+-- Divide integer A by nonnegative integer B, rounding up.
 divRoundUp a b = (a + b - 1) `div` b
 
+-- Generate a bunch of bytes from the PRNG, extracting first from the buffer,
+-- then generating blocks in bulk to answer the entire user request and
+-- rekey.
+-- Return the new prng state and the requested bytes.
 getLots :: PRNG a -> Int -> (PRNG a, [Word8])
 getLots prng n =
 	let oldBuf = buf prng
@@ -228,11 +287,14 @@ getLots prng n =
 
 -- Exposed PRNG functions
 
+-- Construct a new PRNG.
 initPRNG prf blocksPerCall initialkey =
 	 let k = (keyFunc prf) initialkey
 	  in stir PRNG { key=k, blocksPerCall=blocksPerCall, prf=prf, buf=[] }
 
 
+-- Generate more buffered material for the PRNG, and rekey for forward
+-- secrecy.
 stir :: PRNG a -> PRNG a
 stir prng =
      let newBlock = generate prng (blocksPerCall prng)
@@ -240,6 +302,7 @@ stir prng =
 	 newKey = (keyFunc (prf prng)) newKeyBytes
       in PRNG { key=newKey, blocksPerCall=(blocksPerCall prng), prf=(prf prng), buf=newBuf }
 
+-- Add more entropy to the PRNG.
 addSeed :: PRNG a -> [Word8] -> PRNG a
 addSeed prng seed
      | (seed == []) = stir prng
@@ -252,12 +315,16 @@ addSeed prng seed
 	    prng' = PRNG {key=newKey,blocksPerCall=(blocksPerCall prng),prf=(prf prng),buf=[]}
 	 in addSeed prng' rest
 
+-- Return a random 32-bit integer from the PRNG. Return the new PRNG state
+-- and the integer.
 getU32 :: PRNG a -> (PRNG a, Word32)
 getU32 prng =
       let (prng', bytes) = getTiny prng 4
           [w] = bytesToWords bytes
        in (prng', w)
 
+-- Return a random list of n bytes from the PRNG. Return the new PRNG state
+-- and the byte list.
 getBytes :: PRNG a -> Int -> (PRNG a, [Word8])
 getBytes prng n
      | n < ((length (buf prng)) + (bytesPerCall prng) - (keyLen (prf prng))) =
