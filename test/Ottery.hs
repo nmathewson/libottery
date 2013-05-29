@@ -21,10 +21,22 @@
 -- (I'm using Haskell here because it's a good way to turn specs into code.
 -- Though I'm probably doing that wrong.)
 
+module Ottery (
+   ChaChaPRNG,
+   initChaCha8PRNG,
+   initChaCha12PRNG,
+   initChaCha20PRNG,
+   stir,
+   addSeed,
+   getU32,
+   getU64,
+   getBytes,
+   fromHex,
+   toHex
+) where
 
 import Data.Word
 import Data.Bits
-
 
 {-
    Here's the ChaCha block function that implements the ChaCha8,
@@ -340,6 +352,14 @@ getU32 prng =
           [w] = bytesToWords bytes
        in (prng', w)
 
+getU64 :: PRNG a -> (PRNG a, Word64)
+getU64 prng =
+       let
+          (prng', bytes) = getTiny prng 8
+	  [w_lo, w_hi] = bytesToWords bytes
+	  w64 = (fromIntegral w_lo) + ((fromIntegral w_hi) `shiftL` 32)
+	in (prng', w64)
+
 -- Return a random list of n bytes from the PRNG. Return the new PRNG state
 -- and the byte list.
 getBytes :: PRNG a -> Int -> (PRNG a, [Word8])
@@ -348,3 +368,9 @@ getBytes prng n
         getSmall prng n
      | otherwise = getLots prng n
 
+-- Instantiate PRNG.
+
+type ChaChaPRNG = PRNG ChaChaKey
+initChaCha8PRNG = initPRNG chacha8PRF
+initChaCha12PRNG = initPRNG chacha12PRF
+initChaCha20PRNG = initPRNG chacha20PRF
