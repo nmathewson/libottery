@@ -87,7 +87,7 @@ THE SPEC:
         Let BLOCK_LEN = N_BLOCKS * PRF_OUTPUT_LEN
         Let BLOCKS_NEEDED = BYTES_NEEDED divided by BLOCK_LEN, rounding up.
 
-        Let OUTPUT = PRF(K, 0..(BLOCKS_NEEDED-1))
+        Let OUTPUT = PRF(K, 0..((N_BLOCKS*BLOCKS_NEEDED)-1))
         Divide OUTPUT into:
              B = the first (N_BLOCKS-1) * BLOCK_LEN bytes of OUTPUT.
              K' = The next KEY_LEN bytes of OUTPUT
