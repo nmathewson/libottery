@@ -181,7 +181,7 @@ hexDigit 15 = 'f'
 -- Convert a hex string to a list of bytes
 fromHex :: String -> [Word8]
 fromHex "" = []
-fromHex (a:b:rest) = ((hexval a) * 16 + hexval b) : fromHex rest
+fromHex (a:b:rest) = (16 * hexval a + hexval b) : fromHex rest
 
 -- Convert a list of bytes to a hex string.
 toHex :: [Word8] -> String
@@ -198,8 +198,8 @@ toHex (byte:rest) = hexDigit (byte `div` 16) : hexDigit (byte .&. 15) : toHex re
 
 data PRF a = PRF { keyLen :: Int,
 	  	   bytesPerBlock :: Int,
-		   func :: ( a -> Word32 -> [Word8] ),
-		   keyFunc :: ( [Word8] -> a )
+		   func :: a -> Word32 -> [Word8],
+		   keyFunc :: [Word8] -> a
                  }
 
 {-
@@ -252,21 +252,18 @@ updatePRNG prng newKey newBuf =
 -- Yield nBlocks blocks of data from the PRF.  It's vital to re-key after
 -- calling this function.
 generate prng nBlocks =
-     concat [ (func (prf prng)) (key prng) (fromIntegral ctr) | ctr <- [0..nBlocks-1] ]
+     concat [ func (prf prng) (key prng) (fromIntegral ctr) | ctr <- [0..nBlocks-1] ]
 
 -- Helper: how many bytes should we get getting per call to generate?
-bytesPerCall prng = (blocksPerCall prng) * (bytesPerBlock (prf prng))
+bytesPerCall prng = blocksPerCall prng * bytesPerBlock (prf prng)
 
 -- Pull n buffered bytes from a prng, and return the PRNG's new state and the
 -- returned bytes.  Gives an error if the n bytes are not buffered.
 extract :: PRNG a -> Int -> (PRNG a, [Word8])
 extract prng n
-	| (n <= length (buf prng)) =
+	| n <= length (buf prng) =
                  let (rv, nb) = splitAt n (buf prng)
-                     nprng = PRNG {key=(key prng),
-		                   blocksPerCall=(blocksPerCall prng),
-				   prf=(prf prng),
-				   buf=nb}
+                     nprng = updatePRNG prng (key prng) nb
                   in (nprng, rv)
         | otherwise = error "Tried to extract too many bytes!"
 
@@ -276,7 +273,7 @@ extract prng n
 -- Return the new prng state and the requested bytes.
 getTiny :: PRNG a -> Int -> (PRNG a, [Word8])
 getTiny prng n
-	| (n <= length (buf prng)) = extract prng n
+	| n <= length (buf prng) = extract prng n
         | otherwise = extract (stir prng) n
 
 -- Get a few bytes from the prng, extracting greedily from the buffer
@@ -285,12 +282,12 @@ getTiny prng n
 -- Return the new prng state and the requested bytes.
 getSmall :: PRNG a -> Int -> (PRNG a, [Word8])
 getSmall prng n
-        | (n <= length (buf prng)) = extract prng n
+        | n <= length (buf prng) = extract prng n
 	| otherwise =
              let oldBuf = buf prng
 	         prng' = stir prng
 		 (prng'', remainder) = extract prng' (n - length oldBuf)
-	      in (prng'' , (oldBuf ++ remainder) )
+	      in (prng'', oldBuf ++ remainder)
 
 -- Divide integer A by nonnegative integer B, rounding up.
 divRoundUp a b = (a + b - 1) `div` b
@@ -302,23 +299,23 @@ divRoundUp a b = (a + b - 1) `div` b
 getLots :: PRNG a -> Int -> (PRNG a, [Word8])
 getLots prng n =
 	let oldBuf = buf prng
-	    bytesNeeded = n + (keyLen (prf prng)) - (length oldBuf)
+	    bytesNeeded = n + keyLen (prf prng) - length oldBuf
 	    bpc = blocksPerCall prng
 	    blockLen = bytesPerCall prng
 	    blocksNeeded = bytesNeeded `divRoundUp` blockLen
 	    output = generate prng (blocksNeeded * bpc)
 	    (middle, lastBlock) = splitAt (bpc * (blocksNeeded-1)) output
 	    (newKeyBytes, newBuf) = splitAt (keyLen (prf prng)) lastBlock
-	    newKey = (keyFunc (prf prng)) newKeyBytes
+	    newKey = keyFunc (prf prng) newKeyBytes
 	    prng' = updatePRNG prng newKey newBuf
-	    (prng'', final) = extract prng' (n - (length oldBuf) - (length middle))
-	 in (prng'', (oldBuf ++ middle ++ final))
+	    (prng'', final) = extract prng' (n - length oldBuf - length middle)
+	 in (prng'', oldBuf ++ middle ++ final)
 
 -- Exposed PRNG functions
 
 -- Construct a new PRNG.
 initPRNG prf blocksPerCall initialkey =
-	 let k = (keyFunc prf) initialkey
+	 let k = keyFunc prf initialkey
 	  in stir PRNG { key=k, blocksPerCall=blocksPerCall, prf=prf, buf=[] }
 
 
@@ -328,19 +325,19 @@ stir :: PRNG a -> PRNG a
 stir prng =
      let newBlock = generate prng (blocksPerCall prng)
          (newKeyBytes, newBuf) = splitAt (keyLen (prf prng)) newBlock
-	 newKey = (keyFunc (prf prng)) newKeyBytes
+	 newKey = keyFunc (prf prng) newKeyBytes
       in updatePRNG prng newKey newBuf
 
 -- Add more entropy to the PRNG.
 addSeed :: PRNG a -> [Word8] -> PRNG a
 addSeed prng seed
-     | (seed == []) = stir prng
+     | null seed = stir prng
      | otherwise =
         let klen = keyLen (prf prng)
             x = take klen (generate prng (blocksPerCall prng))
 	    (y, rest) = splitAt (keyLen (prf prng)) seed
-	    newKeyBytes = [ a^b | (a,b) <- (zip x y) ]
-	    newKey = (keyFunc (prf prng)) newKeyBytes
+	    newKeyBytes = [ a^b | (a,b) <- zip x y ]
+	    newKey = keyFunc (prf prng) newKeyBytes
 	    prng' = updatePRNG prng newKey []
 	 in addSeed prng' rest
 
@@ -357,14 +354,14 @@ getU64 prng =
        let
           (prng', bytes) = getTiny prng 8
 	  [w_lo, w_hi] = bytesToWords bytes
-	  w64 = (fromIntegral w_lo) + ((fromIntegral w_hi) `shiftL` 32)
+	  w64 = fromIntegral w_lo + (fromIntegral w_hi `shiftL` 32)
 	in (prng', w64)
 
 -- Return a random list of n bytes from the PRNG. Return the new PRNG state
 -- and the byte list.
 getBytes :: PRNG a -> Int -> (PRNG a, [Word8])
 getBytes prng n
-     | n < ((length (buf prng)) + (bytesPerCall prng) - (keyLen (prf prng))) =
+     | n < length (buf prng) + bytesPerCall prng - keyLen (prf prng) =
         getSmall prng n
      | otherwise = getLots prng n
 
