@@ -106,12 +106,13 @@ Details
 -------
 
 A libottery PRNG seeds itself from your operating system's (hopefully)
-secure random number generator.  This seed is used as the key and nonce
-for a (hopefully) strong, fast stream cipher.  Every time it generates a
-"block" (about 1024 bytes), it uses a portion of its own output to
-replace its key and nonce, so that the key it used to make those bytes
-is unrecoverable.  After it extracts bytes from the RNG, it clears them
-from its internal buffers.
+secure random number generator.  This seed is used as the key and
+nonce for a (hopefully) strong, fast stream cipher.  Every time it
+generates a "block" (about 1024 bytes), it uses a portion of its own
+output to replace its key and nonce, so that the key it used to make
+those bytes is unrecoverable.  After it extracts bytes from the RNG,
+it clears them from its internal buffers.  (This is based on a
+construction described in, as summarized by DJB.)
 
 By default, I'm trying to make libottery as safe to use as possible.
 Therefore, I am making it threadsafe by default, and forksafe by
@@ -132,6 +133,8 @@ of random 4-byte unsigned ints), the overhead dominates. Right now, for
 a 4-byte request, the majority of our time goes into locking, checking
 whether we've forked, and making sure that the RNG is really
 initialized.
+
+[1] http://csrc.nist.gov/groups/ST/toolkit//documents/rng/HashBlockCipherDRBG.pdf
 
 Speed comparison
 ----------------
