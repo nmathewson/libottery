@@ -92,22 +92,37 @@ get_hex(const char *hex_, uint8_t *out)
     ottery_st_add_seed(&state, x, strlen(s)/2); \
   } while (0);
 
-#define repeatM(n)                              \
+#define replicateM_(n)                          \
   for (i = 0; i < (n); ++i)
 
 void
 demo(void)
 {
-  /* This ugliness is a kludge so that the C and the Haskell can have the same
-   * code here.
+  int i;
+  /* This ugliness is a kludge so that the C and the Haskell can have mostly
+   * the same code here.
    */
 
 	u32
 	u32
-	stir
 	u32
 	addHexSeed ("f00d")
 	nBytes (256)
+	u64
+	u32
+	nBytes (1)
+	u64
+        replicateM_ (33) /*$*/ nBytes (31)
+	u64
+        addHexSeed ("b3da221ed5011d1f1ab1ef1dd1efaced10ca112e" /*++*/
+                    "f1eece1e55d1ab011ca150c1a151111caf100d52" /*++*/
+		    "0ff00d")
+        u64
+	nBytes (1)
+        replicateM_ (130) u64
+        addHexSeed ("00")
+        nBytes (99)
+        nBytes (17777)
 	u64
 }
 

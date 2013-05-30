@@ -58,12 +58,30 @@ initialKey = O.fromHex (
    "c01055a1defaceab1eacc01adedcab00d1ed00d5")
 
 demo = do
-        prng <- get
 	u32
 	u32
 	u32
 	addHexSeed ("f00d")
 	nBytes (256)
 	u64
+	u32
+	nBytes (1)
+	u64
+        replicateM_ (33) $ nBytes (31)
+	u64
+        addHexSeed ("b3da221ed5011d1f1ab1ef1dd1efaced10ca112e" ++
+                    "f1eece1e55d1ab011ca150c1a151111caf100d52" ++
+		    "0ff00d")
+        u64
+	nBytes (1)
+	replicateM_ (130) u64
+        addHexSeed ("00")
+        nBytes (99)
+        nBytes (17777)
+	u64
+
+-- XXXX The '16' here needs to be parameterized, since it's only right
+-- for BPI==4 in test_krovetz.c.  Also, this whole thing breaks hard
+-- on big-endian boxes.
 
 main = runStateT demo (O.initChaCha8PRNG 16 initialKey)

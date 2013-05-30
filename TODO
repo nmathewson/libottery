@@ -55,6 +55,11 @@ BEFORE FIRST VERSION
         . Test it.
     . Specify and clone in a more spec-y language; make sure it calls itself
       properly.
+      o Clone it in haskell
+      o Make the haskell clone work
+      - Make the haskell clone work for output_len != 1024
+      - Double-check the spec against the haskell clone
+
     o Make a test_deep.
     o 100% test coverage.
       (Well, there are 1-2 non-covered lines, but that's okay.)
@@ -68,6 +73,9 @@ BEFORE FIRST VERSION
     o Uncrustify
 
 BEFORE FINAL VERSION
+  - Rename stir
+  - Move common elements of ottery.h into an ottery_common.h.
+
 
   . Option to avoid leaving stuff on the stack.
 
