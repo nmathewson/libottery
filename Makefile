@@ -78,8 +78,8 @@ check: $(TESTS) test/test_vectors.actual test/test_vectors.actual-nosimd \
 check-spec: test/hs/test_ottery.output test/test_spec.output
 	@cmp test/hs/test_ottery.output test/test_spec.output && echo OKAY || echo BAD
 
-test/hs/test_ottery.output: test/hs/test_ottery
-	./test/hs/test_ottery > test/hs/test_ottery.output
+test/hs/test_ottery.output: test/hs/test_ottery test/test_spec
+	./test/hs/test_ottery `./test/test_spec --blocks-per-call` > test/hs/test_ottery.output
 
 test/test_spec.output: test/test_spec test/test_spec_seed
 	./test/test_spec test/test_spec_seed > test/test_spec.output

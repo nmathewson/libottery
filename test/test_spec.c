@@ -138,8 +138,17 @@ main(int argc, char **argv)
 
   struct ottery_config config;
   ottery_config_init(&config);
-  ottery_config_set_urandom_device_(&config, argv[1]);
   ottery_config_force_implementation(&config, OTTERY_PRF_CHACHA8);
+
+  if (!strcmp(argv[1], "--blocks-per-call")) {
+    if (ottery_st_init(&state, &config)) {
+      printf("couldn't initialize state\n"); return 1;
+    }
+    printf("%d\n", (int)state.prf.output_len / 64);
+    return 0;
+  }
+
+  ottery_config_set_urandom_device_(&config, argv[1]);
 
   if (ottery_st_init(&state, &config)) {
     printf("couldn't initialize state\n"); return 1;

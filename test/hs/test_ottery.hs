@@ -13,6 +13,8 @@
 
 import Data.Word
 import Control.Monad.State
+import System.Environment
+import Numeric
 
 import qualified Ottery as O
 
@@ -80,8 +82,12 @@ demo = do
         nBytes (17777)
 	u64
 
--- XXXX The '16' here needs to be parameterized, since it's only right
--- for BPI==4 in test_krovetz.c.  Also, this whole thing breaks hard
--- on big-endian boxes.
+-- XXXX This whole thing breaks hard on big-endian boxes.
 
-main = runStateT demo (O.initChaCha8PRNG 16 initialKey)
+getInt s = first
+   where
+     (first,_) = readDec s !! 0
+
+main = do
+     (blocksPerCall:_) <- getArgs
+     runStateT demo (O.initChaCha8PRNG (getInt blocksPerCall) initialKey)
