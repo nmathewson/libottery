@@ -62,7 +62,7 @@ THE SPEC:
     should be done destructively, so that the bytes no longer exist
     in the underlying memory.
 
-    To fulfill a "Tiny Request" of N bytes from the PRNG state:
+    To fulfill a "Tiny Request of N bytes" from the PRNG state:
     (for N much less than BUF_LEN)
         If there are fewer than N bytes in BUF, then Stir the PRNG.
         Remove the first N bytes from BUF, and give them to the user.
@@ -98,11 +98,11 @@ THE SPEC:
         Replace K with K'; replace BUF with BUF'.  If BUF is empty, Stir.
         Return A || B || C.
 
-     (When asked for a number of bytes, we call it a "Small request" if
-     we can, and if not, we treat it as a "Big request".)
+     To "Get N Random Bytes":
+         Provide those bytes as a "Small request" if can, and if not,
+         treat it as a "Big request".
 
-
-     To add N bytes of additional seed S to the state:
+     To "Add" N bytes of additional seed S to the state:
 
         Pad S with 0 bytes to a multiple of KEY_LEN.
 
@@ -114,4 +114,8 @@ THE SPEC:
         Stir.
 
 
+
+     The public API consists of the operations above named "Add", "Get N
+     Random bytes", and "Construct", "Tiny Request of 4 bytes", and "Tiny
+     Request of 8 bytes".
 
