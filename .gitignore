@@ -8,11 +8,14 @@
 *.gcov
 *.gcda
 *.gcno
+*.hi
 
 libottery.a
 
 doxygen
 
+test/test_spec
+test/test_spec.output
 test/test_vectors
 test/test_vectors.actual
 test/test_vectors.actual-nosimd
@@ -22,3 +25,5 @@ test/test_stateful
 test/test_memclear
 test/test_shallow
 test/test_deep
+test/hs/test_ottery
+test/hs/test_ottery.output

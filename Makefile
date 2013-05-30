@@ -5,7 +5,7 @@ CFLAGS=-Wall -W -Wextra -g -O3 -pthread
 # -pthread
 
 TESTS =  test/test_vectors test/bench_rng test/dump_bytes test/test_memclear \
-	test/test_shallow test/test_deep
+	test/test_shallow test/test_deep test/test_spec
 
 all: $(TESTS) libottery.a
 
@@ -13,12 +13,14 @@ OTTERY_OBJS = src/chacha8.o src/chacha12.o src/chacha20.o src/ottery.o \
 	src/ottery_osrng.o src/ottery_global.o
 TEST_OBJS = test/test_vectors.o test/bench_rng.o \
 	test/dump_bytes.o test/streams.o test/test_memclear.o \
-	test/tinytest.o test/test_shallow.o test/test_deep.o
+	test/tinytest.o test/test_shallow.o test/test_deep.o \
+	test/test_spec.o
 
 UNCRUSTIFY_FILES = src/chacha8.c src/chacha12.c src/chacha20.c \
 	src/ottery.c src/ottery_osrng.c src/ottery.h src/ottery_st.h \
 	src/ottery-config.h src/ottery-internal.h \
 	test/bench_rng.c test/dump_bytes.c test/streams.c test/test_deep.c \
+	test/test_spec.c \
 	test/test_memclear.c test/test_shallow.c test/test_vectors.c \
 	test/streams.h test/st_wrappers.h
 
@@ -58,6 +60,12 @@ test/test_shallow: test/test_shallow.o test/tinytest.o libottery.a
 test/test_deep: test/test_deep.o test/tinytest.o libottery.a
 	$(CC) $(CFLAGS) -Isrc test/test_deep.o test/tinytest.o libottery.a -o test/test_deep
 
+test/test_spec: test/test_spec.o libottery.a
+	$(CC) $(CFLAGS) -Isrc test/test_spec.o libottery.a -o test/test_spec
+
+test/hs/test_ottery: test/hs/Ottery.hs test/hs/ChaCha.hs test/hs/test_ottery.hs
+	(cd test/hs && ghc test_ottery.hs)
+
 check: $(TESTS) test/test_vectors.actual test/test_vectors.actual-nosimd \
 	test/test_shallow
 
@@ -66,6 +74,15 @@ check: $(TESTS) test/test_vectors.actual test/test_vectors.actual-nosimd \
 	@./test/test_memclear
 	@./test/test_shallow --quiet && echo "OKAY"
 	@./test/test_deep --quiet && echo "OKAY"
+
+check-spec: test/hs/test_ottery.output test/test_spec.output
+	@cmp test/hs/test_ottery.output test/test_spec.output && echo OKAY || echo BAD
+
+test/hs/test_ottery.output: test/hs/test_ottery
+	./test/hs/test_ottery > test/hs/test_ottery.output
+
+test/test_spec.output: test/test_spec test/test_spec_seed
+	./test/test_spec test/test_spec_seed > test/test_spec.output
 
 clean:
 	rm -f src/*.o test/*.o $(TESTS) libottery.a
@@ -101,7 +118,8 @@ test/test_memclear.o: test/test_memclear.c
 test/test_shallow.o: test/test_shallow.c src/ottery.h src/ottery_st.h \
   src/ottery-internal.h src/ottery-config.h test/tinytest.h \
   test/tinytest_macros.h test/st_wrappers.h
+test_spec.o: test/test_spec.c src/ottery.h src/ottery_st.h \
+  src/ottery-internal.h src/ottery-config.h
 test/test_vectors.o: test/test_vectors.c src/ottery-internal.h \
   src/ottery-config.h src/ottery.h test/streams.h
 test/tinytest.o: test/tinytest.c test/tinytest.h test/tinytest_macros.h
-
