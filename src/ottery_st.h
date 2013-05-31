@@ -15,10 +15,12 @@
 #define OTTERY_ST_H_HEADER_INCLUDED_
 #include <stdint.h>
 #include <sys/types.h>
+#include "ottery_common.h"
 
 /** @file */
 
 struct ottery_config;
+struct ottery_state;
 
 /** Size reserved for struct ottery_state */
 #define OTTERY_STATE_DUMMY_SIZE_ 1536

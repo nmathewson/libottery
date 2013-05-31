@@ -100,26 +100,27 @@ src/chacha20.o: src/chacha20.c src/ottery-internal.h src/ottery-config.h \
 src/chacha8.o: src/chacha8.c src/ottery-internal.h src/ottery-config.h \
   src/chacha_krovetz.c src/chacha_merged.c src/chacha_merged_ecrypt.h
 src/ottery.o: src/ottery.c src/ottery-internal.h src/ottery-config.h \
-  src/ottery.h src/ottery_st.h
+  src/ottery.h src/ottery_common.h src/ottery_st.h
 src/ottery_global.o: src/ottery_global.c src/ottery-internal.h \
- src/ottery-config.h src/ottery.h src/ottery_st.h
+  src/ottery-config.h src/ottery.h src/ottery_common.h src/ottery_st.h
 src/ottery_osrng.o: src/ottery_osrng.c src/ottery-internal.h \
-  src/ottery-config.h src/ottery.h
-
-test/bench_rng.o: test/bench_rng.c src/ottery.h src/ottery_st.h
-test/dump_bytes.o: test/dump_bytes.c src/ottery.h src/ottery_st.h \
-  test/st_wrappers.h
-test/streams.o: test/streams.c test/streams.h src/ottery-internal.h \
+  src/ottery-config.h src/ottery.h src/ottery_common.h
+src/bench_rng.o: test/bench_rng.c src/ottery.h src/ottery_common.h \
+  src/ottery_st.h
+src/dump_bytes.o: test/dump_bytes.c src/ottery.h src/ottery_common.h \
+  src/ottery_st.h test/st_wrappers.h
+src/streams.o: test/streams.c test/streams.h src/ottery-internal.h \
   src/ottery-config.h
-test/test_deep.o: test/test_deep.c src/ottery.h src/ottery_st.h \
-  src/ottery-internal.h src/ottery-config.h test/tinytest.h \
-  test/tinytest_macros.h test/st_wrappers.h
+
+test/test_deep.o: test/test_deep.c src/ottery.h src/ottery_common.h \
+  src/ottery_st.h src/ottery-internal.h src/ottery-config.h \
+  test/tinytest.h test/tinytest_macros.h test/st_wrappers.h
 test/test_memclear.o: test/test_memclear.c
-test/test_shallow.o: test/test_shallow.c src/ottery.h src/ottery_st.h \
-  src/ottery-internal.h src/ottery-config.h test/tinytest.h \
-  test/tinytest_macros.h test/st_wrappers.h
-test_spec.o: test/test_spec.c src/ottery.h src/ottery_st.h \
+test/test_shallow.o: test/test_shallow.c src/ottery.h src/ottery_common.h \
+  src/ottery_st.h src/ottery-internal.h src/ottery-config.h \
+  test/tinytest.h test/tinytest_macros.h test/st_wrappers.h
+test/test_spec.o: test/test_spec.c src/ottery_st.h src/ottery_common.h \
   src/ottery-internal.h src/ottery-config.h
 test/test_vectors.o: test/test_vectors.c src/ottery-internal.h \
-  src/ottery-config.h src/ottery.h test/streams.h
+  src/ottery-config.h src/ottery.h src/ottery_common.h test/streams.h
 test/tinytest.o: test/tinytest.c test/tinytest.h test/tinytest_macros.h

@@ -57,7 +57,7 @@ BEFORE FIRST VERSION
       properly.
       o Clone it in haskell
       o Make the haskell clone work
-      - Make the haskell clone work for output_len != 1024
+      o Make the haskell clone work for output_len != 1024
       - Double-check the spec against the haskell clone
 
     o Make a test_deep.
@@ -74,8 +74,7 @@ BEFORE FIRST VERSION
 
 BEFORE FINAL VERSION
   - Rename stir
-  - Move common elements of ottery.h into an ottery_common.h.
-
+  o Move common elements of ottery.h into an ottery_common.h.
 
   . Option to avoid leaving stuff on the stack.
 

@@ -104,6 +104,7 @@ struct ottery_prf {
   void (*generate)(void *state, uint8_t *output, uint32_t idx);
 };
 
+#ifdef OTTERY_INTERNAL
 struct ottery_config {
   /** The PRF that we should use.  If NULL, we use the default. */
   const struct ottery_prf *impl;
@@ -166,6 +167,7 @@ struct __attribute__((aligned(16))) ottery_state {
 #endif
   /**@}*/
 };
+#endif
 
 struct ottery_config;
 /**

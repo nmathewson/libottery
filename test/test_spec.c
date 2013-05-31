@@ -5,7 +5,6 @@
 #include <ctype.h>
 
 #define OTTERY_INTERNAL
-#include "ottery.h"
 #include "ottery_st.h"
 #include "ottery-internal.h"
 
