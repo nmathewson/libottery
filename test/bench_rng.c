@@ -60,20 +60,20 @@
 
 #define N2 100000
 
-#define TIME_BUF(buf_sz, rng_fn) do {                            \
-    struct timeval start, end;                                   \
-    unsigned char buf[buf_sz];                                   \
-    int i;                                                       \
-    gettimeofday(&start, NULL);                                  \
+#define TIME_BUF(buf_sz, rng_fn) do {                             \
+    struct timeval start, end;                                    \
+    unsigned char buf[buf_sz];                                    \
+    int i;                                                        \
+    gettimeofday(&start, NULL);                                   \
     for (i = 0; i < N2; ++i) {                                    \
-      rng_fn;                                                    \
-    }                                                            \
-    gettimeofday(&end, NULL);                                    \
-    uint64_t usec = end.tv_sec - start.tv_sec;                   \
-    usec *= 1000000;                                             \
-    usec += end.tv_usec - start.tv_usec;                         \
+      rng_fn;                                                     \
+    }                                                             \
+    gettimeofday(&end, NULL);                                     \
+    uint64_t usec = end.tv_sec - start.tv_sec;                    \
+    usec *= 1000000;                                              \
+    usec += end.tv_usec - start.tv_usec;                          \
     printf("%s: %f nsec per call\n", __func__, (usec*1000.0)/N2); \
-                                                                 \
+                                                                  \
 } while (0)
 
 
@@ -108,32 +108,32 @@ urandom_u64(void)
 }
 #endif
 
-#define CHACHA_SUITE(fn_suffix, state, ottery_suffix)     \
-void \
-time_ ## fn_suffix (void) \
-{ \
-  TIME_UNSIGNED_RNG((ottery_st_rand_unsigned ## ottery_suffix (state))); \
-} \
-void \
-time_ ## fn_suffix ## _u64(void) \
-{ \
-  TIME_UNSIGNED_RNG((ottery_st_rand_uint64 ## ottery_suffix (state))); \
-} \
-void \
-time_ ## fn_suffix ## _onebyte(void) \
-{ \
-  TIME_BUF(1, ottery_st_rand_bytes ## ottery_suffix(state, buf, sizeof(buf))); \
-} \
-void \
-time_ ## fn_suffix ## _buf16(void) \
-{ \
-  TIME_BUF(16, (ottery_st_rand_bytes ## ottery_suffix(state, buf, sizeof(buf)))); \
-} \
-void \
-time_ ## fn_suffix ## _buf1024(void) \
-{ \
-  TIME_BUF(1024, (ottery_st_rand_bytes ## ottery_suffix(state, buf, sizeof(buf)))); \
-}
+#define CHACHA_SUITE(fn_suffix, state, ottery_suffix)                                 \
+  void                                                                                \
+  time_ ## fn_suffix (void)                                                           \
+  {                                                                                   \
+    TIME_UNSIGNED_RNG((ottery_st_rand_unsigned ## ottery_suffix (state)));            \
+  }                                                                                   \
+  void                                                                                \
+    time_ ## fn_suffix ## _u64(void)                                                  \
+  {                                                                                   \
+    TIME_UNSIGNED_RNG((ottery_st_rand_uint64 ## ottery_suffix (state)));              \
+  }                                                                                   \
+  void                                                                                \
+    time_ ## fn_suffix ## _onebyte(void)                                              \
+  {                                                                                   \
+    TIME_BUF(1, ottery_st_rand_bytes ## ottery_suffix(state, buf, sizeof(buf)));      \
+  }                                                                                   \
+  void                                                                                \
+    time_ ## fn_suffix ## _buf16(void)                                                \
+  {                                                                                   \
+    TIME_BUF(16, (ottery_st_rand_bytes ## ottery_suffix(state, buf, sizeof(buf))));   \
+  }                                                                                   \
+  void                                                                                \
+    time_ ## fn_suffix ## _buf1024(void)                                              \
+  {                                                                                   \
+    TIME_BUF(1024, (ottery_st_rand_bytes ## ottery_suffix(state, buf, sizeof(buf)))); \
+  }
 
 CHACHA_SUITE(chacharand8, &s8, );
 CHACHA_SUITE(chacharand12, &s12, );

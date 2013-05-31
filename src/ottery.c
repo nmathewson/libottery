@@ -45,7 +45,7 @@
 #define MAGIC(ptr) (((uint32_t)(uintptr_t)(ptr)) ^ MAGIC_BASIS)
 
 static inline int ottery_st_rand_lock_and_check(struct ottery_state *st)
-  __attribute__((always_inline));
+__attribute__((always_inline));
 #ifndef OTTERY_NO_WIPE_STACK
 static void ottery_wipe_stack_(void) __attribute__((noinline));
 #endif
@@ -659,16 +659,16 @@ ottery_st_rand_bytes_nolock(struct ottery_state_nolock *st, void *out_, size_t n
     return result;                                                     \
 } while (0)
 
-#define OTTERY_RETURN_RAND_INTTYPE(st, inttype) do {                   \
-    if (ottery_st_rand_lock_and_check(st))                             \
-      return (inttype)0;                                               \
-    OTTERY_RETURN_RAND_INTTYPE_IMPL(st, inttype, UNLOCK(st));          \
+#define OTTERY_RETURN_RAND_INTTYPE(st, inttype) do {          \
+    if (ottery_st_rand_lock_and_check(st))                    \
+      return (inttype)0;                                      \
+    OTTERY_RETURN_RAND_INTTYPE_IMPL(st, inttype, UNLOCK(st)); \
 } while (0)
 
-#define OTTERY_RETURN_RAND_INTTYPE_NOLOCK(st, inttype) do {            \
-    if (ottery_st_rand_check_nolock(st))                               \
-      return (inttype)0;                                               \
-    OTTERY_RETURN_RAND_INTTYPE_IMPL(st, inttype, );                    \
+#define OTTERY_RETURN_RAND_INTTYPE_NOLOCK(st, inttype) do { \
+    if (ottery_st_rand_check_nolock(st))                    \
+      return (inttype)0;                                    \
+    OTTERY_RETURN_RAND_INTTYPE_IMPL(st, inttype, );         \
 } while (0)
 
 unsigned
