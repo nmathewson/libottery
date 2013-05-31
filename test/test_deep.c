@@ -22,6 +22,7 @@
 #define OTTERY_INTERNAL
 #include "ottery.h"
 #include "ottery_st.h"
+#include "ottery_nolock.h"
 #include "ottery-internal.h"
 
 #include "tinytest.h"
@@ -35,6 +36,8 @@
 
 #define STATE() state
 #define USING_STATE() (state != NULL)
+#define USING_NOLOCK() 0
+#define STATE_NOLOCK() NULL
 #include "st_wrappers.h"
 
 /* Here's the dummy generator we'll be using for tests.  It's based on

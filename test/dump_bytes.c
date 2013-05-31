@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include "ottery.h"
 #include "ottery_st.h"
+#include "ottery_nolock.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -26,6 +27,8 @@ int use_global_state = 0;
 
 #define STATE() (&state)
 #define USING_STATE() (use_global_state)
+#define USING_NOLOCK() 0
+#define STATE_NOLOCK() NULL
 #include "st_wrappers.h"
 
 #define MAX_OUTPUT_LEN 8192

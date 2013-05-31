@@ -19,9 +19,10 @@
  * calls its backends.
  */
 #define OTTERY_INTERNAL
+#include "ottery-internal.h"
 #include "ottery.h"
 #include "ottery_st.h"
-#include "ottery-internal.h"
+#include "ottery_nolock.h"
 
 #include "tinytest.h"
 #include "tinytest_macros.h"
@@ -33,13 +34,17 @@
 #include <unistd.h>
 
 #define STATE() state
+#define STATE_NOLOCK() ((struct ottery_state_nolock *)state)
 #define USING_STATE() (state != NULL)
+#define USING_NOLOCK() (state_nolock != 0)
 #include "st_wrappers.h"
 
 char *state_allocation = NULL;
 struct ottery_state *state = NULL;
+int state_nolock = 0;
 
 #define OT_ENABLE_STATE TT_FIRST_USER_FLAG
+#define OT_ENABLE_STATE_NOLOCK ((TT_FIRST_USER_FLAG<<1)|OT_ENABLE_STATE)
 
 void *
 setup_state(const struct testcase_t *testcase)
@@ -47,10 +52,16 @@ setup_state(const struct testcase_t *testcase)
   if (state)
     return NULL;
   if (testcase->flags & OT_ENABLE_STATE) {
+    if (ottery_get_sizeof_state() != ottery_get_sizeof_state_nolock())
+      return NULL;
     state_allocation = malloc(ottery_get_sizeof_state() + 16);
     const int misalign = (int) (((uintptr_t)state_allocation) & 0xf);
     state = (struct ottery_state *)(state_allocation + ((16-misalign)&0xf));
-    ottery_st_init(state, NULL);
+    if (testcase->flags & OT_ENABLE_STATE_NOLOCK)
+      ottery_st_init_nolock(STATE_NOLOCK(), NULL);
+    else
+      ottery_st_init(state, NULL);
+    state_nolock = (testcase->flags & OT_ENABLE_STATE_NOLOCK);
   }
   return (void*) 1;
 }
@@ -459,6 +470,7 @@ test_fatal(void *arg)
 {
   (void)arg;
   __attribute__((aligned(16))) struct ottery_state st;
+  __attribute__((aligned(16))) struct ottery_state_nolock st_nl;
   int tested = 0;
 
   ottery_set_fatal_handler(fatal_handler);
@@ -473,11 +485,23 @@ test_fatal(void *arg)
   tt_int_op(got_fatal_err, ==, OTTERY_ERR_STATE_INIT);
 
   got_fatal_err = 0;
+  ottery_st_add_seed_nolock(&st_nl, (const uint8_t*)"xyz", 3);
+  tt_int_op(got_fatal_err, ==, OTTERY_ERR_STATE_INIT);
+
+  got_fatal_err = 0;
   ottery_st_rand_unsigned(&st);
   tt_int_op(got_fatal_err, ==, OTTERY_ERR_STATE_INIT);
 
   got_fatal_err = 0;
+  ottery_st_rand_unsigned_nolock(&st_nl);
+  tt_int_op(got_fatal_err, ==, OTTERY_ERR_STATE_INIT);
+
+  got_fatal_err = 0;
   ottery_st_rand_bytes(&st, buf, 8);
+  tt_int_op(got_fatal_err, ==, OTTERY_ERR_STATE_INIT);
+
+  got_fatal_err = 0;
+  ottery_st_rand_bytes_nolock(&st_nl, buf, 8);
   tt_int_op(got_fatal_err, ==, OTTERY_ERR_STATE_INIT);
 #endif
 
@@ -492,6 +516,16 @@ test_fatal(void *arg)
   st.urandom_fname = "/dev/null"; /* make that reseed impossible */
   tt_int_op(got_fatal_err, ==, 0);
   ottery_st_rand_unsigned(&st);
+  tt_int_op(got_fatal_err, ==,
+            OTTERY_ERR_ACCESS_STRONG_RNG|OTTERY_ERR_FLAG_POSTFORK_RESEED);
+
+  got_fatal_err = 0;
+  tt_int_op(0, ==, ottery_st_init_nolock(&st_nl, NULL));
+  ottery_st_rand_unsigned_nolock(&st_nl);
+  st_nl.pid = getpid() + 100; /* force a postfork reseed. */
+  st_nl.urandom_fname = "/dev/null"; /* make that reseed impossible */
+  tt_int_op(got_fatal_err, ==, 0);
+  ottery_st_rand_unsigned_nolock(&st_nl);
   tt_int_op(got_fatal_err, ==,
             OTTERY_ERR_ACCESS_STRONG_RNG|OTTERY_ERR_FLAG_POSTFORK_RESEED);
 #endif
@@ -525,6 +559,11 @@ struct testcase_t stateful_tests[] = {
   END_OF_TESTCASES,
 };
 
+struct testcase_t nolock_tests[] = {
+  COMMON_TESTS(OT_ENABLE_STATE_NOLOCK),
+  END_OF_TESTCASES,
+};
+
 struct testcase_t global_tests[] = {
   COMMON_TESTS(0),
   END_OF_TESTCASES,
@@ -533,6 +572,7 @@ struct testcase_t global_tests[] = {
 struct testgroup_t groups[] = {
   { "misc/", misc_tests },
   { "state/", stateful_tests },
+  { "nolock/", nolock_tests },
   { "global/", global_tests },
   END_OF_GROUPS
 };

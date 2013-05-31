@@ -15,6 +15,7 @@
 #include "ottery-internal.h"
 #include "ottery.h"
 #include "ottery_st.h"
+#include "ottery_nolock.h"
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
@@ -44,8 +45,7 @@
 #define MAGIC(ptr) (((uint32_t)(uintptr_t)(ptr)) ^ MAGIC_BASIS)
 
 static inline int ottery_st_rand_lock_and_check(struct ottery_state *st)
-__attribute__((always_inline));
-static void ottery_st_stir_nolock(struct ottery_state *st);
+  __attribute__((always_inline));
 #ifndef OTTERY_NO_WIPE_STACK
 static void ottery_wipe_stack_(void) __attribute__((noinline));
 #endif
@@ -60,6 +60,12 @@ size_t
 ottery_get_sizeof_state(void)
 {
   return sizeof(struct ottery_state);
+}
+
+size_t
+ottery_get_sizeof_state_nolock(void)
+{
+  return sizeof(struct ottery_state_nolock);
 }
 
 #ifndef OTTERY_NO_CLEAR_AFTER_YIELD
@@ -232,7 +238,7 @@ ottery_st_nextblock_nolock_norekey(struct ottery_state *st)
  * @param st The state to use when generating the block.
  */
 static void
-ottery_st_nextblock_nolock(struct ottery_state *st)
+ottery_st_nextblock_nolock(struct ottery_state_nolock *st)
 {
   ottery_st_nextblock_nolock_norekey(st);
   st->prf.setup(st->state, st->buffer);
@@ -251,7 +257,8 @@ ottery_st_nextblock_nolock(struct ottery_state *st)
 static int
 ottery_st_initialize(struct ottery_state *st,
                      const struct ottery_config *config,
-                     int reinit)
+                     int reinit,
+                     int locked)
 {
   const struct ottery_prf *prf;
   if (!reinit) {
@@ -272,17 +279,19 @@ ottery_st_initialize(struct ottery_state *st,
 
     memset(st, 0, sizeof(*st));
 
-    /* Now set up the spinlock or mutex or hybrid thing. */
+    if (locked) {
+      /* Now set up the spinlock or mutex or hybrid thing. */
 #ifdef OTTERY_PTHREADS
-    if (pthread_mutex_init(&st->mutex, NULL))
-      return OTTERY_ERR_LOCK_INIT;
+      if (pthread_mutex_init(&st->mutex, NULL))
+        return OTTERY_ERR_LOCK_INIT;
 #elif defined(OTTERY_CRITICAL_SECTION)
-    if (InitializeCriticalSectionAndSpinCount(&st->mutex, 3000) == 0)
-      return OTTERY_ERR_LOCK_INIT;
+      if (InitializeCriticalSectionAndSpinCount(&st->mutex, 3000) == 0)
+        return OTTERY_ERR_LOCK_INIT;
 #elif defined(OTTERY_OSATOMIC)
-    /* Setting an OSAtomic spinlock to 0 is all you need to do to
-     * initialize it.*/
+      /* Setting an OSAtomic spinlock to 0 is all you need to do to
+       * initialize it.*/
 #endif
+    }
 
     /* Check invariants for PRF, in case we wrote some bad code. */
     if ((prf->state_len > MAX_STATE_LEN) ||
@@ -327,11 +336,18 @@ ottery_st_initialize(struct ottery_state *st,
 int
 ottery_st_init(struct ottery_state *st, const struct ottery_config *cfg)
 {
-  return ottery_st_initialize(st, cfg, 0);
+  return ottery_st_initialize(st, cfg, 0, 1);
 }
 
 int
-ottery_st_add_seed(struct ottery_state *st, const uint8_t *seed, size_t n)
+ottery_st_init_nolock(struct ottery_state_nolock *st,
+                      const struct ottery_config *cfg)
+{
+  return ottery_st_initialize(st, cfg, 0, 0);
+}
+
+static int
+ottery_st_add_seed_impl(struct ottery_state *st, const uint8_t *seed, size_t n, int locking)
 {
 #ifndef OTTERY_NO_INIT_CHECK
   if (UNLIKELY(st->magic != MAGIC(st))) {
@@ -349,10 +365,12 @@ ottery_st_add_seed(struct ottery_state *st, const uint8_t *seed, size_t n)
     const char *urandom_fname;
     /* Hold the lock for only a moment here: we don't want to be holding
      * it while we call the OS RNG. */
-    LOCK(st);
+    if (locking)
+      LOCK(st);
     state_bytes = st->prf.state_bytes;
     urandom_fname = st->urandom_fname;
-    UNLOCK(st);
+    if (locking)
+      UNLOCK(st);
     int r;
     if ((r = ottery_os_randbytes_(urandom_fname, tmp_seed, state_bytes)))
       return r;
@@ -360,7 +378,8 @@ ottery_st_add_seed(struct ottery_state *st, const uint8_t *seed, size_t n)
     n = state_bytes;
   }
 
-  LOCK(st);
+  if (locking)
+    LOCK(st);
   /* The algorithm here is really easy. We grab a block of output from the
    * PRNG, that the first (state_bytes) bytes of that, XOR it with up to
    * (state_bytes) bytes of our new seed data, and use that to set our new
@@ -382,13 +401,26 @@ ottery_st_add_seed(struct ottery_state *st, const uint8_t *seed, size_t n)
   /* Now make sure that st->buffer is set up with the new state. */
   ottery_st_nextblock_nolock(st);
 
-  UNLOCK(st);
+  if (locking)
+    UNLOCK(st);
 
   /* If we used stack-allocated seed material, wipe it. */
   ottery_memclear_(tmp_seed, sizeof(tmp_seed));
 
   return 0;
 }
+
+int
+ottery_st_add_seed(struct ottery_state *st, const uint8_t *seed, size_t n)
+{
+  return ottery_st_add_seed_impl(st, seed, n, 1);
+}
+int
+ottery_st_add_seed_nolock(struct ottery_state_nolock *st, const uint8_t *seed, size_t n)
+{
+  return ottery_st_add_seed_impl(st, seed, n, 0);
+}
+
 
 void
 ottery_st_wipe(struct ottery_state *st)
@@ -401,16 +433,17 @@ ottery_st_wipe(struct ottery_state *st)
   /* You don't need to do anything to tear down an OSAtomic spinlock. */
 #endif
 
+  ottery_st_wipe_nolock(st);
+}
+
+void
+ottery_st_wipe_nolock(struct ottery_state_nolock *st)
+{
   ottery_memclear_(st, sizeof(struct ottery_state));
 }
 
-/**
- * As ottery_st_stir, but do not acquire a lock on the state.
- *
- * @param st The state to stir.
- */
-static void
-ottery_st_stir_nolock(struct ottery_state *st)
+void
+ottery_st_stir_nolock(struct ottery_state_nolock *st)
 {
 #ifdef OTTERY_NO_CLEAR_AFTER_YIELD
   memset(st->buffer, 0, st->pos);
@@ -418,7 +451,6 @@ ottery_st_stir_nolock(struct ottery_state *st)
   (void)st;
 #endif
 }
-
 
 void
 ottery_st_stir(struct ottery_state *st)
@@ -448,12 +480,11 @@ ottery_set_fatal_handler(void (*fn)(int))
 }
 
 /**
- * Shared prologue for functions generating random bytes from an
- * ottery_state.  Make sure that the state is initialized, lock it, and
- * reseed it (if the PID has changed).
+ * Shared prologue for functions generating random bytes from an ottery_state.
+ * Make sure that the state is initialized.
  */
 static inline int
-ottery_st_rand_lock_and_check(struct ottery_state *st)
+ottery_st_rand_check_init(struct ottery_state *st)
 {
 #ifndef OTTERY_NO_INIT_CHECK
   if (UNLIKELY(st->magic != MAGIC(st))) {
@@ -461,18 +492,45 @@ ottery_st_rand_lock_and_check(struct ottery_state *st)
     return -1;
   }
 #endif
+  return 0;
+}
 
-  LOCK(st);
+/* XXXX */
+static inline int
+ottery_st_rand_check_pid(struct ottery_state *st)
+{
 #ifndef OTTERY_NO_PID_CHECK
   if (UNLIKELY(st->pid != getpid())) {
     int err;
-    if ((err = ottery_st_initialize(st, NULL, 1))) {
+    if ((err = ottery_st_initialize(st, NULL, 1, 0))) {
       ottery_fatal_error_(OTTERY_ERR_FLAG_POSTFORK_RESEED|err);
-      UNLOCK(st);
       return -1;
     }
   }
 #endif
+  return 0;
+}
+
+static inline int
+ottery_st_rand_lock_and_check(struct ottery_state *st)
+{
+  if (ottery_st_rand_check_init(st))
+    return -1;
+  LOCK(st);
+  if (ottery_st_rand_check_pid(st)) {
+    UNLOCK(st);
+    return -1;
+  }
+  return 0;
+}
+
+static inline int
+ottery_st_rand_check_nolock(struct ottery_state_nolock *st)
+{
+  if (ottery_st_rand_check_init(st))
+    return -1;
+  if (ottery_st_rand_check_pid(st))
+    return -1;
   return 0;
 }
 
@@ -507,20 +565,16 @@ ottery_st_rand_bytes_from_buf(struct ottery_state *st, uint8_t *out,
   }
 }
 
-void
-ottery_st_rand_bytes(struct ottery_state *st, void *out_,
-                     size_t n)
+static void
+ottery_st_rand_bytes_impl(struct ottery_state *st, void *out_,
+                          size_t n)
 {
-  if (ottery_st_rand_lock_and_check(st))
-    return;
-
   uint8_t *out = out_;
   size_t cpy;
 
   if (n + st->pos < st->prf.output_len * 2 - st->prf.state_bytes - 1) {
     /* Fulfill it all from the buffer simply if possible. */
     ottery_st_rand_bytes_from_buf(st, out, n);
-    UNLOCK(st);
     return;
   }
 
@@ -546,8 +600,23 @@ ottery_st_rand_bytes(struct ottery_state *st, void *out_,
   /* Then stir for the last part. */
   ottery_st_nextblock_nolock(st);
   ottery_st_rand_bytes_from_buf(st, out, n);
+}
 
+void
+ottery_st_rand_bytes(struct ottery_state *st, void *out_, size_t n)
+{
+  if (ottery_st_rand_lock_and_check(st))
+    return;
+  ottery_st_rand_bytes_impl(st, out_, n);
   UNLOCK(st);
+}
+
+void
+ottery_st_rand_bytes_nolock(struct ottery_state_nolock *st, void *out_, size_t n)
+{
+  if (ottery_st_rand_check_nolock(st))
+    return;
+  ottery_st_rand_bytes_impl(st, out_, n);
 }
 
 /**
@@ -567,9 +636,7 @@ ottery_st_rand_bytes(struct ottery_state *st, void *out_,
  * @param st The state to use.
  * @param inttype The type of integer to generate.
  **/
-#define OTTERY_RETURN_RAND_INTTYPE(st, inttype) do {                   \
-    if (ottery_st_rand_lock_and_check(st))                             \
-      return (inttype)0;                                               \
+#define OTTERY_RETURN_RAND_INTTYPE_IMPL(st, inttype, unlock) do {      \
     inttype result;                                                    \
     if (sizeof(inttype) + (st)->pos <= (st)->prf.output_len) {         \
       INT_ASSIGN_PTR(inttype, result, (st)->buffer + (st)->pos);       \
@@ -588,8 +655,20 @@ ottery_st_rand_bytes(struct ottery_state *st, void *out_,
       CLEARBUF((st)->buffer, sizeof(inttype));                         \
       (st)->pos += sizeof(inttype);                                    \
     }                                                                  \
-    UNLOCK(st);                                                        \
+    unlock;                                                            \
     return result;                                                     \
+} while (0)
+
+#define OTTERY_RETURN_RAND_INTTYPE(st, inttype) do {                   \
+    if (ottery_st_rand_lock_and_check(st))                             \
+      return (inttype)0;                                               \
+    OTTERY_RETURN_RAND_INTTYPE_IMPL(st, inttype, UNLOCK(st));          \
+} while (0)
+
+#define OTTERY_RETURN_RAND_INTTYPE_NOLOCK(st, inttype) do {            \
+    if (ottery_st_rand_check_nolock(st))                               \
+      return (inttype)0;                                               \
+    OTTERY_RETURN_RAND_INTTYPE_IMPL(st, inttype, );                    \
 } while (0)
 
 unsigned
@@ -598,10 +677,22 @@ ottery_st_rand_unsigned(struct ottery_state *st)
   OTTERY_RETURN_RAND_INTTYPE(st, unsigned);
 }
 
+unsigned
+ottery_st_rand_unsigned_nolock(struct ottery_state_nolock *st)
+{
+  OTTERY_RETURN_RAND_INTTYPE_NOLOCK(st, unsigned);
+}
+
 uint32_t
 ottery_st_rand_uint32(struct ottery_state *st)
 {
   OTTERY_RETURN_RAND_INTTYPE(st, uint32_t);
+}
+
+uint32_t
+ottery_st_rand_uint32_nolock(struct ottery_state_nolock *st)
+{
+  OTTERY_RETURN_RAND_INTTYPE_NOLOCK(st, uint32_t);
 }
 
 uint64_t
@@ -610,28 +701,58 @@ ottery_st_rand_uint64(struct ottery_state *st)
   OTTERY_RETURN_RAND_INTTYPE(st, uint64_t);
 }
 
+uint64_t
+ottery_st_rand_uint64_nolock(struct ottery_state_nolock *st)
+{
+  OTTERY_RETURN_RAND_INTTYPE_NOLOCK(st, uint64_t);
+}
+
 unsigned
-ottery_st_rand_range(struct ottery_state *st, unsigned upper)
+ottery_st_rand_range_nolock(struct ottery_state_nolock *st, unsigned upper)
 {
   unsigned lim = upper+1;
   unsigned divisor = lim ? (UINT_MAX / lim) : 1;
   unsigned n;
   do {
-    n = (ottery_st_rand_unsigned(st) / divisor);
+    n = (ottery_st_rand_unsigned_nolock(st) / divisor);
   } while (n > upper);
 
   return n;
 }
 
 uint64_t
-ottery_st_rand_range64(struct ottery_state *st, uint64_t upper)
+ottery_st_rand_range64_nolock(struct ottery_state_nolock *st, uint64_t upper)
 {
   uint64_t lim = upper+1;
   uint64_t divisor = lim ? (UINT64_MAX / lim) : 1;
   uint64_t n;
   do {
-    n = (ottery_st_rand_uint64(st) / divisor);
+    n = (ottery_st_rand_uint64_nolock(st) / divisor);
   } while (n > upper);
 
+  return n;
+}
+
+unsigned
+ottery_st_rand_range(struct ottery_state *state, unsigned upper)
+{
+  unsigned n;
+  if (ottery_st_rand_check_init(state))
+    return 0;
+  LOCK(state);
+  n = ottery_st_rand_range_nolock(state, upper);
+  UNLOCK(state);
+  return n;
+}
+
+uint64_t
+ottery_st_rand_range64(struct ottery_state *state, uint64_t upper)
+{
+  uint64_t n;
+  if (ottery_st_rand_check_init(state))
+    return 0;
+  LOCK(state);
+  n = ottery_st_rand_range64_nolock(state, upper);
+  UNLOCK(state);
   return n;
 }

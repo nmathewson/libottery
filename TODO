@@ -108,7 +108,7 @@ BEFORE FINAL VERSION
     - Ignore when we have a state object??
 
   - Handle thread-safety even better
-    - ability to disable locking.
+    o ability to disable locking.
     - Per-pthread?
     - pthread_spin?
     - When about to generate a ton of stuff, increment the counter *then*
