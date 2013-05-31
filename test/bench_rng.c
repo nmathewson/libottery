@@ -39,6 +39,7 @@
 
 #include "ottery.h"
 #include "ottery_st.h"
+#include "ottery_nolock.h"
 
 #define N 10000000
 
@@ -57,9 +58,31 @@
     printf("%s: %f nsec per call\n", __func__, (usec*1000.0)/N); \
 } while (0)
 
+#define N2 100000
+
+#define TIME_BUF(buf_sz, rng_fn) do {                            \
+    struct timeval start, end;                                   \
+    unsigned char buf[buf_sz];                                   \
+    int i;                                                       \
+    gettimeofday(&start, NULL);                                  \
+    for (i = 0; i < N2; ++i) {                                    \
+      rng_fn;                                                    \
+    }                                                            \
+    gettimeofday(&end, NULL);                                    \
+    uint64_t usec = end.tv_sec - start.tv_sec;                   \
+    usec *= 1000000;                                             \
+    usec += end.tv_usec - start.tv_usec;                         \
+    printf("%s: %f nsec per call\n", __func__, (usec*1000.0)/N2); \
+                                                                 \
+} while (0)
+
+
 struct ottery_state s8;
 struct ottery_state s12;
 struct ottery_state s20;
+struct ottery_state_nolock s8nl;
+struct ottery_state_nolock s12nl;
+struct ottery_state_nolock s20nl;
 
 #ifndef NO_URANDOM
 int urandom_fd = -1;
@@ -85,23 +108,39 @@ urandom_u64(void)
 }
 #endif
 
-void
-time_chacharand8(void)
-{
-  TIME_UNSIGNED_RNG((ottery_st_rand_unsigned(&s8)));
+#define CHACHA_SUITE(fn_suffix, state, ottery_suffix)     \
+void \
+time_ ## fn_suffix (void) \
+{ \
+  TIME_UNSIGNED_RNG((ottery_st_rand_unsigned ## ottery_suffix (state))); \
+} \
+void \
+time_ ## fn_suffix ## _u64(void) \
+{ \
+  TIME_UNSIGNED_RNG((ottery_st_rand_uint64 ## ottery_suffix (state))); \
+} \
+void \
+time_ ## fn_suffix ## _onebyte(void) \
+{ \
+  TIME_BUF(1, ottery_st_rand_bytes ## ottery_suffix(state, buf, sizeof(buf))); \
+} \
+void \
+time_ ## fn_suffix ## _buf16(void) \
+{ \
+  TIME_BUF(16, (ottery_st_rand_bytes ## ottery_suffix(state, buf, sizeof(buf)))); \
+} \
+void \
+time_ ## fn_suffix ## _buf1024(void) \
+{ \
+  TIME_BUF(1024, (ottery_st_rand_bytes ## ottery_suffix(state, buf, sizeof(buf)))); \
 }
 
-void
-time_chacharand12(void)
-{
-  TIME_UNSIGNED_RNG((ottery_st_rand_unsigned(&s12)));
-}
-
-void
-time_chacharand20(void)
-{
-  TIME_UNSIGNED_RNG((ottery_st_rand_unsigned(&s20)));
-}
+CHACHA_SUITE(chacharand8, &s8, );
+CHACHA_SUITE(chacharand12, &s12, );
+CHACHA_SUITE(chacharand20, &s20, );
+CHACHA_SUITE(chacharand8nl, &s8nl, _nolock );
+CHACHA_SUITE(chacharand12nl, &s12nl, _nolock );
+CHACHA_SUITE(chacharand20nl, &s20nl, _nolock );
 
 #ifndef NO_URANDOM
 void
@@ -125,23 +164,7 @@ time_libc_random(void)
   TIME_UNSIGNED_RNG((random()));
 }
 
-void
-time_chacharand8_u64(void)
-{
-  TIME_UNSIGNED_RNG((ottery_st_rand_uint64(&s8)));
-}
 
-void
-time_chacharand12_u64(void)
-{
-  TIME_UNSIGNED_RNG((ottery_st_rand_uint64(&s8)));
-}
-
-void
-time_chacharand20_u64(void)
-{
-  TIME_UNSIGNED_RNG((ottery_st_rand_uint64(&s20)));
-}
 #ifndef NO_URANDOM
 void
 time_urandom_u64(void)
@@ -191,25 +214,6 @@ time_openssl_random(void)
 #endif
 }
 
-#undef N
-#define N 100000
-
-#define TIME_BUF(buf_sz, rng_fn) do {                            \
-    struct timeval start, end;                                   \
-    unsigned char buf[buf_sz];                                   \
-    int i;                                                       \
-    gettimeofday(&start, NULL);                                  \
-    for (i = 0; i < N; ++i) {                                    \
-      rng_fn;                                                    \
-    }                                                            \
-    gettimeofday(&end, NULL);                                    \
-    uint64_t usec = end.tv_sec - start.tv_sec;                   \
-    usec *= 1000000;                                             \
-    usec += end.tv_usec - start.tv_usec;                         \
-    printf("%s: %f nsec per call\n", __func__, (usec*1000.0)/N); \
-                                                                 \
-} while (0)
-
 static inline void
 libc_random_buf(void *b, size_t n)
 {
@@ -221,21 +225,6 @@ libc_random_buf(void *b, size_t n)
 }
 
 
-void
-time_chacha8_onebyte(void)
-{
-  TIME_BUF(1, ottery_st_rand_bytes(&s8, buf, sizeof(buf)));
-}
-void
-time_chacha12_onebyte(void)
-{
-  TIME_BUF(1, ottery_st_rand_bytes(&s12, buf, sizeof(buf)));
-}
-void
-time_chacha20_onebyte(void)
-{
-  TIME_BUF(1, ottery_st_rand_bytes(&s20, buf, sizeof(buf)));
-}
 void
 time_arc4random_onebyte(void)
 {
@@ -249,21 +238,6 @@ time_libc_onebyte(void)
   TIME_UNSIGNED_RNG((random() & 0xff));
 }
 
-void
-time_chacharand8_buf16(void)
-{
-  TIME_BUF(16, (ottery_st_rand_bytes(&s8, buf, sizeof(buf))));
-}
-void
-time_chacharand12_buf16(void)
-{
-  TIME_BUF(16, (ottery_st_rand_bytes(&s12, buf, sizeof(buf))));
-}
-void
-time_chacharand20_buf16(void)
-{
-  TIME_BUF(16, (ottery_st_rand_bytes(&s20, buf, sizeof(buf))));
-}
 #ifndef NO_URANDOM
 void
 time_urandom_buf16(void)
@@ -291,21 +265,6 @@ time_opensslrandom_buf16(void)
 #endif
 }
 
-void
-time_chacharand8_buf1024(void)
-{
-  TIME_BUF(1024, (ottery_st_rand_bytes(&s8, buf, sizeof(buf))));
-}
-void
-time_chacharand12_buf1024(void)
-{
-  TIME_BUF(1024, (ottery_st_rand_bytes(&s12, buf, sizeof(buf))));
-}
-void
-time_chacharand20_buf1024(void)
-{
-  TIME_BUF(1024, (ottery_st_rand_bytes(&s20, buf, sizeof(buf))));
-}
 #ifndef NO_URANDOM
 void
 time_urandom_buf1024(void)
@@ -354,24 +313,45 @@ main(int argc, char **argv)
   ottery_st_init(&s8, &cfg_chacha8);
   ottery_st_init(&s12, &cfg_chacha12);
   ottery_st_init(&s20, &cfg_chacha20);
+  ottery_st_init_nolock(&s8nl, &cfg_chacha8);
+  ottery_st_init_nolock(&s12nl, &cfg_chacha12);
+  ottery_st_init_nolock(&s20nl, &cfg_chacha20);
 
   time_chacharand8();
   time_chacharand8_u64();
-  time_chacha8_onebyte();
+  time_chacharand8_onebyte();
   time_chacharand8_buf16();
   time_chacharand8_buf1024();
 
   time_chacharand12();
   time_chacharand12_u64();
-  time_chacha12_onebyte();
+  time_chacharand12_onebyte();
   time_chacharand12_buf16();
   time_chacharand12_buf1024();
 
   time_chacharand20();
   time_chacharand20_u64();
-  time_chacha20_onebyte();
+  time_chacharand20_onebyte();
   time_chacharand20_buf16();
   time_chacharand20_buf1024();
+
+  time_chacharand8nl();
+  time_chacharand8nl_u64();
+  time_chacharand8nl_onebyte();
+  time_chacharand8nl_buf16();
+  time_chacharand8nl_buf1024();
+
+  time_chacharand12nl();
+  time_chacharand12nl_u64();
+  time_chacharand12nl_onebyte();
+  time_chacharand12nl_buf16();
+  time_chacharand12nl_buf1024();
+
+  time_chacharand20nl();
+  time_chacharand20nl_u64();
+  time_chacharand20nl_onebyte();
+  time_chacharand20nl_buf16();
+  time_chacharand20nl_buf1024();
 
   time_arc4random();
   time_arc4random_u64();
