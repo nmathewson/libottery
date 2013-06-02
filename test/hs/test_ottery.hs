@@ -12,11 +12,30 @@
 -}
 
 import Data.Word
+import Data.Bits
+import Data.Char
 import Control.Monad.State
 import System.Environment
 import Numeric
 
 import qualified Ottery as O
+
+{-
+  Hex encoding
+ -}
+-- Hex encoding/decoding. Is there a library for this?  There really
+-- should be.
+
+-- Convert a hex string to a list of bytes
+fromHex :: String -> [Word8]
+fromHex "" = []
+fromHex (a:b:rest) = fromIntegral (16 * digitToInt a + digitToInt b) : fromHex rest
+
+-- Convert a list of bytes to a hex string.
+toHex :: [Word8] -> String
+toHex [] = ""
+toHex (byte:rest) = intToDigit (fromIntegral byte `div` 16) : intToDigit (fromIntegral byte .&. 15) : toHex rest
+
 
 {-
   Use some monads to make this testable.
@@ -41,7 +60,7 @@ u64 = do prng <- get
 nBytes n = do prng <- get
               let (prng', result) = O.getBytes prng n
 	      put prng'
-	      io $ print (O.toHex result)
+	      io $ print (toHex result)
 
 addSeed seed =
     do
@@ -49,13 +68,13 @@ addSeed seed =
        let prng' = O.addSeed prng seed
        put prng'
 
-addHexSeed = addSeed . O.fromHex
+addHexSeed = addSeed . fromHex
 
 
 -- An arbitrary initial key for testing.
 -- grep -i '^[abcdefoilsz]*$' /usr/share/dict/words
 
-initialKey = O.fromHex (
+initialKey = fromHex (
    "0b501e5ce5ceba5e1e55ba0b0b0fff0c51e10de5" ++
    "c01055a1defaceab1eacc01adedcab00d1ed00d5")
 

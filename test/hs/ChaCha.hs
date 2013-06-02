@@ -22,8 +22,6 @@
 -- Though I'm probably doing that wrong.)
 
 module ChaCha (
-   fromHex,
-   toHex,
    wordsToBytes,
    bytesToWords,
    chachaWords,
@@ -139,50 +137,4 @@ chachaWords rounds key ctr =
                 k4,k5,k6,k7,
                 ctr,0,n0,n1)
 
--- Hex encoding/decoding. Is there a library for this?  There really
--- should be.
-
-hexval '0' = 0
-hexval '1' = 1
-hexval '2' = 2
-hexval '3' = 3
-hexval '4' = 4
-hexval '5' = 5
-hexval '6' = 6
-hexval '7' = 7
-hexval '8' = 8
-hexval '9' = 9
-hexval 'a' = 10
-hexval 'b' = 11
-hexval 'c' = 12
-hexval 'd' = 13
-hexval 'e' = 14
-hexval 'f' = 15
-
-hexDigit 0 = '0'
-hexDigit 1 = '1'
-hexDigit 2 = '2'
-hexDigit 3 = '3'
-hexDigit 4 = '4'
-hexDigit 5 = '5'
-hexDigit 6 = '6'
-hexDigit 7 = '7'
-hexDigit 8 = '8'
-hexDigit 9 = '9'
-hexDigit 10 = 'a'
-hexDigit 11 = 'b'
-hexDigit 12 = 'c'
-hexDigit 13 = 'd'
-hexDigit 14 = 'e'
-hexDigit 15 = 'f'
-
--- Convert a hex string to a list of bytes
-fromHex :: String -> [Word8]
-fromHex "" = []
-fromHex (a:b:rest) = (16 * hexval a + hexval b) : fromHex rest
-
--- Convert a list of bytes to a hex string.
-toHex :: [Word8] -> String
-toHex [] = ""
-toHex (byte:rest) = hexDigit (byte `div` 16) : hexDigit (byte .&. 15) : toHex rest
 

@@ -30,8 +30,6 @@ module Ottery (
    getU32,
    getU64,
    getBytes,
-   fromHex,
-   toHex
 ) where
 
 import Data.Word
