@@ -75,11 +75,11 @@ chacha12PRF = chachaPRF 12
 chacha20PRF = chachaPRF 20
 
 {-
-   And now at last, our PRNG.  A PRNG state has a current key (which changes
-   a lot), a number of blocks to extract every time we invoke the PRF
-   (which parameterizes the forward-secrecy vs efficiency tradeoff), a PRF,
-   and a buffer of bytes that we've generated but which we haven't given
-   to the user yet.
+   And now at last, our PRNG.  A PRNG state has a current key (which
+   changes a lot), a number of blocks to extract every time we invoke
+   the PRF (which parameterizes an efficiency tradeoff), a PRF, and a
+   buffer of bytes that we've generated but which we haven't given to
+   the user yet.
 -}
 
 data PRNG a = PRNG { key :: a,
@@ -167,8 +167,8 @@ initPRNG prf blocksPerCall initialkey =
 	  in stir PRNG { key=k, blocksPerCall=blocksPerCall, prf=prf, buf=[] }
 
 
--- Generate more buffered material for the PRNG, and rekey for forward
--- secrecy.
+-- Generate more buffered material for the PRNG, and rekey for backtracking
+-- resistance.
 stir :: PRNG a -> PRNG a
 stir prng =
      let newBlock = generate prng (blocksPerCall prng)

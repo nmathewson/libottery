@@ -68,6 +68,7 @@ BEFORE FIRST VERSION
     o Document APIs.
     o Finish the readme
     o comment all the code
+    o s/forward-secrecy/backtracking resistance/
 
   o CONSISTENCY
     o Uncrustify
