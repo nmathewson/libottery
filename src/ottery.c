@@ -46,6 +46,7 @@
 
 static inline int ottery_st_rand_lock_and_check(struct ottery_state *st)
 __attribute__((always_inline));
+static int ottery_st_reseed(struct ottery_state *state);
 #ifndef OTTERY_NO_WIPE_STACK
 static void ottery_wipe_stack_(void) __attribute__((noinline));
 #endif
@@ -257,78 +258,84 @@ ottery_st_nextblock_nolock(struct ottery_state_nolock *st)
 static int
 ottery_st_initialize(struct ottery_state *st,
                      const struct ottery_config *config,
-                     int reinit,
                      int locked)
 {
   const struct ottery_prf *prf;
-  if (!reinit) {
-    const char *urandom_fname;
-    /* We really need our state to be aligned. If it isn't, let's give an
-     * error now, and not a crash when the SIMD instructions start to fail.
-     */
-    if (((uintptr_t)st) & 0xf)
-      return OTTERY_ERR_STATE_ALIGNMENT;
-
-    if (config) {
-      urandom_fname = config->urandom_fname;
-      prf = config->impl;
-    } else {
-      prf = &OTTERY_PRF_DEFAULT;
-      urandom_fname = NULL;
-    }
-
-    memset(st, 0, sizeof(*st));
-
-    if (locked) {
-      /* Now set up the spinlock or mutex or hybrid thing. */
-#ifdef OTTERY_PTHREADS
-      if (pthread_mutex_init(&st->mutex, NULL))
-        return OTTERY_ERR_LOCK_INIT;
-#elif defined(OTTERY_CRITICAL_SECTION)
-      if (InitializeCriticalSectionAndSpinCount(&st->mutex, 3000) == 0)
-        return OTTERY_ERR_LOCK_INIT;
-#elif defined(OTTERY_OSATOMIC)
-      /* Setting an OSAtomic spinlock to 0 is all you need to do to
-       * initialize it.*/
-#endif
-    }
-
-    /* Check invariants for PRF, in case we wrote some bad code. */
-    if ((prf->state_len > MAX_STATE_LEN) ||
-        (prf->state_bytes > MAX_STATE_BYTES) ||
-        (prf->state_bytes > prf->output_len) ||
-        (prf->output_len > MAX_OUTPUT_LEN))
-      return OTTERY_ERR_INTERNAL;
-
-    /* Check whether some of our structure size assumptions are right. */
-    if ((sizeof(struct ottery_state) > OTTERY_STATE_DUMMY_SIZE_) ||
-        (sizeof(struct ottery_config) > OTTERY_CONFIG_DUMMY_SIZE_))
-      return OTTERY_ERR_INTERNAL;
-
-    st->urandom_fname = urandom_fname;
-
-    /* Copy the PRF into place. */
-    memcpy(&st->prf, prf, sizeof(*prf));
-  } else {
-    prf = &st->prf;
-  }
-  /* Now seed the PRF: Generate some random bytes from the OS, and use them
-   * as whatever keys/nonces/whatever the PRF wants to have. */
+  const char *urandom_fname;
   int err;
-  if ((err = ottery_os_randbytes_(st->urandom_fname,
-                                  st->buffer, prf->state_bytes)))
+  /* We really need our state to be aligned. If it isn't, let's give an
+   * error now, and not a crash when the SIMD instructions start to fail.
+   */
+  if (((uintptr_t)st) & 0xf)
+    return OTTERY_ERR_STATE_ALIGNMENT;
+
+  if (config) {
+    urandom_fname = config->urandom_fname;
+    prf = config->impl;
+  } else {
+    prf = &OTTERY_PRF_DEFAULT;
+    urandom_fname = NULL;
+  }
+
+  memset(st, 0, sizeof(*st));
+
+  if (locked) {
+    /* Now set up the spinlock or mutex or hybrid thing. */
+#ifdef OTTERY_PTHREADS
+    if (pthread_mutex_init(&st->mutex, NULL))
+      return OTTERY_ERR_LOCK_INIT;
+#elif defined(OTTERY_CRITICAL_SECTION)
+    if (InitializeCriticalSectionAndSpinCount(&st->mutex, 3000) == 0)
+      return OTTERY_ERR_LOCK_INIT;
+#elif defined(OTTERY_OSATOMIC)
+    /* Setting an OSAtomic spinlock to 0 is all you need to do to
+     * initialize it.*/
+#endif
+  }
+
+  /* Check invariants for PRF, in case we wrote some bad code. */
+  if ((prf->state_len > MAX_STATE_LEN) ||
+      (prf->state_bytes > MAX_STATE_BYTES) ||
+      (prf->state_bytes > prf->output_len) ||
+      (prf->output_len > MAX_OUTPUT_LEN))
+    return OTTERY_ERR_INTERNAL;
+
+  /* Check whether some of our structure size assumptions are right. */
+  if ((sizeof(struct ottery_state) > OTTERY_STATE_DUMMY_SIZE_) ||
+      (sizeof(struct ottery_config) > OTTERY_CONFIG_DUMMY_SIZE_))
+    return OTTERY_ERR_INTERNAL;
+
+  st->urandom_fname = urandom_fname;
+
+  /* Copy the PRF into place. */
+  memcpy(&st->prf, prf, sizeof(*prf));
+
+  if ((err = ottery_st_reseed(st)))
     return err;
-  prf->setup(st->state, st->buffer);
-
-  /* Generate the first block of output. */
-  st->block_counter = 0;
-  ottery_st_nextblock_nolock(st);
-
-  st->pid = getpid();
 
   /* Set the magic number last, or else we might look like we succeeded
    * when we didn't */
   st->magic = MAGIC(st);
+
+  st->pid = getpid();
+
+  return 0;
+}
+
+static int
+ottery_st_reseed(struct ottery_state *st)
+{
+  /* Now seed the PRF: Generate some random bytes from the OS, and use them
+   * as whatever keys/nonces/whatever the PRF wants to have. */
+  int err;
+  if ((err = ottery_os_randbytes_(st->urandom_fname,
+                                  st->buffer, st->prf.state_bytes)))
+    return err;
+  st->prf.setup(st->state, st->buffer);
+
+  /* Generate the first block of output. */
+  st->block_counter = 0;
+  ottery_st_nextblock_nolock(st);
 
   return 0;
 }
@@ -336,14 +343,14 @@ ottery_st_initialize(struct ottery_state *st,
 int
 ottery_st_init(struct ottery_state *st, const struct ottery_config *cfg)
 {
-  return ottery_st_initialize(st, cfg, 0, 1);
+  return ottery_st_initialize(st, cfg, 1);
 }
 
 int
 ottery_st_init_nolock(struct ottery_state_nolock *st,
                       const struct ottery_config *cfg)
 {
-  return ottery_st_initialize(st, cfg, 0, 0);
+  return ottery_st_initialize(st, cfg, 0);
 }
 
 static int
@@ -502,10 +509,11 @@ ottery_st_rand_check_pid(struct ottery_state *st)
 #ifndef OTTERY_NO_PID_CHECK
   if (UNLIKELY(st->pid != getpid())) {
     int err;
-    if ((err = ottery_st_initialize(st, NULL, 1, 0))) {
+    if ((err = ottery_st_reseed(st))) {
       ottery_fatal_error_(OTTERY_ERR_FLAG_POSTFORK_RESEED|err);
       return -1;
     }
+    st->pid = getpid();
   }
 #endif
   return 0;

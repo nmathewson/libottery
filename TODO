@@ -83,7 +83,7 @@ BEFORE FINAL VERSION
 
   - Make sure that the reinitialization logic is threadsafe.
 
-  - Separate the function for reseeding and reinitializing.
+  o Separate the function for reseeding and reinitializing.
 
   o Waste fewer bytes when stirring.
 
