@@ -18,6 +18,7 @@
  */
 #include <string.h>
 #include <assert.h>
+#include "ottery-internal.h"
 
 /* Architecture-neutral way to specify 16-byte vector of ints              */
 typedef unsigned vec __attribute__ ((vector_size (16)));
@@ -124,19 +125,6 @@ typedef unsigned vec __attribute__ ((vector_size (16)));
 *(vec *)(op + d +  8) = REVV_BE(v2);    \
 *(vec *)(op + d + 12) = REVV_BE(v3);
 
-#if CHACHA_RNDS == 8
-#define ottery_prf_chacha ottery_prf_chacha8_krovetz_
-#define NAME "ChaCha8"
-#elif CHACHA_RNDS == 12
-#define ottery_prf_chacha ottery_prf_chacha12_krovetz_
-#define NAME "ChaCha12"
-#elif CHACHA_RNDS == 20
-#define ottery_prf_chacha ottery_prf_chacha20_krovetz_
-#define NAME "ChaCha20"
-#else
-#error
-#endif
-
 struct chacha_state_krovetz {
   __attribute__ ((aligned (16))) uint8_t key[32];
   __attribute__ ((aligned (16))) uint8_t nonce[8];
@@ -144,11 +132,20 @@ struct chacha_state_krovetz {
 
 #define LOOP_ITERATIONS 4
 
+static inline int
+ottery_blocks_chacha_krovetz(
+        const int chacha_rounds,
+        uint8_t *out,
+        uint32_t block_idx,
+        struct chacha_state_krovetz *st)
+  __attribute__((always_inline));
+
 /** Generates 64 * BPI * LOOP_ITERATIONS bytes of output using the key and
  * nonce in st and the counter in block_idx, and store them in out.
  */
-static int
+static inline int
 ottery_blocks_chacha_krovetz(
+        const int chacha_rounds,
         uint8_t *out,
         uint32_t block_idx,
         struct chacha_state_krovetz *st)
@@ -199,7 +196,7 @@ ottery_blocks_chacha_krovetz(
         const uint64_t x_ctr = block_idx + BPI*iters+(BPI-1);
         x12 = x_ctr & 0xffffffff; x13 = x_ctr>>32; x14 = np[0]; x15 = np[1];
         #endif
-        for (i = CHACHA_RNDS/2; i; i--) {
+        for (i = chacha_rounds/2; i; i--) {
             DQROUND_VECTORS(v0,v1,v2,v3)
             DQROUND_VECTORS(v4,v5,v6,v7)
             #if VBPI > 2
@@ -270,27 +267,36 @@ chacha_krovetz_state_setup(void *state, const uint8_t *bytes)
 }
 
 static void
-chacha_krovetz_generate(void *state, uint8_t *output, uint32_t idx)
+chacha8_krovetz_generate(void *state, uint8_t *output, uint32_t idx)
 {
   struct chacha_state_krovetz *st = state;
-  ottery_blocks_chacha_krovetz(output, idx * IDX_STEP, st);
+  ottery_blocks_chacha_krovetz(8, output, idx * IDX_STEP, st);
 }
 
-const struct ottery_prf ottery_prf_chacha = {
-  NAME,
-  "krovetz",
-  STATE_LEN,
-  STATE_BYTES,
-  OUTPUT_LEN,
-  chacha_krovetz_state_setup,
-  chacha_krovetz_generate,
-};
+static void
+chacha12_krovetz_generate(void *state, uint8_t *output, uint32_t idx)
+{
+  struct chacha_state_krovetz *st = state;
+  ottery_blocks_chacha_krovetz(12, output, idx * IDX_STEP, st);
+}
 
-#undef NAME
-#undef STATE_LEN
-#undef STATE_BYTES
-#undef OUTPUT_LEN
-#undef IDX_STEP
-#undef ottery_stream_chacha
-#undef ottery_prf_chacha
+static void
+chacha20_krovetz_generate(void *state, uint8_t *output, uint32_t idx)
+{
+  struct chacha_state_krovetz *st = state;
+  ottery_blocks_chacha_krovetz(20, output, idx * IDX_STEP, st);
+}
 
+#define PRF_CHACHA(r) {                         \
+  "ChaCha" #r,                                  \
+  "krovetz",                                    \
+  STATE_LEN,                                    \
+  STATE_BYTES,                                  \
+  OUTPUT_LEN,                                   \
+  chacha_krovetz_state_setup,                   \
+  chacha ## r ## _krovetz_generate              \
+}
+
+const struct ottery_prf ottery_prf_chacha8_krovetz_ = PRF_CHACHA(8);
+const struct ottery_prf ottery_prf_chacha12_krovetz_ = PRF_CHACHA(12);
+const struct ottery_prf ottery_prf_chacha20_krovetz_ = PRF_CHACHA(20);

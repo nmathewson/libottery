@@ -18,6 +18,8 @@ D. J. Bernstein
 Public domain.
 */
 #include "ottery-internal.h"
+#define u8 uint8_t
+#define u32 uint32_t
 #include "chacha_merged_ecrypt.h"
 
 #define ROTATE(v,c) (ROTL32(v,c))
@@ -65,10 +67,12 @@ static void ECRYPT_ivsetup(ECRYPT_ctx *x,const u8 *iv)
 #define IDX_STEP    16
 #define OUTPUT_LEN  (IDX_STEP * 64)
 
+static inline void chacha_merged_getblocks(const int chacha_rounds, ECRYPT_ctx *x,u8 *c) __attribute__((always_inline));
+
 /** Generate OUTPUT_LEN bytes of output using the key, nonce, and counter in x,
  * and store them in c.
  */
-static void chacha_merged_getblocks(ECRYPT_ctx *x,u8 *c)
+static void chacha_merged_getblocks(const int chacha_rounds, ECRYPT_ctx *x,u8 *c)
 {
   u32 x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15;
   u32 j0, j1, j2, j3, j4, j5, j6, j7, j8, j9, j10, j11, j12, j13, j14, j15;
@@ -108,7 +112,7 @@ static void chacha_merged_getblocks(ECRYPT_ctx *x,u8 *c)
     x13 = j13;
     x14 = j14;
     x15 = j15;
-    for (i = CHACHA_RNDS;i > 0;i -= 2) {
+    for (i = chacha_rounds;i > 0;i -= 2) {
       QUARTERROUND( x0, x4, x8,x12)
       QUARTERROUND( x1, x5, x9,x13)
       QUARTERROUND( x2, x6,x10,x14)
@@ -160,19 +164,6 @@ static void chacha_merged_getblocks(ECRYPT_ctx *x,u8 *c)
   }
 }
 
-#if CHACHA_RNDS == 8
-#define ottery_prf_chacha ottery_prf_chacha8_merged_
-#define NAME "ChaCha8"
-#elif CHACHA_RNDS == 12
-#define ottery_prf_chacha ottery_prf_chacha12_merged_
-#define NAME "ChaCha12"
-#elif CHACHA_RNDS == 20
-#define ottery_prf_chacha ottery_prf_chacha20_merged_
-#define NAME "ChaCha20"
-#else
-#error
-#endif
-
 #define STATE_LEN   (sizeof(ECRYPT_ctx))
 #define STATE_BYTES 40
 
@@ -185,26 +176,39 @@ chacha_merged_state_setup(void *state_, const uint8_t *bytes)
 }
 
 static void
-chacha_merged_generate(void *state_, uint8_t *output, uint32_t idx)
+chacha8_merged_generate(void *state_, uint8_t *output, uint32_t idx)
 {
   ECRYPT_ctx *x = state_;
   x->input[12] = idx * IDX_STEP;
-  chacha_merged_getblocks(x, output);
+  chacha_merged_getblocks(8, x, output);
 }
 
-const struct ottery_prf ottery_prf_chacha = {
-  NAME,
-  "merged",
-  STATE_LEN,
-  STATE_BYTES,
-  OUTPUT_LEN,
-  chacha_merged_state_setup,
-  chacha_merged_generate,
-};
+static void
+chacha12_merged_generate(void *state_, uint8_t *output, uint32_t idx)
+{
+  ECRYPT_ctx *x = state_;
+  x->input[12] = idx * IDX_STEP;
+  chacha_merged_getblocks(12, x, output);
+}
 
-#undef NAME
-#undef STATE_LEN
-#undef STATE_BYTES
-#undef OUTPUT_LEN
-#undef IDX_STEP
-#undef ottery_prf_chacha
+static void
+chacha20_merged_generate(void *state_, uint8_t *output, uint32_t idx)
+{
+  ECRYPT_ctx *x = state_;
+  x->input[12] = idx * IDX_STEP;
+  chacha_merged_getblocks(20, x, output);
+}
+
+#define PRF_CHACHA(r) {                         \
+  "ChaCha" #r,                                  \
+  "merged",                                     \
+  STATE_LEN,                                    \
+  STATE_BYTES,                                  \
+  OUTPUT_LEN,                                   \
+  chacha_merged_state_setup,                    \
+  chacha ## r ## _merged_generate               \
+}
+
+const struct ottery_prf ottery_prf_chacha8_merged_ = PRF_CHACHA(8);
+const struct ottery_prf ottery_prf_chacha12_merged_ = PRF_CHACHA(12);
+const struct ottery_prf ottery_prf_chacha20_merged_ = PRF_CHACHA(20);

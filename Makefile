@@ -9,14 +9,14 @@ TESTS =  test/test_vectors test/bench_rng test/dump_bytes test/test_memclear \
 
 all: $(TESTS) libottery.a
 
-OTTERY_OBJS = src/chacha8.o src/chacha12.o src/chacha20.o src/ottery.o \
+OTTERY_OBJS = src/chacha_merged.o src/chacha_krovetz.o src/ottery.o \
 	src/ottery_osrng.o src/ottery_global.o
 TEST_OBJS = test/test_vectors.o test/bench_rng.o \
 	test/dump_bytes.o test/streams.o test/test_memclear.o \
 	test/tinytest.o test/test_shallow.o test/test_deep.o \
 	test/test_spec.o
 
-UNCRUSTIFY_FILES = src/chacha8.c src/chacha12.c src/chacha20.c \
+UNCRUSTIFY_FILES = src/chacha_merged.c src/chacha_krovetz.c \
 	src/ottery.c src/ottery_osrng.c src/ottery.h src/ottery_st.h \
 	src/ottery-config.h src/ottery-internal.h \
 	test/bench_rng.c test/dump_bytes.c test/streams.c test/test_deep.c \
@@ -93,32 +93,34 @@ doxygen:
 uncrustify:
 	uncrustify -c etc/uncrustify.cfg --replace -l C $(UNCRUSTIFY_FILES)
 
-src/chacha12.o: src/chacha12.c src/ottery-internal.h src/ottery-config.h \
-  src/chacha_krovetz.c src/chacha_merged.c src/chacha_merged_ecrypt.h
-src/chacha20.o: src/chacha20.c src/ottery-internal.h src/ottery-config.h \
-  src/chacha_krovetz.c src/chacha_merged.c src/chacha_merged_ecrypt.h
-src/chacha8.o: src/chacha8.c src/ottery-internal.h src/ottery-config.h \
-  src/chacha_krovetz.c src/chacha_merged.c src/chacha_merged_ecrypt.h
+src/chacha_krovetz.o: src/chacha_krovetz.c src/ottery-internal.h \
+  src/ottery-config.h
+src/chacha_merged.o: src/chacha_merged.c src/ottery-internal.h \
+  src/ottery-config.h src/chacha_merged_ecrypt.h
 src/ottery.o: src/ottery.c src/ottery-internal.h src/ottery-config.h \
-  src/ottery.h src/ottery_common.h src/ottery_st.h
+  src/ottery.h src/ottery_common.h src/ottery_st.h src/ottery_nolock.h
+src/ottery_cpuinfo.o: src/ottery_cpuinfo.c src/ottery-internal.h \
+  src/ottery-config.h
 src/ottery_global.o: src/ottery_global.c src/ottery-internal.h \
   src/ottery-config.h src/ottery.h src/ottery_common.h src/ottery_st.h
 src/ottery_osrng.o: src/ottery_osrng.c src/ottery-internal.h \
   src/ottery-config.h src/ottery.h src/ottery_common.h
-src/bench_rng.o: test/bench_rng.c src/ottery.h src/ottery_common.h \
-  src/ottery_st.h
-src/dump_bytes.o: test/dump_bytes.c src/ottery.h src/ottery_common.h \
-  src/ottery_st.h test/st_wrappers.h
-src/streams.o: test/streams.c test/streams.h src/ottery-internal.h \
-  src/ottery-config.h
 
+test/bench_rng.o: test/bench_rng.c src/ottery.h src/ottery_common.h \
+  src/ottery_st.h src/ottery_nolock.h
+test/dump_bytes.o: test/dump_bytes.c src/ottery.h src/ottery_common.h \
+  src/ottery_st.h src/ottery_nolock.h test/st_wrappers.h
+test/streams.o: test/streams.c test/streams.h src/ottery-internal.h \
+  src/ottery-config.h
 test/test_deep.o: test/test_deep.c src/ottery.h src/ottery_common.h \
-  src/ottery_st.h src/ottery-internal.h src/ottery-config.h \
-  test/tinytest.h test/tinytest_macros.h test/st_wrappers.h
+  src/ottery_st.h src/ottery_nolock.h src/ottery-internal.h \
+  src/ottery-config.h test/tinytest.h test/tinytest_macros.h \
+  test/st_wrappers.h
 test/test_memclear.o: test/test_memclear.c
-test/test_shallow.o: test/test_shallow.c src/ottery.h src/ottery_common.h \
-  src/ottery_st.h src/ottery-internal.h src/ottery-config.h \
-  test/tinytest.h test/tinytest_macros.h test/st_wrappers.h
+test/test_shallow.o: test/test_shallow.c src/ottery-internal.h \
+  src/ottery-config.h src/ottery.h src/ottery_common.h src/ottery_st.h \
+  src/ottery_nolock.h test/tinytest.h test/tinytest_macros.h \
+  test/st_wrappers.h
 test/test_spec.o: test/test_spec.c src/ottery_st.h src/ottery_common.h \
   src/ottery-internal.h src/ottery-config.h
 test/test_vectors.o: test/test_vectors.c src/ottery-internal.h \
