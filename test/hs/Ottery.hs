@@ -91,12 +91,6 @@ data PRNG a = PRNG { key :: a,
   Internal prng functions
 -}
 
-updatePRNG prng newKey newBuf =
-     PRNG { key=newKey,
-            blocksPerCall=blocksPerCall prng,
-	    prf=prf prng,
-	    buf=newBuf }
-
 -- Yield nBlocks blocks of data from the PRF.  It's vital to re-key after
 -- calling this function.
 generate prng nBlocks =
@@ -111,7 +105,7 @@ extract :: PRNG a -> Int -> (PRNG a, [Word8])
 extract prng n
 	| n <= length (buf prng) =
                  let (rv, nb) = splitAt n (buf prng)
-                     nprng = updatePRNG prng (key prng) nb
+                     nprng = prng {key=(key prng), buf=nb}
                   in (nprng, rv)
         | otherwise = error "Tried to extract too many bytes!"
 
@@ -155,7 +149,7 @@ getLots prng n =
 	    (middle, lastBlock) = splitAt (blockLen * (callsNeeded-1)) output
 	    (newKeyBytes, newBuf) = splitAt (keyLen (prf prng)) lastBlock
 	    newKey = keyFunc (prf prng) newKeyBytes
-	    prng' = updatePRNG prng newKey newBuf
+	    prng' = prng {key=newKey, buf=newBuf}
 	    (prng'', final) = extract prng' (n - length oldBuf - length middle)
 	 in (prng'', oldBuf ++ middle ++ final)
 
@@ -174,7 +168,7 @@ stir prng =
      let newBlock = generate prng (blocksPerCall prng)
          (newKeyBytes, newBuf) = splitAt (keyLen (prf prng)) newBlock
 	 newKey = keyFunc (prf prng) newKeyBytes
-      in updatePRNG prng newKey newBuf
+      in prng {key=newKey, buf=newBuf }
 
 zeropad :: Int -> [Word8] -> [Word8]
 zeropad n lst = take n (lst ++ repeat 0)
@@ -190,7 +184,7 @@ addSeed prng seed
 	    y' = zeropad klen y
 	    newKeyBytes = [ a `xor` b | (a,b) <- zip x y' ]
 	    newKey = keyFunc (prf prng) newKeyBytes
-	    prng' = updatePRNG prng newKey []
+	    prng' = prng {key=newKey, buf=[]}
 	 in addSeed prng' rest
 
 -- Return a random 32-bit integer from the PRNG. Return the new PRNG state
