@@ -73,6 +73,8 @@ struct ottery_prf {
   const char *name;
   /** The name of the implementation of this algorithm*/
   const char *impl;
+  /** The name of the flavor of the implementation of this algorithm*/
+  const char *flav;
   /** The length of the object that's used to hold the state (keys, nonces,
    * subkeys as needed, etc) for this PRF. This can be longer than
    * state_bytes because of key expansion or structure padding.  It must be
@@ -85,7 +87,9 @@ struct ottery_prf {
    * function. It must be no larger than MAX_OUTPUT_LEN.
    */
   unsigned output_len;
-  /** Pointer to a function to to intialize a state structure for the PRF.
+  /** Bitmask of CPU flags required to run this PRF. */
+  uint32_t required_cpucap;
+  /** Pointer to a function to intialize a state structure for the PRF.
    *
    * @param state An object of size at least (state_len) that will
    *     hold the state and any derived values.  It must be aligned to

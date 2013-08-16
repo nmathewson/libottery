@@ -17,6 +17,7 @@ chacha-merged.c version 20080118
 D. J. Bernstein
 Public domain.
 */
+#include <string.h>
 #include "ottery-internal.h"
 #define u8 uint8_t
 #define u32 uint32_t
@@ -200,11 +201,13 @@ chacha20_merged_generate(void *state_, uint8_t *output, uint32_t idx)
 }
 
 #define PRF_CHACHA(r) {                         \
-  "ChaCha" #r,                                  \
-  "merged",                                     \
+  "CHACHA" #r,                                  \
+  "CHACHA" #r "-NOSIMD",                        \
+  "CHACHA" #r "-NOSIMD-DEFAULT",                \
   STATE_LEN,                                    \
   STATE_BYTES,                                  \
   OUTPUT_LEN,                                   \
+  0,                                            \
   chacha_merged_state_setup,                    \
   chacha ## r ## _merged_generate               \
 }
@@ -212,3 +215,4 @@ chacha20_merged_generate(void *state_, uint8_t *output, uint32_t idx)
 const struct ottery_prf ottery_prf_chacha8_merged_ = PRF_CHACHA(8);
 const struct ottery_prf ottery_prf_chacha12_merged_ = PRF_CHACHA(12);
 const struct ottery_prf ottery_prf_chacha20_merged_ = PRF_CHACHA(20);
+

@@ -60,7 +60,7 @@ def experiment(key, nonce, skip, rounds=20):
     print "================================================================"
     p = skip//64
     out = "".join(chacha_block(p+r, nonce, key, rounds) for r in xrange(8) )
-    print "cipher: ChaCha%s"%rounds
+    print "cipher: CHACHA%s"%rounds
     print "   key: %s"%binascii.b2a_hex(key)
     print " nonce: %s"%binascii.b2a_hex(nonce)
     print "offset: %s"%skip

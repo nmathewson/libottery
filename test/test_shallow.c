@@ -349,11 +349,9 @@ test_bad_init(void *arg)
 
   tt_int_op(0, ==, ottery_config_init(&cfg));
   tt_int_op(OTTERY_ERR_INVALID_ARGUMENT, ==,
-            ottery_config_force_implementation(&cfg, 0));
-  tt_int_op(OTTERY_ERR_INVALID_ARGUMENT, ==,
             ottery_config_force_implementation(&cfg, "rc4"));
   tt_int_op(0, ==,
-            ottery_config_force_implementation(&cfg, "CHACHA"));
+            ottery_config_force_implementation(&cfg, "CHACHA20"));
 
   memcpy(&bad_prf, &ottery_prf_chacha20_, sizeof(struct ottery_prf));
   bad_prf.state_len = 1024;
@@ -370,7 +368,7 @@ test_bad_init(void *arg)
   ottery_config_set_manual_prf_(&cfg, &bad_prf);
   tt_int_op(OTTERY_ERR_INTERNAL, ==, OTTERY_INIT(&cfg));
 
-  ottery_config_force_implementation(&cfg, "CHACHA");
+  ottery_config_force_implementation(&cfg, "CHACHA20");
   tt_int_op(0, ==, OTTERY_INIT(&cfg));
 
   ottery_config_set_urandom_device_(&cfg,"/dev/please-dont-add-this-device");

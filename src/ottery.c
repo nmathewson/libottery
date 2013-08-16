@@ -22,6 +22,8 @@
 #include <unistd.h>
 #include <limits.h>
 
+#include <stdio.h>
+
 /* I've added a few assertions to sanity-check for debugging, but they should
  * never ever ever trigger.  It's fine to build this code with NDEBUG. */
 #include <assert.h>
@@ -152,52 +154,54 @@ ottery_wipe_stack_(void)
 #error How do I lock?
 #endif
 
-/** Which PRF should we use by default? */
-#define OTTERY_PRF_DEFAULT ottery_prf_chacha20_
-
 int
 ottery_config_init(struct ottery_config *cfg)
 {
-  cfg->impl = &OTTERY_PRF_DEFAULT;
+  cfg->impl = NULL;
   cfg->urandom_fname = NULL;
   return 0;
+}
+
+static const struct ottery_prf *
+ottery_get_impl(const char *impl)
+{
+  int i;
+  const struct ottery_prf *ALL_PRFS[] = {
+    &ottery_prf_chacha20_krovetz_,
+    &ottery_prf_chacha12_krovetz_,
+    &ottery_prf_chacha8_krovetz_,
+    &ottery_prf_chacha20_merged_,
+    &ottery_prf_chacha12_merged_,
+    &ottery_prf_chacha8_merged_,
+
+    NULL,
+  };
+  const uint32_t cap = ottery_get_cpu_capabilities_();
+
+  for (i = 0; ALL_PRFS[i]; ++i) {
+    const struct ottery_prf *prf = ALL_PRFS[i];
+    if ((prf->required_cpucap & cap) != prf->required_cpucap)
+      continue;
+    if (impl == NULL)
+      return prf;
+    if (!strcmp(impl, prf->name))
+      return prf;
+    if (!strcmp(impl, prf->impl))
+      return prf;
+    if (!strcmp(impl, prf->flav))
+      return prf;
+  }
+  return NULL;
 }
 
 int
 ottery_config_force_implementation(struct ottery_config *cfg,
                                    const char *impl)
 {
-  int i;
-  static const struct {
-    const char *name;
-    const struct ottery_prf *prf;
-  } prf_table[] = {
-    { OTTERY_PRF_CHACHA,   &ottery_prf_chacha20_, },
-    { OTTERY_PRF_CHACHA8,  &ottery_prf_chacha8_, },
-    { OTTERY_PRF_CHACHA12, &ottery_prf_chacha12_, },
-    { OTTERY_PRF_CHACHA20, &ottery_prf_chacha20_, },
-
-#ifdef OTTERY_HAVE_SIMD_IMPL
-    { OTTERY_PRF_CHACHA_SIMD,   &ottery_prf_chacha20_krovetz_, },
-    { OTTERY_PRF_CHACHA8_SIMD,  &ottery_prf_chacha8_krovetz_, },
-    { OTTERY_PRF_CHACHA12_SIMD, &ottery_prf_chacha12_krovetz_, },
-    { OTTERY_PRF_CHACHA20_SIMD, &ottery_prf_chacha20_krovetz_, },
-#endif
-
-    { OTTERY_PRF_CHACHA_NO_SIMD,   &ottery_prf_chacha20_merged_, },
-    { OTTERY_PRF_CHACHA8_NO_SIMD,  &ottery_prf_chacha8_merged_, },
-    { OTTERY_PRF_CHACHA12_NO_SIMD, &ottery_prf_chacha12_merged_, },
-    { OTTERY_PRF_CHACHA20_NO_SIMD, &ottery_prf_chacha20_merged_, },
-
-    { NULL, NULL }
-  };
-  if (!impl)
-    return OTTERY_ERR_INVALID_ARGUMENT;
-  for (i = 0; prf_table[i].name; ++i) {
-    if (0 == strcmp(impl, prf_table[i].name)) {
-      cfg->impl = prf_table[i].prf;
-      return 0;
-    }
+  const struct ottery_prf *prf = ottery_get_impl(impl);
+  if (prf) {
+    cfg->impl = prf;
+    return 0;
   }
   return OTTERY_ERR_INVALID_ARGUMENT;
 }
@@ -260,8 +264,9 @@ ottery_st_initialize(struct ottery_state *st,
                      const struct ottery_config *config,
                      int locked)
 {
-  const struct ottery_prf *prf;
+  const struct ottery_prf *prf = NULL;
   const char *urandom_fname;
+  struct ottery_config cfg_tmp;
   int err;
   /* We really need our state to be aligned. If it isn't, let's give an
    * error now, and not a crash when the SIMD instructions start to fail.
@@ -269,13 +274,16 @@ ottery_st_initialize(struct ottery_state *st,
   if (((uintptr_t)st) & 0xf)
     return OTTERY_ERR_STATE_ALIGNMENT;
 
-  if (config) {
-    urandom_fname = config->urandom_fname;
-    prf = config->impl;
-  } else {
-    prf = &OTTERY_PRF_DEFAULT;
-    urandom_fname = NULL;
+  if (!config) {
+    ottery_config_init(&cfg_tmp);
+    config = &cfg_tmp;
   }
+
+  urandom_fname = config->urandom_fname;
+  prf = config->impl;
+
+  if (!prf)
+    prf = ottery_get_impl(NULL);
 
   memset(st, 0, sizeof(*st));
 

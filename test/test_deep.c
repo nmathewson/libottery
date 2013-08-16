@@ -121,9 +121,11 @@ dummy_prf_generate(void *state_, uint8_t *output, uint32_t idx)
 struct ottery_prf dummy_prf =  {
   "LoremIpsum",
   "LoremIpsum",
+  "LoremIpsum",
   sizeof(struct dummy_prf_state), /* state_len */
   4, /* state_bytes */
   64, /* output_len */
+  0, /* required cpucaps */
   dummy_prf_setup,
   dummy_prf_generate
 };
