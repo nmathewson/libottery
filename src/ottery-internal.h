@@ -52,6 +52,17 @@
  */
 int ottery_os_randbytes_(const char *fname, uint8_t *bytes, size_t n);
 
+/**
+ * Clear all bytes stored in a structure. Unlike memset, the compiler is not
+ * going to optimize this out of existence because the target is about to go
+ * out of scope.
+ *
+ * @param mem Pointer to the memory to erase.
+ * @param len The number of bytes to erase.
+ */
+void ottery_memclear_(void *mem, size_t len);
+
+
 #if !defined(OTTERY_NO_VECS)   \
   && (defined(__ARM_NEON__) || \
   defined(__ALTIVEC__)  ||     \

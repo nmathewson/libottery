@@ -85,18 +85,11 @@ ottery_get_sizeof_state_nolock(void)
  */
 void * (*volatile memset_volatile)(void *, int, size_t) = memset;
 
-/**
- * Clear all bytes stored in a structure. Unlike memset, the compiler is not
- * going to optimize this out of existence because the target is about to go
- * out of scope.
- *
- * @param mem Pointer to the memory to erase.
- * @param len The number of bytes to erase.
- */
-/* NOTE: whenever we change this, change test/test_memclear.c accordingly */
-static void
+
+void
 ottery_memclear_(void *mem, size_t len)
 {
+  /* NOTE: whenever we change this, change test/test_memclear.c accordingly */
   memset_volatile(mem, 0, len);
 }
 
