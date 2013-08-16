@@ -307,6 +307,12 @@ chacha20_krovetz_generate(void *state, uint8_t *output, uint32_t idx)
   chacha ## r ## _krovetz_generate              \
 }
 
+#ifdef __SSE3__
+const struct ottery_prf ottery_prf_chacha8_krovetz_sse3_ = PRF_CHACHA(8);
+const struct ottery_prf ottery_prf_chacha12_krovetz_sse3_ = PRF_CHACHA(12);
+const struct ottery_prf ottery_prf_chacha20_krovetz_sse3_ = PRF_CHACHA(20);
+#else
 const struct ottery_prf ottery_prf_chacha8_krovetz_ = PRF_CHACHA(8);
 const struct ottery_prf ottery_prf_chacha12_krovetz_ = PRF_CHACHA(12);
 const struct ottery_prf ottery_prf_chacha20_krovetz_ = PRF_CHACHA(20);
+#endif

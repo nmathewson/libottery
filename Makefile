@@ -4,13 +4,26 @@ CFLAGS=-Wall -W -Wextra -g -O3 -pthread
 # -mfpu=neon
 # -pthread
 
+### define if we're an X86 or X86_64 chip.
+X86=1
+
 TESTS =  test/test_vectors test/bench_rng test/dump_bytes test/test_memclear \
 	test/test_shallow test/test_deep test/test_spec
 
 all: $(TESTS) libottery.a
 
-OTTERY_OBJS = src/chacha_merged.o src/chacha_krovetz.o src/ottery.o \
+##ifdef X86
+ARCH_OBJS = src/chacha_krovetz_sse3.o src/chacha_krovetz_sse2.o
+CFLAGS_EXTRA = -DOTTERY_HAVE_SSE3_IMPL
+##else
+##ARCH_OBJS = src/chacha_krovetz.o
+##CFLAGS_EXTRA =
+##endif
+
+CFLAGS_ALL = $(CFLAGS) $(CFLAGS_EXTRA)
+OTTERY_BASE_OBJS = src/chacha_merged.o src/ottery.o \
 	src/ottery_osrng.o src/ottery_global.o src/ottery_cpuinfo.o
+OTTERY_OBJS = $(OTTERY_BASE_OBJS) $(ARCH_OBJS)
 TEST_OBJS = test/test_vectors.o test/bench_rng.o \
 	test/dump_bytes.o test/streams.o test/test_memclear.o \
 	test/tinytest.o test/test_shallow.o test/test_deep.o \
@@ -28,23 +41,40 @@ UNCRUSTIFY_FILES = src/chacha_merged.c src/chacha_krovetz.c \
 libottery.a: $(OTTERY_OBJS)
 	ar rcs libottery.a $(OTTERY_OBJS) && ranlib libottery.a
 
-$(OTTERY_OBJS): %.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+$(OTTERY_BASE_OBJS): %.o: %.c
+	$(CC) $(CFLAGS_ALL) -c $< -o $@
 
 $(TEST_OBJS): %.o: %.c
-	$(CC) $(CFLAGS) -Isrc -c $< -o $@
+	$(CC) $(CFLAGS_ALL) -Isrc -c $< -o $@
+
+##ifdef X86
+src/chacha_krovetz_sse3.o: src/chacha_krovetz.c src/ottery-internal.h \
+  src/ottery-config.h
+	$(CC) $(CFLAGS_ALL) -msse3 -c $< -o $@
+src/chacha_krovetz_sse2.o: src/chacha_krovetz.c src/ottery-internal.h \
+  src/ottery-config.h
+	$(CC) $(CFLAGS_ALL) -mno-sse3 -c $< -o $@
+##else
+##src/chacha_krovetz.o: src/chacha_krovetz.c src/ottery-internal.h \
+##    src/ottery-config.h
+##	$(CC) $(CFLAGS_ALL) -c $< -o $@
+##endif
+
 
 test/test_vectors: test/test_vectors.o test/streams.o libottery.a
-	$(CC) $(CFLAGS) -Isrc test/test_vectors.o test/streams.o libottery.a -o test/test_vectors
+	$(CC) $(CFLAGS_ALL) -Isrc test/test_vectors.o test/streams.o libottery.a -o test/test_vectors
 
 test/bench_rng: test/bench_rng.o libottery.a
-	$(CC) $(CFLAGS) -Isrc test/bench_rng.o libottery.a -lcrypto -o test/bench_rng
+	$(CC) $(CFLAGS_ALL) -Isrc test/bench_rng.o libottery.a -lcrypto -o test/bench_rng
 
 test/test_vectors.expected: test/make_test_vectors.py
 	./test/make_test_vectors.py > test/test_vectors.expected
 
 test/test_vectors.actual: test/test_vectors
 	./test/test_vectors > test/test_vectors.actual
+
+test/test_vectors.actual-midrange: test/test_vectors
+	./test/test_vectors midrange > test/test_vectors.actual-midrange
 
 test/test_vectors.actual-nosimd: test/test_vectors
 	./test/test_vectors no-simd > test/test_vectors.actual-nosimd
@@ -68,9 +98,11 @@ test/hs/test_ottery: test/hs/Ottery.hs test/hs/ChaCha.hs test/hs/test_ottery.hs
 	(cd test/hs && ghc test_ottery.hs)
 
 check: $(TESTS) test/test_vectors.actual test/test_vectors.actual-nosimd \
+	test/test_vectors.actual-midrange \
 	test/test_shallow
 
 	@cmp test/test_vectors.expected test/test_vectors.actual && echo OKAY || BAD
+	@cmp test/test_vectors.expected test/test_vectors.actual-midrange && echo OKAY || BAD
 	@cmp test/test_vectors.expected test/test_vectors.actual-nosimd && echo OKAY || echo BAD
 	@./test/test_memclear
 	@./test/test_shallow --quiet && echo "OKAY"

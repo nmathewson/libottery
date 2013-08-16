@@ -353,17 +353,17 @@ test_bad_init(void *arg)
   tt_int_op(0, ==,
             ottery_config_force_implementation(&cfg, "CHACHA20"));
 
-  memcpy(&bad_prf, &ottery_prf_chacha20_, sizeof(struct ottery_prf));
+  memcpy(&bad_prf, &ottery_prf_chacha20_merged_, sizeof(struct ottery_prf));
   bad_prf.state_len = 1024;
   ottery_config_set_manual_prf_(&cfg, &bad_prf);
   tt_int_op(OTTERY_ERR_INTERNAL, ==, OTTERY_INIT(&cfg));
 
-  memcpy(&bad_prf, &ottery_prf_chacha20_, sizeof(struct ottery_prf));
+  memcpy(&bad_prf, &ottery_prf_chacha20_merged_, sizeof(struct ottery_prf));
   bad_prf.state_bytes = 2000;
   ottery_config_set_manual_prf_(&cfg, &bad_prf);
   tt_int_op(OTTERY_ERR_INTERNAL, ==, OTTERY_INIT(&cfg));
 
-  memcpy(&bad_prf, &ottery_prf_chacha20_, sizeof(struct ottery_prf));
+  memcpy(&bad_prf, &ottery_prf_chacha20_merged_, sizeof(struct ottery_prf));
   bad_prf.output_len = 8;
   ottery_config_set_manual_prf_(&cfg, &bad_prf);
   tt_int_op(OTTERY_ERR_INTERNAL, ==, OTTERY_INIT(&cfg));

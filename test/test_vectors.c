@@ -63,15 +63,6 @@ experiment(const u8 *key, const u8 *nonce, unsigned skip,
     }                                                                  \
   } while (0)
 
-const struct ottery_prf *prfs_best[] = {
-#ifdef OTTERY_HAVE_SIMD_IMPL
-  &ottery_prf_chacha8_,
-  &ottery_prf_chacha12_,
-  &ottery_prf_chacha20_,
-#endif
-  NULL
-};
-
 const struct ottery_prf *prfs_no_simd[] = {
   &ottery_prf_chacha8_merged_,
   &ottery_prf_chacha12_merged_,
@@ -79,12 +70,36 @@ const struct ottery_prf *prfs_no_simd[] = {
   NULL
 };
 
+#ifdef OTTERY_HAVE_SIMD_IMPL
+const struct ottery_prf *prfs_midrange[] = {
+  &ottery_prf_chacha8_krovetz_,
+  &ottery_prf_chacha12_krovetz_,
+  &ottery_prf_chacha20_krovetz_,
+  NULL
+};
+#else
+#define prfs_midrange prfs_no_simd
+#endif
+
+#ifdef OTTERY_HAVE_SSE3_IMPL
+const struct ottery_prf *prfs_best[] = {
+  &ottery_prf_chacha8_krovetz_sse3_,
+  &ottery_prf_chacha12_krovetz_sse3_,
+  &ottery_prf_chacha20_krovetz_sse3_,
+  NULL
+};
+#else
+#define prfs_best prfs_midrange
+#endif
+
 int
 main(int argc, char **argv)
 {
   const struct ottery_prf **prfs = prfs_best;
   if (argc > 1 && !strcmp(argv[1], "no-simd"))
     prfs = prfs_no_simd;
+  if (argc > 1 && !strcmp(argv[1], "midrange"))
+    prfs = prfs_midrange;
 
   X("helloworld!helloworld!helloworld", "!hellowo", 0);
   X("\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0",

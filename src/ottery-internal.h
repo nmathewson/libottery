@@ -234,16 +234,11 @@ extern const struct ottery_prf ottery_prf_chacha8_krovetz_;
 extern const struct ottery_prf ottery_prf_chacha12_krovetz_;
 extern const struct ottery_prf ottery_prf_chacha20_krovetz_;
 /** @} */
-/** @brief Default ChaCha implementations.
- * @{ */
-#define ottery_prf_chacha8_ ottery_prf_chacha8_krovetz_
-#define ottery_prf_chacha12_ ottery_prf_chacha12_krovetz_
-#define ottery_prf_chacha20_ ottery_prf_chacha20_krovetz_
-/** @} */
-#else
-#define ottery_prf_chacha8_ ottery_prf_chacha8_merged_
-#define ottery_prf_chacha12_ ottery_prf_chacha12_merged_
-#define ottery_prf_chacha20_ ottery_prf_chacha20_merged_
+#ifdef OTTERY_HAVE_SSE3_IMPL
+extern const struct ottery_prf ottery_prf_chacha8_krovetz_sse3_;
+extern const struct ottery_prf ottery_prf_chacha12_krovetz_sse3_;
+extern const struct ottery_prf ottery_prf_chacha20_krovetz_sse3_;
+#endif
 #endif
 
 #endif
