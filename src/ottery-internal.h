@@ -190,6 +190,14 @@ void ottery_config_set_urandom_device_(struct ottery_config *cfg,
  * ottery_fatal_handler. */
 void ottery_fatal_error_(int error);
 
+#define OTTERY_CPUCAP_SIMD (1<<0)
+#define OTTERY_CPUCAP_SSE3 (1<<1)
+#define OTTERY_CPUCAP_AES  (1<<2)
+#define OTTERY_CPUCAP_RAND (1<<3)
+
+/** Return a mask of OTTERY_CPUCAP_* for what the CPU will offer us. */
+uint32_t ottery_get_cpu_capabilities_(void);
+
 /**
  * @brief pure-C portable ChaCha implementations.
  *
