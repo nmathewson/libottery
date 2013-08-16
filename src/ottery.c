@@ -152,6 +152,7 @@ ottery_config_init(struct ottery_config *cfg)
 {
   cfg->impl = NULL;
   cfg->urandom_fname = NULL;
+  cfg->disabled_sources = 0;
   return 0;
 }
 
@@ -218,6 +219,13 @@ ottery_config_set_urandom_device_(struct ottery_config *cfg,
   cfg->urandom_fname = fname;
 }
 
+void
+ottery_config_disable_entropy_sources_(struct ottery_config *cfg,
+                                       uint32_t disabled_sources)
+{
+  cfg->disabled_sources = disabled_sources;
+}
+
 /**
  * As ottery_st_nextblock_nolock(), but fill the entire block with
  * entropy, and don't try to rekey the state.
@@ -263,7 +271,6 @@ ottery_st_initialize(struct ottery_state *st,
                      int locked)
 {
   const struct ottery_prf *prf = NULL;
-  const char *urandom_fname;
   struct ottery_config cfg_tmp;
   int err;
   /* We really need our state to be aligned. If it isn't, let's give an
@@ -277,7 +284,6 @@ ottery_st_initialize(struct ottery_state *st,
     config = &cfg_tmp;
   }
 
-  urandom_fname = config->urandom_fname;
   prf = config->impl;
 
   if (!prf)
@@ -311,7 +317,9 @@ ottery_st_initialize(struct ottery_state *st,
       (sizeof(struct ottery_config) > OTTERY_CONFIG_DUMMY_SIZE_))
     return OTTERY_ERR_INTERNAL;
 
-  st->urandom_fname = urandom_fname;
+  /* XXXXX Have a better way to copy these over. */
+  st->osrng_config.urandom_fname = config->urandom_fname;
+  st->osrng_config.disabled_sources = config->disabled_sources;
 
   /* Copy the PRF into place. */
   memcpy(&st->prf, prf, sizeof(*prf));
@@ -333,11 +341,17 @@ ottery_st_reseed(struct ottery_state *st)
 {
   /* Now seed the PRF: Generate some random bytes from the OS, and use them
    * as whatever keys/nonces/whatever the PRF wants to have. */
+  /* XXXX Add seed rather than starting from scratch? */
   int err;
-  if ((err = ottery_os_randbytes_(st->urandom_fname,
-                                  st->buffer, st->prf.state_bytes)))
+  uint32_t flags=0;
+  if ((err = ottery_os_randbytes_(&st->osrng_config, 0,
+                                  st->buffer, st->prf.state_bytes,
+                                  st->buffer+st->prf.state_bytes,
+                                  &flags)))
     return err;
   st->prf.setup(st->state, st->buffer);
+  st->last_osrng_flags = flags;
+  st->entropy_src_flags = flags;
 
   /* Generate the first block of output. */
   st->block_counter = 0;
@@ -372,23 +386,18 @@ ottery_st_add_seed_impl(struct ottery_state *st, const uint8_t *seed, size_t n, 
   /* If the user passed NULL, then we should reseed from the operating
    * system. */
   uint8_t tmp_seed[MAX_STATE_BYTES];
+  uint32_t flags = 0;
 
   if (!seed || !n) {
-    unsigned state_bytes;
-    const char *urandom_fname;
-    /* Hold the lock for only a moment here: we don't want to be holding
-     * it while we call the OS RNG. */
-    if (locking)
-      LOCK(st);
-    state_bytes = st->prf.state_bytes;
-    urandom_fname = st->urandom_fname;
-    if (locking)
-      UNLOCK(st);
+    uint8_t scratch[MAX_STATE_BYTES];
     int r;
-    if ((r = ottery_os_randbytes_(urandom_fname, tmp_seed, state_bytes)))
+    if ((r = ottery_os_randbytes_(&st->osrng_config, 0,
+                                  tmp_seed, st->prf.state_bytes, scratch,
+                                  &flags)))
       return r;
     seed = tmp_seed;
-    n = state_bytes;
+    n = st->prf.state_bytes;
+    ottery_memclear_(scratch, MAX_STATE_BYTES);
   }
 
   if (locking)
@@ -413,6 +422,9 @@ ottery_st_add_seed_impl(struct ottery_state *st, const uint8_t *seed, size_t n, 
 
   /* Now make sure that st->buffer is set up with the new state. */
   ottery_st_nextblock_nolock(st);
+
+  st->entropy_src_flags |= flags;
+  st->last_osrng_flags = flags;
 
   if (locking)
     UNLOCK(st);

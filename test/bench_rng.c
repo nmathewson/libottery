@@ -11,6 +11,7 @@
    work in doc/cc0.txt.  If not, see
       <http://creativecommons.org/publicdomain/zero/1.0/>.
  */
+#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/time.h>
@@ -108,6 +109,25 @@ urandom_u64(void)
 }
 #endif
 
+#if defined(i386) || \
+    defined(__i386) || \
+    defined(__x86_64) || \
+    defined(__M_IX86) || \
+    defined(_M_IX86) || \
+    defined(__INTEL_COMPILER)
+static unsigned
+rdrand(void)
+{
+  unsigned therand;
+  unsigned char status;
+  asm volatile(".byte 0x0F, 0xC7, 0xF0 ; setc %1"
+               : "=a" (therand), "=qm" (status));
+  assert(status);
+  return therand;
+}
+#endif
+
+
 #define CHACHA_SUITE(fn_suffix, state, ottery_suffix)                                 \
   void                                                                                \
   time_ ## fn_suffix (void)                                                           \
@@ -141,6 +161,12 @@ CHACHA_SUITE(chacharand20, &s20, );
 CHACHA_SUITE(chacharand8nl, &s8nl, _nolock );
 CHACHA_SUITE(chacharand12nl, &s12nl, _nolock );
 CHACHA_SUITE(chacharand20nl, &s20nl, _nolock );
+
+void
+time_rdrandom(void)
+{
+  TIME_UNSIGNED_RNG(rdrand());
+}
 
 #ifndef NO_URANDOM
 void
@@ -224,6 +250,15 @@ libc_random_buf(void *b, size_t n)
   }
 }
 
+static inline void
+rdrandom_buf(void *b, size_t n)
+{
+  unsigned *cp = b;
+  unsigned i;
+  for (i = 0; i < n/sizeof(unsigned); ++i) {
+    *cp++ = rdrand();
+  }
+}
 
 void
 time_arc4random_onebyte(void)
@@ -265,6 +300,12 @@ time_opensslrandom_buf16(void)
 #endif
 }
 
+void
+time_rdrandom_buf16(void)
+{
+  TIME_BUF(16, rdrandom_buf(buf, sizeof(buf)));
+}
+
 #ifndef NO_URANDOM
 void
 time_urandom_buf1024(void)
@@ -291,6 +332,13 @@ time_opensslrandom_buf1024(void)
   TIME_BUF(1024, (RAND_bytes(buf, sizeof(buf))));
 #endif
 }
+
+void
+time_rdrandom_buf1024(void)
+{
+  TIME_BUF(1024, rdrandom_buf(buf, sizeof(buf)));
+}
+
 
 int
 main(int argc, char **argv)
@@ -358,6 +406,10 @@ main(int argc, char **argv)
   time_arc4random_onebyte();
   time_arc4random_buf16();
   time_arc4random_buf1024();
+
+  time_rdrandom();
+  time_rdrandom_buf16();
+  time_rdrandom_buf1024();
 
 #ifndef NO_URANDOM
   urandom_fd = open("/dev/urandom", O_RDONLY);

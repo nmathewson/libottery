@@ -38,19 +38,61 @@
 #define MAX_OUTPUT_LEN 1024
 
 /**
+ * @brief Flags for external entropy sources.
+ *
+ * @{ */
+/** An RNG that probably provides strong entropy. */
+#define OTTERY_ENTROPY_FL_STRONG  0x0001
+/** An RNG provided by the operating system. */
+#define OTTERY_ENTROPY_FL_OS      0x0002
+/** An RNG provided by the CPU. */
+#define OTTERY_ENTROPY_FL_CPU     0x0004
+/** An RNG that runs very quickly. */
+#define OTTERY_ENTROPY_FL_FAST    0x0008
+/** @} */
+/**
+ * @brief External entropy sources
+ *
+ * @{ */
+/** A unix-style /dev/urandom device. */
+#define OTTERY_ENTROPY_SRC_RANDOMDEV      0x0100
+/** The Windows CryptGenRandom call. */
+#define OTTERY_ENTROPY_SRC_CRYPTGENRANDOM 0x0200
+/** The Intel RDRAND instruction. */
+#define OTTERY_ENTROPY_SRC_RDRAND         0x0400
+/** @} */
+
+/** Configuration for the strong RNG the we use for entropy. */
+struct ottery_osrng_config {
+  /** The filename to use as /dev/urandom. Ignored if this
+   * is not a unix-like operating system. If this is NULL, we use
+   * the default value. */
+  const char *urandom_fname;
+  /** */
+  uint32_t disabled_sources;
+};
+
+/**
  * Interface to the operating system's strong RNG.  If this were fast,
  * we'd just use it for everything, and forget about having a userspace
  * PRNG.  Unfortunately, it typically isn't.
  *
- * @param fname The filename to use as /dev/urandom. Ignored if this
- *    is not a unix-like operating system. If this is NULL, we use
- *    the default value.
+ * @param config A correctly set-up ottery_osrng_config.
+ * @param require_flags Only run entropy sources with *all* of these
+ *      OTTERY_ENTROPY_* flags set. Set this to 0 to use all the sources
+ *      that work.
  * @param bytes A buffer to receive random bytes.
  * @param n The number of bytes to write
+ * @param scratch Scratch space at least n bytes in size.
+ * @param flags_out Set to a bitwise OR of all of the OTTERY_ENTROPY_* flags
+ *      for sources in the result.
  * @return 0 on success, or an error code on failure. On failure, it is not
  *   safe to treat the contents of the buffer as random at all.
  */
-int ottery_os_randbytes_(const char *fname, uint8_t *bytes, size_t n);
+int ottery_os_randbytes_(const struct ottery_osrng_config *config,
+                         uint32_t require_flags,
+                         uint8_t *bytes, size_t n, uint8_t *scratch,
+                         uint32_t *flags_out);
 
 /**
  * Clear all bytes stored in a structure. Unlike memset, the compiler is not
@@ -61,7 +103,6 @@ int ottery_os_randbytes_(const char *fname, uint8_t *bytes, size_t n);
  * @param len The number of bytes to erase.
  */
 void ottery_memclear_(void *mem, size_t len);
-
 
 #if !defined(OTTERY_NO_VECS)   \
   && (defined(__ARM_NEON__) || \
@@ -126,6 +167,9 @@ struct ottery_config {
 
   /** The filename for urandom to use. If NULL, we use the default. */
   const char *urandom_fname;
+
+  /** Don't use any sources with *any* of these flags set. */
+  uint32_t disabled_sources;
 };
 
 #define ottery_state_nolock ottery_state
@@ -164,9 +208,18 @@ struct __attribute__((aligned(16))) ottery_state {
    * ottery_st_rand_lock_and_check(). */
   pid_t pid;
   /**
-   * The filename for urandom to use. If NULL, we use the default.
+   * Combined flags_out results from all calls to the entropy source that
+   * have influenced our current state.
    */
-  const char *urandom_fname;
+  uint32_t entropy_src_flags;
+  /**
+   * flags_out result from our last call to the entropy source.
+   */
+  uint32_t last_osrng_flags;
+  /**
+   * Configuration and state for the entropy source.
+   */
+  struct ottery_osrng_config osrng_config;
   /**
    * @brief Locks for this structure.
    *
@@ -200,6 +253,12 @@ void ottery_config_set_manual_prf_(struct ottery_config *cfg,
  */
 void ottery_config_set_urandom_device_(struct ottery_config *cfg,
                                        const char *fname);
+
+/**
+ * For testing: DOCDOC.
+ */
+void ottery_config_disable_entropy_sources_(struct ottery_config *cfg,
+                                            uint32_t disabled_sources);
 
 /** Called when a fatal error has occurred: Die horribly, or invoke
  * ottery_fatal_handler. */

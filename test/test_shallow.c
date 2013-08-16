@@ -101,32 +101,72 @@ static void
 test_osrandom(void *arg)
 {
   (void) arg;
-  uint8_t buf[65];
+  uint8_t buf[66];
+  uint8_t scratch[66];
+  struct ottery_osrng_config cfg;
   int i, j;
+  uint32_t flags=0;
 
   memset(buf, 0, sizeof(buf));
+  memset(scratch, 0, sizeof(scratch));
+  memset(&cfg, 0, sizeof(cfg));
   /* randbytes must succeed. */
-  tt_int_op(0, ==, ottery_os_randbytes_(NULL, buf, 63));
+  tt_int_op(0, ==, ottery_os_randbytes_(NULL, 0, buf, 64, scratch, &flags));
+  tt_assert(flags & OTTERY_ENTROPY_FL_OS);
+  tt_assert(flags & OTTERY_ENTROPY_FL_STRONG);
 
   /* Does it stop after the number of bytes we tell it? */
+  tt_int_op(0, ==, buf[64]);
+  tt_int_op(0, ==, buf[65]);
+  tt_int_op(0, ==, scratch[64]);
+  tt_int_op(0, ==, scratch[65]);
+
+  /* Can we get an odd number of bytes? */  memset(buf, 0, sizeof(buf));
+  memset(scratch, 0, sizeof(scratch));
+  flags = 0;
+  tt_int_op(0, ==, ottery_os_randbytes_(NULL, 0, buf, 63, scratch, &flags));
   tt_int_op(0, ==, buf[63]);
   tt_int_op(0, ==, buf[64]);
+  tt_int_op(0, ==, scratch[63]);
+  tt_int_op(0, ==, scratch[64]);
+  tt_assert(flags & OTTERY_ENTROPY_FL_OS);
+  tt_assert(flags & OTTERY_ENTROPY_FL_STRONG);
 
   /* Try it 8 times; make sure every byte is set at least once */
   for (i = 0; i < 7; ++i) {
-    uint8_t buf2[63];
-    tt_int_op(0, ==, ottery_os_randbytes_(NULL, buf2, 63));
-    for (j = 0; j < 63; ++j)
+    uint8_t buf2[64];
+    tt_int_op(0, ==, ottery_os_randbytes_(NULL, 0, buf2, 64, scratch, &flags));
+    for (j = 0; j < 64; ++j)
       buf[j] |= buf2[j];
   }
-  for (j = 0; j < 63; ++j)
+  for (j = 0; j < 64; ++j)
     tt_int_op(0, !=, buf[j]);
 
+  cfg.disabled_sources = OTTERY_ENTROPY_SRC_RDRAND;
+  cfg.urandom_fname = "/dev/please-dont-create-this-file";
+  flags = 0;
   tt_int_op(OTTERY_ERR_INIT_STRONG_RNG, ==,
-            ottery_os_randbytes_("/dev/please-dont-add-this-device", buf, 10));
+            ottery_os_randbytes_(&cfg, 0, buf, 12, scratch, &flags));
+  tt_int_op(flags, ==, 0);
 
+  cfg.urandom_fname = "/dev/null";
   tt_int_op(OTTERY_ERR_ACCESS_STRONG_RNG, ==,
-            ottery_os_randbytes_("/dev/null", buf, 10));
+            ottery_os_randbytes_(&cfg, 0, buf, 12, scratch, &flags));
+  tt_int_op(flags, ==, 0);
+
+  /* Make sure at least one OS source works. */
+  cfg.disabled_sources = 0;
+  flags = 0;
+  tt_int_op(0, ==, ottery_os_randbytes_(NULL, OTTERY_ENTROPY_FL_OS, buf, 64, scratch, &flags));
+  tt_assert(flags & OTTERY_ENTROPY_FL_OS);
+  tt_assert(flags & OTTERY_ENTROPY_FL_STRONG);
+
+  /* Make sure at least one OS source works in another way. */
+  cfg.disabled_sources = 0;
+  ottery_disable_cpu_capabilities_(OTTERY_CPUCAP_RAND);
+  tt_int_op(0, ==, ottery_os_randbytes_(NULL, 0, buf, 64, scratch, &flags));
+  tt_assert(flags & OTTERY_ENTROPY_FL_OS);
+  tt_assert(flags & OTTERY_ENTROPY_FL_STRONG);
 
  end:
   ;
@@ -368,13 +408,16 @@ test_bad_init(void *arg)
   ottery_config_set_manual_prf_(&cfg, &bad_prf);
   tt_int_op(OTTERY_ERR_INTERNAL, ==, OTTERY_INIT(&cfg));
 
+  ottery_config_init(&cfg);
   ottery_config_force_implementation(&cfg, "CHACHA20");
   tt_int_op(0, ==, OTTERY_INIT(&cfg));
 
   ottery_config_set_urandom_device_(&cfg,"/dev/please-dont-add-this-device");
+  ottery_config_disable_entropy_sources_(&cfg, OTTERY_ENTROPY_SRC_RDRAND);
   tt_int_op(OTTERY_ERR_INIT_STRONG_RNG, ==, OTTERY_INIT(&cfg));
 
   ottery_config_set_urandom_device_(&cfg,"/dev/null");
+  ottery_config_disable_entropy_sources_(&cfg, OTTERY_ENTROPY_SRC_RDRAND);
   tt_int_op(OTTERY_ERR_ACCESS_STRONG_RNG, ==, OTTERY_INIT(&cfg));
 
   ottery_config_set_urandom_device_(&cfg, NULL);
@@ -391,6 +434,7 @@ test_reseed_stir(void *arg)
   uint8_t buf[256], buf2[256];
   struct ottery_state st_orig;
   int op;
+  int r;
 
   OTTERY_RAND_UNSIGNED();
   if (state) {
@@ -400,29 +444,37 @@ test_reseed_stir(void *arg)
   for (op = 0; op < 6; ++op) {
     if (state)
       memcpy(state, &st_orig, sizeof(st_orig));
+    r = 0;
     if (op == 0) {
       ;
     } else if (op == 1) {
       OTTERY_STIR();
     } else if (op == 2) {
-      OTTERY_ADD_SEED((const uint8_t*)"chosen by fair dice roll. "
-                      "guaranteed to be random.",50);
+      r = OTTERY_ADD_SEED((const uint8_t*)"chosen by fair dice roll. "
+                          "guaranteed to be random.",50);
     } else if (op == 3) {
-      OTTERY_ADD_SEED(NULL, 6060842);
+      r = OTTERY_ADD_SEED(NULL, 6060842);
     } else if (op == 4) {
-      OTTERY_ADD_SEED((const uint8_t*)"", 0);
+      r = OTTERY_ADD_SEED((const uint8_t*)"", 0);
     } else if (op == 5) {
       OTTERY_WIPE();
       if (state)
         OTTERY_INIT(NULL);
     }
     OTTERY_RAND_BYTES(buf2, sizeof(buf2));
+    tt_int_op(r, ==, 0);
     if ((op == 0 || op == 1) && state) {
       tt_assert(0 == memcmp(buf, buf2, sizeof(buf)));
     } else {
       tt_assert(memcmp(buf, buf2, sizeof(buf)));
       tt_assert(memcmp(buf, buf2, 16));
     }
+  }
+
+  /* Now check failing ADD_SEED. */
+  if (state) {
+    state->osrng_config.disabled_sources = ~0;
+    tt_int_op(OTTERY_ERR_INIT_STRONG_RNG, ==, OTTERY_ADD_SEED(NULL, 0));
   }
 
  end:
@@ -568,7 +620,8 @@ test_fatal(void *arg)
   tt_int_op(0, ==, ottery_st_init(&st, NULL));
   ottery_st_rand_unsigned(&st);
   st.pid = getpid() + 100; /* force a postfork reseed. */
-  st.urandom_fname = "/dev/null"; /* make that reseed impossible */
+  st.osrng_config.urandom_fname = "/dev/null"; /* make reseed impossible */
+  st.osrng_config.disabled_sources = OTTERY_ENTROPY_SRC_RDRAND;
   tt_int_op(got_fatal_err, ==, 0);
   ottery_st_rand_unsigned(&st);
   tt_int_op(got_fatal_err, ==,
@@ -578,7 +631,8 @@ test_fatal(void *arg)
   tt_int_op(0, ==, ottery_st_init_nolock(&st_nl, NULL));
   ottery_st_rand_unsigned_nolock(&st_nl);
   st_nl.pid = getpid() + 100; /* force a postfork reseed. */
-  st_nl.urandom_fname = "/dev/null"; /* make that reseed impossible */
+  st_nl.osrng_config.urandom_fname = "/dev/null"; /* make reseed impossible */
+  st_nl.osrng_config.disabled_sources = OTTERY_ENTROPY_SRC_RDRAND;
   tt_int_op(got_fatal_err, ==, 0);
   ottery_st_rand_unsigned_nolock(&st_nl);
   tt_int_op(got_fatal_err, ==,
@@ -593,7 +647,7 @@ test_fatal(void *arg)
 }
 
 struct testcase_t misc_tests[] = {
-  { "osrandom", test_osrandom, 0, NULL, NULL },
+  { "osrandom", test_osrandom, TT_FORK, NULL, NULL },
   { "get_sizeof", test_get_sizeof, 0, NULL, NULL },
   { "select_prf", test_select_prf, TT_FORK, 0, NULL },
   { "fatal", test_fatal, TT_FORK, NULL, NULL },
