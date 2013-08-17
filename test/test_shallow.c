@@ -279,7 +279,7 @@ test_range(void *arg)
     tt_int_op(OTTERY_RAND_RANGE(100), <=, 100);
     tt_int_op(OTTERY_RAND_RANGE64(100), <=, 100);
     tt_int_op(OTTERY_RAND_RANGE64(10000), <=, 10000);
-    tt_int_op(OTTERY_RAND_RANGE64(quite_big), <=, quite_big);
+    tt_assert(OTTERY_RAND_RANGE64(quite_big) <= quite_big);
     if (OTTERY_RAND_RANGE64(quite_big) > (((uint64_t)1)<<40))
       ++got_a_big_one;
     if (OTTERY_RAND_RANGE(3000000000U) > 2000000000U)
