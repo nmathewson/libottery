@@ -464,6 +464,47 @@ fatal_handler(int err)
 }
 
 static void
+test_select_prf(void *arg)
+{
+  struct ottery_config cfg;
+  (void)arg;
+
+  tt_int_op(0, ==, ottery_config_init(&cfg));
+
+  /* Select by name. */
+  tt_int_op(0, ==, ottery_config_force_implementation(&cfg, "CHACHA8"));
+  tt_ptr_op(cfg.impl, !=, NULL);
+  tt_str_op(cfg.impl->name, ==, "CHACHA8");
+
+  /* Select by implementation. */
+  tt_int_op(0, ==, ottery_config_force_implementation(&cfg, "CHACHA12-NOSIMD"));
+  tt_ptr_op(cfg.impl, !=, NULL);
+  tt_ptr_op(cfg.impl, ==, &ottery_prf_chacha12_merged_);
+
+  /* Select by flavor. */
+  tt_int_op(0, ==, ottery_config_force_implementation(&cfg,
+                                                   "CHACHA20-NOSIMD-DEFAULT"));
+  tt_ptr_op(cfg.impl, !=, NULL);
+  tt_ptr_op(cfg.impl, ==, &ottery_prf_chacha20_merged_);
+
+  /* Select the default. */
+  tt_int_op(0, ==, ottery_config_init(&cfg));
+  tt_int_op(0, ==, ottery_config_force_implementation(&cfg, NULL));
+  tt_ptr_op(cfg.impl, !=, NULL);
+  TT_BLATHER(("The default PRF is %s", cfg.impl->flav));
+
+  /* Now turn off our SIMD support and verify that we get a non-SIMD
+   * implementation. */
+  ottery_disable_cpu_capabilities_(OTTERY_CPUCAP_SIMD);
+  tt_int_op(0, ==, ottery_config_force_implementation(&cfg, NULL));
+  tt_ptr_op(cfg.impl, !=, NULL);
+  tt_ptr_op(cfg.impl, ==, &ottery_prf_chacha20_merged_);
+
+ end:
+  ;
+}
+
+static void
 test_fatal(void *arg)
 {
   (void)arg;
@@ -554,6 +595,7 @@ test_fatal(void *arg)
 struct testcase_t misc_tests[] = {
   { "osrandom", test_osrandom, 0, NULL, NULL },
   { "get_sizeof", test_get_sizeof, 0, NULL, NULL },
+  { "select_prf", test_select_prf, TT_FORK, 0, NULL },
   { "fatal", test_fatal, TT_FORK, NULL, NULL },
   END_OF_TESTCASES
 };

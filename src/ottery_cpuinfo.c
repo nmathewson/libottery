@@ -58,6 +58,14 @@ cpuid(int index, int regs[4])
 #endif
 #endif
 
+static uint32_t disabled_cpu_capabilities = 0;
+
+void
+ottery_disable_cpu_capabilities_(uint32_t disable)
+{
+  disabled_cpu_capabilities |= disable;
+}
+
 uint32_t
 ottery_get_cpu_capabilities_(void)
 {
@@ -76,5 +84,5 @@ ottery_get_cpu_capabilities_(void)
 #else
   uint32_t cap = OTTERY_CPUCAP_SIMD;
 #endif
-  return cap;
+  return cap & ~disabled_cpu_capabilities;
 }

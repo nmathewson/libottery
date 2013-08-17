@@ -213,6 +213,10 @@ void ottery_fatal_error_(int error);
 /** Return a mask of OTTERY_CPUCAP_* for what the CPU will offer us. */
 uint32_t ottery_get_cpu_capabilities_(void);
 
+/** Tell ottery_get_cpu_capabilities to never report certain capabilities as
+ * present. */
+void ottery_disable_cpu_capabilities_(uint32_t disable);
+
 /**
  * @brief pure-C portable ChaCha implementations.
  *
