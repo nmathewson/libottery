@@ -118,7 +118,8 @@ test/test_spec.output: test/test_spec test/test_spec_seed
 	./test/test_spec test/test_spec_seed > test/test_spec.output
 
 clean:
-	rm -f src/*.o test/*.o $(TESTS) libottery.a
+	rm -f src/*.o test/*.o src/*.gc{da,no} test/*.gc{da,no} *.gcov
+	rm -f $(TESTS) libottery.a
 
 doxygen:
 	doxygen etc/doxygen.conf
@@ -126,6 +127,21 @@ doxygen:
 uncrustify:
 	uncrustify -c etc/uncrustify.cfg --replace -l C $(UNCRUSTIFY_FILES)
 
+reset-gcov:
+	rm -f {src,test}/*.gcda
+
+coverage:
+	gcov -o src $(OTTERY_BASE_OBJS:.o=.c)
+	if [ "$(X86)" = 1 ]; then 					\
+	   gcov -o src/chacha_krovetz_sse2.o src/chacha_krovetz.c && 	\
+	       mv chacha_krovetz.c.gcov chacha_krovetz_sse2.c.gcov ;	\
+	   gcov -o src/chacha_krovetz_sse3.o src/chacha_krovetz.c && 	\
+	       mv chacha_krovetz.c.gcov chacha_krovetz_sse3.c.gcov ;	\
+	else 								\
+	   gcov -o src src/chacha_krovetz.c; 				\
+	fi
+
+##################################################
 src/chacha_krovetz.o: src/chacha_krovetz.c src/ottery-internal.h \
   src/ottery-config.h
 src/chacha_merged.o: src/chacha_merged.c src/ottery-internal.h \
