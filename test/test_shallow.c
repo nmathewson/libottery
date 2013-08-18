@@ -503,6 +503,22 @@ test_fatal(void *arg)
   got_fatal_err = 0;
   ottery_st_rand_bytes_nolock(&st_nl, buf, 8);
   tt_int_op(got_fatal_err, ==, OTTERY_ERR_STATE_INIT);
+
+  got_fatal_err = 0;
+  (void) ottery_st_rand_range(&st, 12);
+  tt_int_op(got_fatal_err, ==, OTTERY_ERR_STATE_INIT);
+
+  got_fatal_err = 0;
+  (void) ottery_st_rand_range(&st_nl, 12);
+  tt_int_op(got_fatal_err, ==, OTTERY_ERR_STATE_INIT);
+
+  got_fatal_err = 0;
+  (void) ottery_st_rand_range64(&st, 12);
+  tt_int_op(got_fatal_err, ==, OTTERY_ERR_STATE_INIT);
+
+  got_fatal_err = 0;
+  (void) ottery_st_rand_range64_nolock(&st_nl, 12);
+  tt_int_op(got_fatal_err, ==, OTTERY_ERR_STATE_INIT);
 #endif
 
 #ifndef OTTERY_NO_PID_CHECK
