@@ -184,10 +184,16 @@ time_arc4random(void)
 #endif
 }
 
+#ifdef _WIN32
+#define libc_random() ((rand()<<16)+rand())
+#else
+#define libc_random() random()
+#endif
+
 void
 time_libc_random(void)
 {
-  TIME_UNSIGNED_RNG((random()));
+  TIME_UNSIGNED_RNG((libc_random()));
 }
 
 
@@ -201,7 +207,7 @@ time_urandom_u64(void)
 void
 time_libc_random_u64(void)
 {
-  TIME_UNSIGNED_RNG((((uint64_t)random()) << 32) + random());
+  TIME_UNSIGNED_RNG((((uint64_t)libc_random()) << 32) + libc_random());
 }
 
 
@@ -246,7 +252,7 @@ libc_random_buf(void *b, size_t n)
   unsigned *cp = b;
   unsigned i;
   for (i = 0; i < n/sizeof(unsigned); ++i) {
-    *cp++ = random();
+    *cp++ = libc_random();
   }
 }
 
@@ -270,7 +276,11 @@ time_arc4random_onebyte(void)
 void
 time_libc_onebyte(void)
 {
-  TIME_UNSIGNED_RNG((random() & 0xff));
+#ifdef _WIN32
+  TIME_UNSIGNED_RNG((rand() & 0xff));
+#else
+  TIME_UNSIGNED_RNG((libc_random() & 0xff));
+#endif
 }
 
 #ifndef NO_URANDOM

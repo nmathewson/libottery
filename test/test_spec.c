@@ -64,11 +64,19 @@ get_hex(const char *hex_, uint8_t *out)
     uint32_t u = ottery_st_rand_uint32(&state); \
     printf("%u\n", (unsigned) u);               \
   } while (0);
+#ifdef _WIN32
+#define u64                                                 \
+  do {                                                      \
+    uint64_t u = ottery_st_rand_uint64(&state);             \
+    printf("%I64u\n", (unsigned __int64) u);                \
+  } while (0);
+#else
 #define u64                                                 \
   do {                                                      \
     uint64_t u = ottery_st_rand_uint64(&state);             \
     printf("%llu\n", (unsigned long long) u);               \
   } while (0);
+#endif
 #define stir                                    \
   do {                                          \
     ottery_st_stir(&state);                     \
