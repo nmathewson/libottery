@@ -62,7 +62,7 @@ BEFORE FIRST VERSION
 
     o Make a test_deep.
     o 100% test coverage.
-      (Well, there are 1-2 non-covered lines, but that's okay.)
+      (Well, there are 1-3 non-covered lines, but that's okay.)
 
   o DOCUMENTATION
     o Document APIs.
@@ -73,13 +73,10 @@ BEFORE FIRST VERSION
   o CONSISTENCY
     o Uncrustify
 
-BEFORE FINAL VERSION
+BEFORE VERSION 1:
   - Rename stir
   o Move common elements of ottery.h into an ottery_common.h.
 
-  . Option to avoid leaving stuff on the stack.
-
-  - Ability to make a tiny tiny runtime for embedded applications.
 
   - Make sure that the reinitialization logic is threadsafe.
 
@@ -92,8 +89,8 @@ BEFORE FINAL VERSION
     - Detect ARM neon
     - Detect altivec simd
 
-  - Build with sse3/sse2 in separate modules.
-    - Use the best supported implementation for each algorithm.
+  o Build with sse3/sse2 in separate modules.
+    o Use the best supported implementation for each algorithm.
 
   - Separate threaded/nonthreaded libraries.
 
@@ -135,10 +132,15 @@ BEFORE FINAL VERSION
 
   . Other entropy sources besides /dev/urandom
     - User-specified /dev/*random
+      . Implement
+      - Make it user-specified
+      - Allow an fd.
+      - Make sure it's a device!
     - Syscall/ioctl
-    - rdrand instruction.
+    o rdrand instruction.
     o That windows thing.
     - User promises to seed (dangerous)
+    - Ability to say "Still use X, but don't consider it strong."
 
   - Drop endianness conversion; not needed for PRNG usage
 
@@ -148,6 +150,12 @@ BEFORE FINAL VERSION
 
   o Drop support for 64-bit counters: 256GB is enough for anyone.
 
+  - Expose OSRNG functions.
+
+BLUESKY
   - avoid redundant initialization checks.
 
+  . Option to avoid leaving stuff on the stack.
+
+  - Ability to make a tiny tiny runtime for embedded applications.
 
