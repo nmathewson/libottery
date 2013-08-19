@@ -533,6 +533,8 @@ ottery_st_rand_check_pid(struct ottery_state *st)
     }
     st->pid = getpid();
   }
+#else
+  (void) st;
 #endif
   return 0;
 }
