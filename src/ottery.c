@@ -81,16 +81,16 @@ ottery_get_sizeof_state_nolock(void)
 
 /**
  * Volatile pointer to memset: we use this to keep the compiler from
- * eliminating our call to memset.
+ * eliminating our call to memset.  (Don't make this static.)
  */
-void * (*volatile memset_volatile)(void *, int, size_t) = memset;
+void * (*volatile ottery_memset_volatile_)(void *, int, size_t) = memset;
 
 
 void
 ottery_memclear_(void *mem, size_t len)
 {
   /* NOTE: whenever we change this, change test/test_memclear.c accordingly */
-  memset_volatile(mem, 0, len);
+  ottery_memset_volatile_(mem, 0, len);
 }
 
 #ifndef OTTERY_NO_WIPE_STACK
@@ -111,7 +111,7 @@ static void
 ottery_wipe_stack_(void)
 {
   char buf[WIPE_STACK_LEN];
-  memset_volatile(buf, 0, sizeof(buf));
+  ottery_memset_volatile_(buf, 0, sizeof(buf));
 }
 #else
 #define ottery_wipe_stack_() ((void)0)
