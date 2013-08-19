@@ -38,6 +38,7 @@
 #include <openssl/rand.h>
 #endif
 
+#include "ottery-internal.h"
 #include "ottery.h"
 #include "ottery_st.h"
 #include "ottery_nolock.h"
@@ -417,9 +418,11 @@ main(int argc, char **argv)
   time_arc4random_buf16();
   time_arc4random_buf1024();
 
-  time_rdrandom();
-  time_rdrandom_buf16();
-  time_rdrandom_buf1024();
+  if (ottery_get_cpu_capabilities_() & OTTERY_CPUCAP_RAND) {
+    time_rdrandom();
+    time_rdrandom_buf16();
+    time_rdrandom_buf1024();
+  }
 
 #ifndef NO_URANDOM
   urandom_fd = open("/dev/urandom", O_RDONLY);
