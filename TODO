@@ -7,6 +7,8 @@ BEFORE EVERY RELEASE
 
   - Uncrustify.
 
+  - Valgrind.
+
   - Build and test on:
     - Windows, Windows64 (mingw)
     - ARM

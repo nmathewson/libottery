@@ -310,6 +310,8 @@ test_range(void *arg)
   int got_a_big_one = 0;
   (void)arg;
 
+  memset(count, 0, sizeof(count));
+
   for (i = 0; i < 1000; ++i) {
     tt_int_op(OTTERY_RAND_RANGE(5), <=, 5);
     count[OTTERY_RAND_RANGE(5)] += 1;
@@ -566,6 +568,7 @@ test_fatal(void *arg)
 
   ottery_set_fatal_handler(fatal_handler);
   memset(&st, 0xff, sizeof(st));
+  memset(&st_nl, 0xff, sizeof(st_nl));
 
 #ifndef OTTERY_NO_INIT_CHECK
   uint8_t buf[8];
