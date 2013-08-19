@@ -79,6 +79,9 @@ BEFORE VERSION 1:
     - timed?
     - every N bytes?
 
+  - Function to return a bitmask of any bogus options that the library was
+    built with.
+
 SOMEDAY:
   - avoid redundant initialization checks.
 
@@ -87,6 +90,11 @@ SOMEDAY:
   - Ability to make a tiny tiny runtime for embedded applications.
 
   - Port to MSVC
+
+  - Port to ancient operating systems
+
+  - Port to weird chips.
+
   - Handle fork even better. Ideas:
     - mutex/state in a shared mmap?
     . pthread_atfork?
