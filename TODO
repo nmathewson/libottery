@@ -1,48 +1,24 @@
 
 Hey, it's a solo project! I get to use this TODO format again!
 
+BEFORE EVERY RELEASE
+  - 100% test coverage.
+    (Well, there are 1-3 non-covered lines, but that's okay.)
+
+  - Uncrustify.
+
+  - Build and test on:
+    - Windows, Windows64 (mingw)
+    - ARM
+    - FreeBSD
+    - OSX
+    - Fedora
+    - 
+
+
 BEFORE FIRST BETA VERSION
 
-  o Make both implementations work n*64-bytes at a time, with
-    persistent state. Use that as a backend for the RNG.
-  o Add a frontend that wraps the 64-bytes backend into a
-    proper bytewise RNG.
-  o Seed from the OS.  Facility to seed from extra stuff if
-    you're paranoid.
-  o frontend that returns an unsigned.
-
-  o Thread-safety: lock the thing.
-    o pthreads
-  o Handle fork() safely.
-    o getpid() on each call?
-  o Code to clear the stack.
-  o A mixing/stirring feature
-
-  o frontend that returns an unsigned within a range.
-
-  o Rename.
-
-  o Build/benchmark with -fPIC
-
-  o Static state functions.
-
-  o Well-considered set of what APIs to export
-    o Initial state-based thing.
-    o Initial static thing
-
-  o Working headers
-  o Build with more warnings
-  o Pluggable backends.
-  o Tests for chacha12
-
-  o Resolve every XXXX
-
-  o Strip out ability to use chacha as stream cipher: it would be bad to do
-    so given how I'm going to tweak it.
-
-  o Switch from initialized-check to magic-number check?
-
-  o Remove the idx_step logic; it's an accident waiting to happen
+  - Rename stir
 
   - TESTING
     . Add a benchmarking/timing feature
@@ -60,39 +36,7 @@ BEFORE FIRST BETA VERSION
       o Make the haskell clone work for output_len != 1024
       - Double-check the spec against the haskell clone
 
-    o Make a test_deep.
-    o 100% test coverage.
-      (Well, there are 1-3 non-covered lines, but that's okay.)
-
-  o DOCUMENTATION
-    o Document APIs.
-    o Finish the readme
-    o comment all the code
-    o s/forward-secrecy/backtracking resistance/
-
-  o CONSISTENCY
-    o Uncrustify
-
-  - Rename stir
-
   - Make sure that the reinitialization logic is threadsafe.
-
-  o Build with sse3/sse2 in separate modules.
-    o Use the best supported implementation for each algorithm.
-
-  o Move common elements of ottery.h into an ottery_common.h.
-
-  o Separate the function for reseeding and reinitializing.
-
-  o Waste fewer bytes when stirring.
-
-  o Remove needless stirring for large rand_bytes() calls.
-
-  o On stir, kill buffer up to pos?
-
-  o Drop support for 64-bit counters: 256GB is enough for anyone.
-
-
 
 BEFORE VERSION 1:
 
@@ -103,21 +47,10 @@ BEFORE VERSION 1:
 
   - Separate threaded/nonthreaded libraries.
 
-  X Make rand_bytes() better handle the case where, after alignment, n is
-    less than output_len?
-
-  X Use AESNI instead of chacha when it's available?
-    o Port implementation (see branch 'aesni')
-    o Benchmark implementation.
-      (NOT FASTER THAN CHACHA.)
-    X Test implementation
-    X Use it when appropriate.
-
   o Windows port
     o Windows threads
     o No need for fork detection.
     - Good build process
-    - Actually test on windows
     - Coverage on Windows
 
   . Other entropy sources besides /dev/urandom
@@ -166,4 +99,16 @@ SOMEDAY:
     - When about to generate a ton of stuff, increment the counter *then*
       drop the lock!
   - Do something about L1 cache pressure.
+
+
+REJECTED:
+  X Use AESNI instead of chacha when it's available?
+    o Port implementation (see branch 'aesni')
+    o Benchmark implementation.
+      (NOT FASTER THAN CHACHA.)
+    X Test implementation
+    X Use it when appropriate.
+
+  X Make rand_bytes() better handle the case where, after alignment, n is
+    less than output_len?
 
