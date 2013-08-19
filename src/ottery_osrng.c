@@ -160,7 +160,7 @@ ottery_os_randbytes_(const struct ottery_osrng_config *config,
                      uint8_t *bytes, size_t n,
                      uint8_t *scratch, uint32_t *flags_out)
 {
-  int err = OTTERY_ERR_INIT_STRONG_RNG, i, last_err;
+  int err = OTTERY_ERR_INIT_STRONG_RNG, i, last_err = 0;
   size_t j;
   uint32_t got = 0;
   const uint32_t disabled_sources = config ? config->disabled_sources : 0;
