@@ -1,7 +1,7 @@
 
 Hey, it's a solo project! I get to use this TODO format again!
 
-BEFORE FIRST VERSION
+BEFORE FIRST BETA VERSION
 
   o Make both implementations work n*64-bytes at a time, with
     persistent state. Use that as a backend for the RNG.
@@ -73,49 +73,38 @@ BEFORE FIRST VERSION
   o CONSISTENCY
     o Uncrustify
 
-BEFORE VERSION 1:
   - Rename stir
-  o Move common elements of ottery.h into an ottery_common.h.
-
 
   - Make sure that the reinitialization logic is threadsafe.
+
+  o Build with sse3/sse2 in separate modules.
+    o Use the best supported implementation for each algorithm.
+
+  o Move common elements of ottery.h into an ottery_common.h.
 
   o Separate the function for reseeding and reinitializing.
 
   o Waste fewer bytes when stirring.
+
+  o Remove needless stirring for large rand_bytes() calls.
+
+  o On stir, kill buffer up to pos?
+
+  o Drop support for 64-bit counters: 256GB is enough for anyone.
+
+
+
+BEFORE VERSION 1:
 
   o Detect CPU features at runtime.
     o In particular, detecting SSE3/SSE2 could be a bit of a win.
     - Detect ARM neon
     - Detect altivec simd
 
-  o Build with sse3/sse2 in separate modules.
-    o Use the best supported implementation for each algorithm.
-
   - Separate threaded/nonthreaded libraries.
 
   X Make rand_bytes() better handle the case where, after alignment, n is
     less than output_len?
-
-  o Remove needless stirring for large rand_bytes() calls.
-
-  o On stir, kill buffer up to pos?
-
-  - Handle fork even better. Ideas:
-    - mutex/state in a shared mmap?
-    . pthread_atfork?
-      (Hm, it appears that sensible libcs make getpid() pretty fast, so this
-       isn't a win the way I did it at first.)
-    - Ignore when we have a state object??
-
-  - Handle thread-safety even better
-    o ability to disable locking.
-    - Per-pthread?
-    - pthread_spin?
-    - When about to generate a ton of stuff, increment the counter *then*
-      drop the lock!
-
-  - Do something about L1 cache pressure.
 
   X Use AESNI instead of chacha when it's available?
     o Port implementation (see branch 'aesni')
@@ -129,6 +118,7 @@ BEFORE VERSION 1:
     o No need for fork detection.
     - Good build process
     - Actually test on windows
+    - Coverage on Windows
 
   . Other entropy sources besides /dev/urandom
     - User-specified /dev/*random
@@ -141,21 +131,39 @@ BEFORE VERSION 1:
     o That windows thing.
     - User promises to seed (dangerous)
     - Ability to say "Still use X, but don't consider it strong."
+    - egd?
 
   - Drop endianness conversion; not needed for PRNG usage
 
-  - Port to MSVC
-
   - Test on altivec, fix whatever I broke there.
-
-  o Drop support for 64-bit counters: 256GB is enough for anyone.
 
   - Expose OSRNG functions.
 
-BLUESKY
+  - Rudimentary prediction resistance:
+    - opportunistic, if you have a fast entropy source.
+    - timed?
+    - every N bytes?
+
+SOMEDAY:
   - avoid redundant initialization checks.
 
   . Option to avoid leaving stuff on the stack.
 
   - Ability to make a tiny tiny runtime for embedded applications.
+
+  - Port to MSVC
+  - Handle fork even better. Ideas:
+    - mutex/state in a shared mmap?
+    . pthread_atfork?
+      (Hm, it appears that sensible libcs make getpid() pretty fast, so this
+       isn't a win the way I did it at first.)
+    - Ignore when we have a state object??
+
+  - Handle thread-safety even better
+    o ability to disable locking.
+    - Per-pthread?
+    - pthread_spin?
+    - When about to generate a ton of stuff, increment the counter *then*
+      drop the lock!
+  - Do something about L1 cache pressure.
 
