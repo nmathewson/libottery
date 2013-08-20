@@ -77,7 +77,8 @@ code, so I'm trying to minimize the complexity of the build system.
 
 I've tested with clang and gcc, on Linux and OSX.  I've done most of the
 testing on Intel x86_64 chips, and a little bit on ARM.  I will try
-other places eventually.  Interoperability with free platforms.
+other places eventually.  I especially value interoperability with free
+platforms.
 
 How to use it (the basics)
 --------------------------
@@ -113,7 +114,7 @@ for a (hopefully) strong, fast stream cipher.  Every time it generates a
 replace its key and nonce, so that the key it used to make those bytes
 is unrecoverable.  After it extracts bytes from the RNG, it clears them
 from its internal buffers.  (This is based on a construction described
-in, as summarized by DJB.)
+in XXX, as summarized by DJB.)
 
 By default, I'm trying to make libottery as safe to use as possible.
 Therefore, I am making it threadsafe by default, and forksafe by
