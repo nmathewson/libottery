@@ -47,6 +47,27 @@ ottery_os_randbytes_win32(const struct ottery_osrng_config *cfg,
 
 #ifndef _WIN32
 #define RAND_URANDOM
+/**
+ * Read from a file into an n-byte buffer until the buffer is full or until
+ * we reach an error.  Returns the number of bytes read.  If the return
+ * value is less than n, an error occurred.
+ */
+int
+ottery_read_n_bytes_from_file_(int fd, uint8_t *out, size_t n)
+{
+  ssize_t r;
+  uint8_t *outp = out;
+  while (n) {
+    r = read(fd, outp, n);
+    if (r <= 0 || (size_t)r > n)
+      return outp - out;
+    outp += r;
+    n -= r;
+  }
+  return outp - out;
+}
+
+
 /** Generate random bytes using the unix-style /dev/urandom RNG, or another
  * such device as configured in the configuration. */
 static int
@@ -84,7 +105,8 @@ ottery_os_randbytes_urandom(const struct ottery_osrng_config *cfg,
   fd = open(urandom_fname, O_RDONLY|O_CLOEXEC);
   if (fd < 0)
     return OTTERY_ERR_INIT_STRONG_RNG;
-  if ((n = read(fd, out, outlen)) < 0 || (size_t)n != outlen)
+  n = ottery_read_n_bytes_from_file_(fd, out, outlen);
+  if (n < 0 || (size_t)n != outlen)
     result = OTTERY_ERR_ACCESS_STRONG_RNG;
   close(fd);
   return result;

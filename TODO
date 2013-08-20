@@ -61,14 +61,14 @@ BEFORE VERSION 1:
       - Make it user-specified
       - Allow an fd.
       - Make sure it's a device!
-    - Syscall/ioctl
+    - Syscall/ioctl/arc4random
     o rdrand instruction.
     o That windows thing.
     - User promises to seed (dangerous)
     - Ability to say "Still use X, but don't consider it strong."
-    - egd?
+    - egd, prngd?
 
-  - Drop endianness conversion; not needed for PRNG usage
+  - Read entropy sources until all the bytes are there.
 
   - Test on altivec, fix whatever I broke there.
 
