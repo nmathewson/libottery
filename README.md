@@ -47,8 +47,9 @@ There *might* be horrible security bugs left in it. If there are, I
 won't be very embarrassed: I told you not to use it yet!
 
 If it breaks, you *don't* get to keep both pieces!  I will come over and
-break the pieces into even smaller pieces, then break something else that
-you actually liked, then point at them and laugh and laugh and laugh.
+break the pieces into even smaller pieces, then break something else
+that you actually liked, then point at them and laugh and laugh and
+laugh.
 
 
 
@@ -56,10 +57,10 @@ you actually liked, then point at them and laugh and laugh and laugh.
 
 
 
-(To people without my particular sense of humor: the purpose of this section
-is to make you not use libottery in production code yet, because it isn't
-ready. If it makes you nervous about using this version of the software in
-production: good!  That's the point.)
+(To people without my particular sense of humor: the purpose of this
+section is to make you not use libottery in production code yet, because
+it isn't ready. If it makes you nervous about using this version of the
+software in production: good!  That's the point.)
 
 How to build it
 ---------------
@@ -106,13 +107,13 @@ Details
 -------
 
 A libottery PRNG seeds itself from your operating system's (hopefully)
-secure random number generator.  This seed is used as the key and
-nonce for a (hopefully) strong, fast stream cipher.  Every time it
-generates a "block" (about 1024 bytes), it uses a portion of its own
-output to replace its key and nonce, so that the key it used to make
-those bytes is unrecoverable.  After it extracts bytes from the RNG,
-it clears them from its internal buffers.  (This is based on a
-construction described in, as summarized by DJB.)
+secure random number generator.  This seed is used as the key and nonce
+for a (hopefully) strong, fast stream cipher.  Every time it generates a
+"block" (about 1024 bytes), it uses a portion of its own output to
+replace its key and nonce, so that the key it used to make those bytes
+is unrecoverable.  After it extracts bytes from the RNG, it clears them
+from its internal buffers.  (This is based on a construction described
+in, as summarized by DJB.)
 
 By default, I'm trying to make libottery as safe to use as possible.
 Therefore, I am making it threadsafe by default, and forksafe by
@@ -193,21 +194,23 @@ Digression: What's wrong with your favorite cryptography library's PRNG?
 Probably nothing in terms of its security, assuming it does a reasonable
 job of seeding itself.  But odds are good that it's pretty slow, which
 can make trouble for programmers: in performance critical code that eats
-a ton of random numbers, they're going to find themselves tempted to just
-use random(), because really, what could it matter?
+a ton of random numbers, they're going to find themselves tempted to
+just use random(), because really, what could it matter?
 
 Intellectual Property Notices
 -----------------------------
 
-There are no known present or future claims by a copyright holder that the
-distribution of this software infringes the copyright. In particular, the
-author of the software is not making such claims and does not intend to make
-such claims.  Additionally, Nick Mathewson has dedicated his code here to the
-public domain using the CC0 public domain dedication; see doc/cc0.txt or
+There are no known present or future claims by a copyright holder that
+the distribution of this software infringes the copyright. In
+particular, the author of the software is not making such claims and
+does not intend to make such claims.  Additionally, Nick Mathewson has
+dedicated his code here to the public domain using the CC0 public domain
+dedication; see doc/cc0.txt or
 <http://creativecommons.org/publicdomain/zero/1.0/> for full details.
 
-There are no known present or future claims by a patent holder that the use
-of this software infringes the patent. In particular, the author of the
-software is not making such claims and does not intend to make such claims.
+There are no known present or future claims by a patent holder that the
+use of this software infringes the patent. In particular, the author of
+the software is not making such claims and does not intend to make such
+claims.
 
 This code is in the public domain.
