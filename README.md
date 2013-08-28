@@ -65,15 +65,16 @@ software in production: good!  That's the point.)
 How to build it
 ---------------
 
+    ./autogen.sh
+    ./configure
     make
     make check
 
-If that doesn't work, use GNU make. If that doesn't work, edit the
-makefile.  If that doesn't work, debug the program.
+If that doesn't work, debug the program.
 
-Yes, I know how to use autotools, but I'm trying to see how far I can
-get on gmake alone.  I want this library to be easy to embed in other
-code, so I'm trying to minimize the complexity of the build system.
+Yes, I know autotools is a pain, but I've outgrown what I'm happy doing
+in gmake alone. I welcome ports to other build tools, but only if they
+get the full functionality of the current build system.
 
 I've tested with clang and gcc, on Linux and OSX.  I've done most of the
 testing on Intel x86_64 chips, and a little bit on ARM.  I will try
