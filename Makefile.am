@@ -152,10 +152,15 @@ doxygen:
 	doxygen etc/doxygen.conf
 
 UNCRUSTIFY_FILES =				\
-		$(OTTERY_CORE_SRC)		\
+		src/ottery.c			\
+		src/ottery_cpuinfo.c		\
+		src/ottery_global.c		\
+		src/ottery_osrng.c		\
 		$(include_HEADERS)		\
-		$(noinst_HEADERS)		\
-		src/chacha_krovetz.c		\
+		src/chacha_merged_ecrypt.h 	\
+		src/ottery-internal.h 		\
+		test/st_wrappers.h 		\
+		test/streams.h 			\
 		test/dump_bytes.c		\
 		test/streams.c			\
 		test/test_deep.c		\
@@ -163,6 +168,12 @@ UNCRUSTIFY_FILES =				\
 		test/test_shallow.c		\
 		test/test_spec.c		\
 		test/test_vectors.c
+
+# Ignoring these, because they're not ours:
+#		src/chacha_merged.c
+#		test/tinytest.h
+#		test/tinytest_macros.h
+# 		src/chacha_krovetz.c
 
 uncrustify:
 	uncrustify -c etc/uncrustify.cfg --replace -l C $(UNCRUSTIFY_FILES)
