@@ -127,3 +127,22 @@ test/test_spec.output: test/test_spec test/test_spec_seed
 doxygen:
 	doxygen etc/doxygen.conf
 
+UNCRUSTIFY_FILES =				\
+		$(OTTERY_CORE_SRC)		\
+		$(include_HEADERS)		\
+		$(noinst_HEADERS)		\
+		src/chacha_krovetz.c		\
+		test/dump_bytes.c		\
+		test/streams.c			\
+		test/test_deep.c		\
+		test/test_memclear.c		\
+		test/test_shallow.c		\
+		test/test_spec.c		\
+		test/test_vectors.c
+
+uncrustify:
+	uncrustify -c etc/uncrustify.cfg --replace -l C $(UNCRUSTIFY_FILES)
+
+reset-gcov:
+	rm -f {src,test}/*.gcda
+
