@@ -146,3 +146,13 @@ uncrustify:
 reset-gcov:
 	rm -f {src,test}/*.gcda
 
+#coverage:
+#	gcov -o src $(OTTERY_BASE_OBJS:.o=.c)
+#	if [ "$(X86)" = 1 ]; then 					\
+#	   gcov -o src/chacha_krovetz_sse2.o src/chacha_krovetz.c && 	\
+#	       mv chacha_krovetz.c.gcov chacha_krovetz_sse2.c.gcov ;	\
+#	   gcov -o src/chacha_krovetz_sse3.o src/chacha_krovetz.c && 	\
+#	       mv chacha_krovetz.c.gcov chacha_krovetz_sse3.c.gcov ;	\
+#	else 								\
+#	   gcov -o src src/chacha_krovetz.c; 				\
+#	fi
