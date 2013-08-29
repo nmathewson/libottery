@@ -33,6 +33,8 @@ BEFORE FIRST BETA VERSION
     - Make it use the cflags I want.
     . Fix up .gitignore
 
+  - First-class coverage support in autotools files.
+
   - Rename stir
 
   - TESTING

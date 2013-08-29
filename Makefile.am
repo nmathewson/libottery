@@ -61,7 +61,7 @@ CFLAGS_EXTRA =
 OTTERY_LIBS_EXTRA =
 endif
 
-AM_CFLAGS = $(CFLAGS_EXTRA) -I $(top_srcdir)/src
+AM_CFLAGS = -O3 -Wall -W -Wextra -pthread $(CFLAGS_EXTRA) -I $(top_srcdir)/src
 
 libottery_la_SOURCES = $(OTTERY_CORE_SRC) $(OTTERY_ARCH_SRC)
 libottery_la_LDFLAGS = $(GENERIC_LDFLAGS)
