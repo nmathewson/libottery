@@ -50,6 +50,7 @@ stamp-h1
 /test/test_spec
 /test/test_spec.output
 /test/test_vectors
+/test/test_vectors.expected
 /test/test_vectors.actual
 /test/test_vectors.actual-midrange
 /test/test_vectors.actual-nosimd

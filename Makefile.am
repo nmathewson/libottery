@@ -88,7 +88,12 @@ EXTRA_DIST =					\
 	test/test_spec_seed			\
 	test/hs/Ottery.hs \
 	test/hs/ChaCha.hs \
-	test/hs/test_ottery.hs
+	test/hs/test_ottery.hs \
+	etc/doxygen.conf \
+	etc/uncrustify.cfg \
+	COPYING \
+	README.md \
+	TODO
 
 CLEANFILES = $(noinst_DATA) test/hs/*.hi test/hs/*.o test/hs/test_ottery
 
