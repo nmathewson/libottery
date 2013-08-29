@@ -34,7 +34,23 @@ AC_PROG_GCC_TRADITIONAL
 AC_PROG_LIBTOOL
 AC_SUBST(LIBTOOL_DEPS)
 
-AM_CONDITIONAL([X86], [true])
+AC_MSG_CHECKING([whether CPU is X86 or X86_64])
+AC_TRY_COMPILE(,
+	[
+#if defined(i386) || \
+    defined(__i386) || \
+    defined(__x86_64) || \
+    defined(__M_IX86) || \
+    defined(_M_IX86) || \
+    defined(__INTEL_COMPILER)
+#else
+die horribly
+#endif
+	],
+	is_x86=yes; AC_MSG_RESULT(yes),
+	is_x86=no; AC_MSG_RESULT(no),
+)
+AM_CONDITIONAL(X86, [test "$is_x86" = "yes"])
 
 AC_CONFIG_FILES( [libottery.pc] )
 AC_OUTPUT(Makefile)
