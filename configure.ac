@@ -10,6 +10,56 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 AC_DEFINE(NUMERIC_VERSION, 0x00000000, [Numeric representation of the version])
 
+
+AC_ARG_ENABLE(pid-check,
+     AS_HELP_STRING(--disable-pid-check,
+         [Disable checks to see if the process has forked. Dangerous!]))
+AC_ARG_ENABLE(init-check,
+     AS_HELP_STRING(--disable-init-check,
+         [Disable checks to make sure that the PRNG is initialized. Dangerous!]))
+AC_ARG_ENABLE(simd,
+     AS_HELP_STRING(--disable-simd,
+         [Don't build with support for fast crypto using SIMD]), ,
+	 enable_simd=yes)
+AC_ARG_ENABLE(locks,
+     AS_HELP_STRING(--disable-locks,
+         [Don't build with locking support]), , enable_locks=yes)
+AC_ARG_ENABLE(spinlocks,
+     AS_HELP_STRING(--disable-spinlocks,
+         [When using locking, don't use spinlocks]]), , enable_spinlocks=yes)
+AC_ARG_ENABLE(clear-after-yield,
+     AS_HELP_STRING(--disable-clear-after-yield,
+         [Don't clear data from our buffer immediately after yielding it]), ,
+	 enable_clear_after_yield=yes)
+AC_ARG_ENABLE(wipe-stack,
+     AS_HELP_STRING(--disable-wipe-stack,
+         [Don't attempt to wipe the stack after calling the crypto core]), ,
+	 enable_wipe_stack=yes)
+
+if test "$enable_pid_check" = no; then
+   AC_DEFINE(OTTERY_NO_PID_CHECK, 1, [If defined, disable PID checking. (DANGER!)])
+fi
+if test "$enable_init_check" = no; then
+   AC_DEFINE(OTTERY_NO_INIT_CHECK, 1, [If defined, disable initialization checking. (DANGER!)])
+fi
+if test "$enable_simd" = no; then
+   AC_DEFINE(OTTERY_NO_VECS, 1, [If defined, disable SIMD crypto])
+fi
+if test "$enable_locks" = no; then
+   AC_DEFINE(OTTERY_NO_LOCKS, 1, [If defined, disable locking])
+fi
+if test "$enable_spinlocks" = no; then
+   AC_DEFINE(OTTERY_NO_SPINLOCKS, 1, [If defined, don't use spinlocks for locking])
+fi
+if test "$enable_clear_after_yield" = no; then
+   AC_DEFINE(OTTERY_NO_CLEAR_AFTER_YIELD, 1, [If defined, don't clear the buffer after producing output.])
+fi
+if test "$enable_wipe_stack" = no; then
+   AC_DEFINE(OTTERY_NO_WIPE_STACK, 1, [If defined, don't try to wipe the stack after calling the crypto core.])
+fi
+
+
+
 dnl Try and get a full POSIX environment on obscure systems
 ifdef([AC_USE_SYSTEM_EXTENSIONS], [
 AC_USE_SYSTEM_EXTENSIONS

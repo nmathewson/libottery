@@ -123,3 +123,7 @@ test/hs/test_ottery.output: test/hs/test_ottery test/test_spec
 
 test/test_spec.output: test/test_spec test/test_spec_seed
 	$(AM_V_GEN)./test/test_spec test/test_spec_seed > test/test_spec.output
+
+doxygen:
+	doxygen etc/doxygen.conf
+
