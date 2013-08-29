@@ -62,7 +62,7 @@ CFLAGS_EXTRA =
 OTTERY_LIBS_EXTRA =
 endif
 
-AM_CFLAGS = $(CFLAGS_EXTRA)
+AM_CFLAGS = $(CFLAGS_EXTRA) -I $(top_srcdir)/src
 
 libottery_la_SOURCES = $(OTTERY_CORE_SRC) $(OTTERY_ARCH_SRC)
 libottery_la_LDFLAGS = $(GENERIC_LDFLAGS)
@@ -75,13 +75,18 @@ test_bench_rng_SOURCES = test/bench_rng.c
 test_bench_rng_LDADD = libottery.la -lcrypto
 
 noinst_DATA =					\
+	test/test_vectors.expected		\
 	test/test_vectors.actual		\
 	test/test_vectors.actual-nosimd		\
-	test/test_vectors.actual-midrange	\
-	test/test_vectors.expected
+	test/test_vectors.actual-midrange
 
-test/test_vectors.expected: test/make_test_vectors.py
-	$(AM_V_GEN)./test/make_test_vectors.py > test/test_vectors.expected
+noinst_SCRIPTS = test/make_test_vectors.py
+EXTRA_DIST = test/make_test_vectors.py test/test_vector_cmp.sh
+
+CLEANFILES = $(noinst_DATA)
+
+test/test_vectors.expected: $(top_srcdir)/test/make_test_vectors.py
+	$(AM_V_GEN)$(top_srcdir)/test/make_test_vectors.py > test/test_vectors.expected
 
 test/test_vectors.actual: test/test_vectors
 	$(AM_V_GEN)./test/test_vectors > test/test_vectors.actual
