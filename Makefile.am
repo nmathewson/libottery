@@ -16,7 +16,10 @@ TEST_PROGS = test/test_vectors test/bench_rng test/dump_bytes	\
 	test/test_memclear test/test_shallow test/test_deep	\
 	test/test_spec
 
-noinst_PROGRAMS = $(TEST_PROGS)
+TESTS = test/test_memclear test/test_shallow test/test_deep \
+	test/test_vector_cmp.sh
+
+check_PROGRAMS = $(TEST_PROGS)
 lib_LTLIBRARIES = libottery.la
 pkgconfig_DATA  = libottery.pc
 include_HEADERS	=				\
@@ -24,6 +27,14 @@ include_HEADERS	=				\
 	src/ottery_common.h			\
 	src/ottery_nolock.h			\
 	src/ottery_st.h
+
+noinst_HEADERS = 			\
+	src/chacha_merged_ecrypt.h 	\
+	src/ottery-internal.h 		\
+	test/st_wrappers.h 		\
+	test/streams.h 			\
+	test/tinytest.h 		\
+	test/tinytest_macros.h
 
 pkgconfigdir=$(libdir)/pkgconfig
 
@@ -63,17 +74,23 @@ test_test_vectors_LDADD = libottery.la
 test_bench_rng_SOURCES = test/bench_rng.c
 test_bench_rng_LDADD = libottery.la -lcrypto
 
+noinst_DATA =					\
+	test/test_vectors.actual		\
+	test/test_vectors.actual-nosimd		\
+	test/test_vectors.actual-midrange	\
+	test/test_vectors.expected
+
 test/test_vectors.expected: test/make_test_vectors.py
-	./test/make_test_vectors.py > test/test_vectors.expected
+	$(AM_V_GEN)./test/make_test_vectors.py > test/test_vectors.expected
 
 test/test_vectors.actual: test/test_vectors
-	./test/test_vectors > test/test_vectors.actual
+	$(AM_V_GEN)./test/test_vectors > test/test_vectors.actual
 
 test/test_vectors.actual-midrange: test/test_vectors
-	./test/test_vectors midrange > test/test_vectors.actual-midrange
+	$(AM_V_GEN)./test/test_vectors midrange > test/test_vectors.actual-midrange
 
 test/test_vectors.actual-nosimd: test/test_vectors
-	./test/test_vectors no-simd > test/test_vectors.actual-nosimd
+	$(AM_V_GEN)./test/test_vectors no-simd > test/test_vectors.actual-nosimd
 
 test_dump_bytes_SOURCES = test/dump_bytes.c
 test_dump_bytes_LDADD = libottery.la
@@ -91,24 +108,13 @@ test_test_spec_SOURCES = test/test_spec.c
 test_test_spec_LDADD = libottery.la
 
 test/hs/test_ottery: test/hs/Ottery.hs test/hs/ChaCha.hs test/hs/test_ottery.hs
-	(cd test/hs && ghc test_ottery.hs)
-
-check: $(TESTS) test/test_vectors.actual test/test_vectors.actual-nosimd \
-	test/test_vectors.actual-midrange \
-	test/test_shallow
-
-	@cmp test/test_vectors.expected test/test_vectors.actual && echo OKAY || BAD
-	@cmp test/test_vectors.expected test/test_vectors.actual-midrange && echo OKAY || BAD
-	@cmp test/test_vectors.expected test/test_vectors.actual-nosimd && echo OKAY || echo BAD
-	@./test/test_memclear
-	@./test/test_shallow --quiet && echo "OKAY"
-	@./test/test_deep --quiet && echo "OKAY"
+	$(AM_V_GEN)(cd test/hs && ghc test_ottery.hs)
 
 check-spec: test/hs/test_ottery.output test/test_spec.output
 	@cmp test/hs/test_ottery.output test/test_spec.output && echo OKAY || echo BAD
 
 test/hs/test_ottery.output: test/hs/test_ottery test/test_spec
-	./test/hs/test_ottery `./test/test_spec --blocks-per-call` > test/hs/test_ottery.output
+	$(AM_V_GEN)./test/hs/test_ottery `./test/test_spec --blocks-per-call` > test/hs/test_ottery.output
 
 test/test_spec.output: test/test_spec test/test_spec_seed
-	./test/test_spec test/test_spec_seed > test/test_spec.output
+	$(AM_V_GEN)./test/test_spec test/test_spec_seed > test/test_spec.output

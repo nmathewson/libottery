@@ -11,6 +11,8 @@
 *.gcno
 *.hi
 *.swp
+test*.log
+test*.trs
 
 .libs
 .deps
@@ -31,6 +33,7 @@ stamp-h1
 /libtool
 /ltmain.sh
 /missing
+/test-driver
 
 /libottery.la
 /libottery.a
