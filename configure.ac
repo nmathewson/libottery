@@ -58,6 +58,12 @@ if test "$enable_wipe_stack" = no; then
    AC_DEFINE(OTTERY_NO_WIPE_STACK, 1, [If defined, don't try to wipe the stack after calling the crypto core.])
 fi
 
+AC_ARG_VAR(PYTHON)
+AC_CHECK_PROGS(PYTHON, [python python2 python3])
+AC_ARG_VAR(GHC)
+AC_CHECK_PROGS(GHC,    [ghc])
+
+
 
 
 dnl Try and get a full POSIX environment on obscure systems
@@ -100,7 +106,10 @@ die horribly
 	is_x86=yes; AC_MSG_RESULT(yes),
 	is_x86=no; AC_MSG_RESULT(no),
 )
+
 AM_CONDITIONAL(X86, [test "$is_x86" = "yes"])
+AM_CONDITIONAL(USEPYTHON, [test "x$PYTHON" != "x"])
+AM_CONDITIONAL(USEGHC,    [test "x$GHC"    != "x"])
 
 AC_CONFIG_FILES( [libottery.pc] )
 AC_OUTPUT(Makefile)

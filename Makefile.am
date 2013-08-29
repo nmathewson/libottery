@@ -13,8 +13,7 @@ ACLOCAL_AMFLAGS = -I m4
 VERSION_INFO = 0:0:0
 
 TEST_PROGS = test/test_vectors test/bench_rng test/dump_bytes	\
-	test/test_memclear test/test_shallow test/test_deep	\
-	test/test_spec
+	test/test_memclear test/test_shallow test/test_deep
 
 TESTS = test/test_memclear test/test_shallow test/test_deep \
 	test/test_vector_cmp.sh
@@ -81,12 +80,20 @@ noinst_DATA =					\
 	test/test_vectors.actual-midrange
 
 noinst_SCRIPTS = test/make_test_vectors.py
-EXTRA_DIST = test/make_test_vectors.py test/test_vector_cmp.sh
 
-CLEANFILES = $(noinst_DATA)
+EXTRA_DIST =					\
+	test/make_test_vectors.py		\
+	test/test_vector_cmp.sh			\
+	test/test_spec_cmp.sh			\
+	test/test_spec_seed			\
+	test/hs/Ottery.hs \
+	test/hs/ChaCha.hs \
+	test/hs/test_ottery.hs
+
+CLEANFILES = $(noinst_DATA) test/hs/*.hi test/hs/*.o test/hs/test_ottery
 
 test/test_vectors.expected: $(top_srcdir)/test/make_test_vectors.py
-	$(AM_V_GEN)$(top_srcdir)/test/make_test_vectors.py > test/test_vectors.expected
+	$(AM_V_GEN)$(PYTHON) $(top_srcdir)/test/make_test_vectors.py > test/test_vectors.expected
 
 test/test_vectors.actual: test/test_vectors
 	$(AM_V_GEN)./test/test_vectors > test/test_vectors.actual
@@ -109,20 +116,32 @@ test_test_shallow_LDADD = libottery.la
 test_test_deep_SOURCES = test/test_deep.c test/tinytest.c
 test_test_deep_LDADD = libottery.la
 
-test_test_spec_SOURCES = test/test_spec.c
-test_test_spec_LDADD = libottery.la
+if USEGHC
+check_PROGRAMS += test/test_spec
+noinst_DATA += 				\
+	test/hs/test_ottery.output 	\
+	test/test_spec.output
 
 test/hs/test_ottery: test/hs/Ottery.hs test/hs/ChaCha.hs test/hs/test_ottery.hs
-	$(AM_V_GEN)(cd test/hs && ghc test_ottery.hs)
-
-check-spec: test/hs/test_ottery.output test/test_spec.output
-	@cmp test/hs/test_ottery.output test/test_spec.output && echo OKAY || echo BAD
+	$(AM_V_GEN)$(MKDIR_P) ./test/hs
+	$(AM_V_AT)$(GHC) -o test/hs/test_ottery \
+		-odir ./test/hs -hidir ./test/hs \
+		$(top_srcdir)/test/hs/Ottery.hs \
+		$(top_srcdir)/test/hs/ChaCha.hs \
+		$(top_srcdir)/test/hs/test_ottery.hs
 
 test/hs/test_ottery.output: test/hs/test_ottery test/test_spec
 	$(AM_V_GEN)./test/hs/test_ottery `./test/test_spec --blocks-per-call` > test/hs/test_ottery.output
 
 test/test_spec.output: test/test_spec test/test_spec_seed
-	$(AM_V_GEN)./test/test_spec test/test_spec_seed > test/test_spec.output
+	$(AM_V_GEN)./test/test_spec $(top_srcdir)/test/test_spec_seed > test/test_spec.output
+
+test_test_spec_SOURCES = test/test_spec.c
+test_test_spec_LDADD = libottery.la
+
+TESTS += test/test_spec_cmp.sh
+
+endif
 
 doxygen:
 	doxygen etc/doxygen.conf
