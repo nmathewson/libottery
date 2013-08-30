@@ -518,6 +518,8 @@ ottery_st_rand_check_init(struct ottery_state *st)
     ottery_fatal_error_(OTTERY_ERR_STATE_INIT);
     return -1;
   }
+#else
+  (void)st;
 #endif
   return 0;
 }
