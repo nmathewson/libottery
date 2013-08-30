@@ -1,1 +1,17 @@
+#libottery pkg-config source file
+
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: libottery
+Description: libottery is a fast secure random number generator
+Version: @VERSION@
+Requires:
+Conflicts:
+Libs: -L${libdir} -lottery
+Cflags: -I${includedir}
+
+
 
