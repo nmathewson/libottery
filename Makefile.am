@@ -64,6 +64,9 @@ include_HEADERS	=				\
 noinst_HEADERS = 			\
 	src/chacha_merged_ecrypt.h 	\
 	src/ottery-internal.h 		\
+	src/ottery_entropy_cryptgenrandom.c	\
+	src/ottery_entropy_rdrand.c	\
+	src/ottery_entropy_urandom.c	\
 	test/st_wrappers.h 		\
 	test/streams.h 			\
 	test/tinytest.h 		\
