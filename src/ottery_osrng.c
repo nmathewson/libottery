@@ -19,162 +19,31 @@
 #include <unistd.h>
 #include <string.h>
 
-#ifdef _WIN32
-#define RAND_WIN32
-/** Generate random bytes using the Windows CryptGenRandom operating-system
- * RNG. */
-static int
-ottery_os_randbytes_win32(const struct ottery_osrng_config *cfg,
-                          uint8_t *out, size_t outlen)
-{
-  /* On Windows, CryptGenRandom is supposed to be a well-seeded
-   * cryptographically strong random number generator. */
-  HCRYPTPROV provider;
-  int retval = 0;
-  (void) cfg;
-
-  if (0 == CryptAcquireContext(&provider, NULL, NULL, PROV_RSA_FULL,
-                               CRYPT_VERIFYCONTEXT))
-    return OTTERY_ERR_INIT_STRONG_RNG;
-
-  if (0 == CryptGenRandom(provider, outlen, out))
-    retval = OTTERY_ERR_ACCESS_STRONG_RNG;
-
-  CryptReleaseContext(provider, 0);
-  return retval;
-}
-#endif
-
-#ifndef _WIN32
-#define RAND_URANDOM
-/**
- * Read from a file into an n-byte buffer until the buffer is full or until
- * we reach an error.  Returns the number of bytes read.  If the return
- * value is less than n, an error occurred.
- */
-int
-ottery_read_n_bytes_from_file_(int fd, uint8_t *out, size_t n)
-{
-  ssize_t r;
-  uint8_t *outp = out;
-  while (n) {
-    r = read(fd, outp, n);
-    if (r <= 0 || (size_t)r > n)
-      return outp - out;
-    outp += r;
-    n -= r;
-  }
-  return outp - out;
-}
-
-
-/** Generate random bytes using the unix-style /dev/urandom RNG, or another
- * such device as configured in the configuration. */
-static int
-ottery_os_randbytes_urandom(const struct ottery_osrng_config *cfg,
-                            uint8_t *out, size_t outlen)
-{
-  /* On most unixes these days, you can get strong random numbers from
-   * /dev/urandom.
-   *
-   * That's assuming that /dev/urandom is seeded.  For most applications,
-   * that won't be a problem. But for stuff that starts close to system
-   * startup, before the operating system has added any entropy to the pool,
-   * it can be pretty bad.
-   *
-   * You could use /dev/random instead, if you want, but that has another
-   * problem.  It will block if the OS PRNG has received less entropy than
-   * it has emitted.  If we assume that the OS PRNG isn't cryptographically
-   * weak, blocking in that case is simple overkill.
-   *
-   * It would be best if there were an alternative that blocked if the PRNG
-   * had _never_ been seeded.  But most operating systems don't have that.
-   */
-  int fd;
-  ssize_t n;
-  int result = 0;
-  const char *urandom_fname;
-#ifndef O_CLOEXEC
-#define O_CLOEXEC 0
-#endif
-  if (cfg && cfg->urandom_fname)
-    urandom_fname = cfg->urandom_fname;
-  else
-    urandom_fname = "/dev/urandom";
-
-  fd = open(urandom_fname, O_RDONLY|O_CLOEXEC);
-  if (fd < 0)
-    return OTTERY_ERR_INIT_STRONG_RNG;
-  n = ottery_read_n_bytes_from_file_(fd, out, outlen);
-  if (n < 0 || (size_t)n != outlen)
-    result = OTTERY_ERR_ACCESS_STRONG_RNG;
-  close(fd);
-  return result;
-}
-#endif
-
-#if defined(i386) || \
-    defined(__i386) || \
-    defined(__x86_64) || \
-    defined(__M_IX86) || \
-    defined(_M_IX86) || \
-    defined(__INTEL_COMPILER)
-#define RAND_RDRAND
-/** Helper: invoke the RDRAND instruction to get 4 random bytes in the output
- * value. Return 0 on success, and an error on failure. */
-static int
-rdrand(uint32_t *therand) {
- unsigned char status;
- asm volatile(".byte 0x0F, 0xC7, 0xF0 ; setc %1"
- : "=a" (*therand), "=qm" (status));
- return (status)==1 ? 0 : OTTERY_ERR_INIT_STRONG_RNG;
-}
-
-/** Generate bytes using the Intel RDRAND instruction. */
-static int
-ottery_os_randbytes_rdrand(const struct ottery_osrng_config *cfg,
-                           uint8_t *out, size_t outlen)
-{
-  int err;
-  uint32_t *up = (uint32_t *) out;
-  (void) cfg;
-  if (! (ottery_get_cpu_capabilities_() & OTTERY_CPUCAP_RAND))
-    return OTTERY_ERR_INIT_STRONG_RNG;
-  while (outlen >= 4) {
-    if ((err = rdrand(up)))
-      return err;
-    up += 1;
-    outlen -= 4;
-  }
-  if (outlen) {
-    uint32_t tmp;
-    if ((err = rdrand(&tmp)))
-      return err;
-    memcpy(up, &tmp, outlen);
-  }
-  return 0;
-}
-#endif
-
 #define SRC(x) OTTERY_ENTROPY_SRC_ ## x
 #define FL(x) OTTERY_ENTROPY_FL_ ## x
+
+#include "ottery_entropy_cryptgenrandom.c"
+#include "ottery_entropy_urandom.c"
+#include "ottery_entropy_rdrand.c"
+
+
 /** Table of RNG functions and their properties. */
 static struct ottery_randbytes_source {
   int (*fn)(const struct ottery_osrng_config *, uint8_t *, size_t);
   uint32_t flags;
 } RAND_SOURCES[] = {
-#ifdef RAND_WIN32
-  { ottery_os_randbytes_win32,   SRC(CRYPTGENRANDOM)|FL(OS)|FL(STRONG) },
-#elif defined(RAND_URANDOM)
-  { ottery_os_randbytes_urandom, SRC(RANDOMDEV)|FL(OS)|FL(STRONG) },
+#ifdef ENTROPY_SOURCE_CRYPTGENRANDOM
+  ENTROPY_SOURCE_CRYPTGENRANDOM,
 #endif
-#ifdef RAND_RDRAND
-  { ottery_os_randbytes_rdrand,  SRC(RDRAND)|FL(CPU)|FL(FAST)|FL(STRONG) },
+#ifdef ENTROPY_SOURCE_URANDOM
+  ENTROPY_SOURCE_URANDOM,
+#endif
+#ifdef ENTROPY_SOURCE_RDRAND
+  ENTROPY_SOURCE_RDRAND,
 #endif
   { NULL, 0 }
 };
-#undef SRC
-#undef FL
+
 
 int
 ottery_os_randbytes_(const struct ottery_osrng_config *config,
