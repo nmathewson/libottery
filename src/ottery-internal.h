@@ -60,7 +60,11 @@
 #define OTTERY_ENTROPY_SRC_CRYPTGENRANDOM 0x0200
 /** The Intel RDRAND instruction. */
 #define OTTERY_ENTROPY_SRC_RDRAND         0x0400
+/** DOCDOC */
+#define OTTERY_ENTROPY_SRC_EGD            0x0800
 /** @} */
+
+struct sockaddr;
 
 /** Configuration for the strong RNG the we use for entropy. */
 struct ottery_osrng_config {
@@ -68,7 +72,10 @@ struct ottery_osrng_config {
    * is not a unix-like operating system. If this is NULL, we use
    * the default value. */
   const char *urandom_fname;
-  /** */
+  /** DOCDOC */
+  struct sockaddr *egd_sockaddr;
+  int egd_socklen;
+  /** DOCDOC */
   uint32_t disabled_sources;
 };
 
