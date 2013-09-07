@@ -15,6 +15,7 @@
 #define OTTERY_INTERNAL_H_HEADER_INCLUDED_
 #include <stdint.h>
 #include <sys/types.h>
+#include <sys/socket.h> //TODO: fix windows.  Can we get this out of here?
 #include "ottery-config.h"
 
 #ifndef OTTERY_NO_LOCKS
@@ -60,6 +61,8 @@
 #define OTTERY_ENTROPY_SRC_CRYPTGENRANDOM 0x0200
 /** The Intel RDRAND instruction. */
 #define OTTERY_ENTROPY_SRC_RDRAND         0x0400
+/** DOCDOC */
+#define OTTERY_ENTROPY_SRC_EGD            0x0800
 /** @} */
 
 /** Configuration for the strong RNG the we use for entropy. */
@@ -68,7 +71,9 @@ struct ottery_osrng_config {
    * is not a unix-like operating system. If this is NULL, we use
    * the default value. */
   const char *urandom_fname;
-  /** */
+  /** DOCDOC */
+  struct sockaddr_storage egd_sockaddr;
+  /** DOCDOC */
   uint32_t disabled_sources;
 };
 

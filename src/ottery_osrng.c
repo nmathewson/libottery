@@ -25,7 +25,7 @@
 #include "ottery_entropy_cryptgenrandom.c"
 #include "ottery_entropy_urandom.c"
 #include "ottery_entropy_rdrand.c"
-
+#include "ottery_entropy_egd.c"
 
 /** Table of RNG functions and their properties. */
 static struct ottery_randbytes_source {
@@ -37,6 +37,9 @@ static struct ottery_randbytes_source {
 #endif
 #ifdef ENTROPY_SOURCE_URANDOM
   ENTROPY_SOURCE_URANDOM,
+#endif
+#ifdef ENTROPY_SOURCE_EGD
+  ENTROPY_SOURCE_EGD,
 #endif
 #ifdef ENTROPY_SOURCE_RDRAND
   ENTROPY_SOURCE_RDRAND,
