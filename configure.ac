@@ -90,7 +90,32 @@ AM_CONDITIONAL(USEPYTHON, [test "x$PYTHON" != "x"])
 
 AC_ARG_VAR(GHC)
 AC_CHECK_PROGS(GHC,    [ghc])
-AM_CONDITIONAL(USEGHC,    [test "x$GHC"    != "x"])
+dnl In addition to the base Haskell compiler, the "Control.Monad.State"
+dnl library is required (from the mtl package).
+GHC_MTL=no
+if test "x$GHC" != "x"; then
+  AC_CACHE_CHECK([for Control.Monad.State], ac_cv_ghc_control_monad_state, [
+    cat <<\EOF > conftest.hs
+import Control.Monad.State
+main = undefined
+EOF
+    $GHC -c conftest.hs 1>&AS_MESSAGE_LOG_FD 2>&AS_MESSAGE_LOG_FD
+    if test $? -eq 0; then
+      ac_cv_ghc_control_monad_state=yes
+    else
+      ac_cv_ghc_control_monad_state=no
+    fi
+    rm -f conftest.*
+  ])
+  if test $ac_cv_ghc_control_monad_state = yes; then
+    GHC_MTL=yes
+  else
+    AC_MSG_WARN([Control.Monad.State unavailable; some tests will not be run.])
+    AC_MSG_WARN([Control.Monad.State is in the Haskell package 'mtl'.])
+  fi
+fi
+AC_SUBST(GHC_MTL)
+AM_CONDITIONAL(USEGHC, [test "x$GHC" != "x" && test "$GHC_MTL" = "yes"])
 
 dnl Try and get a full POSIX environment on systems where you need magic to
 dnl get it.  The AC_USE_SYSTEM_EXTENSIONS macro is best, but older autoconfs
