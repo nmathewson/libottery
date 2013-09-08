@@ -59,34 +59,23 @@ libottery_la_SOURCES =				\
 	src/ottery_global.c			\
 	src/ottery_osrng.c
 
-if SIMD
-
-if CHACHA_KROVETZ_X86_TWO_FLAVORS
-
-# On X86 or X86_64, we build chacha_krovetz.c in an SSE2 flavor and a
-# SSSE3 flavor, detecting at runtime which to use.  We need to put them
-# in separate .la libraries, since automake supports per-library CFLAGS,
-# but not per-file CFLAGS.
-noinst_LTLIBRARIES = libchacha-sse2.la libchacha-ssse3.la
-libchacha_sse2_la_SOURCES = src/chacha_krovetz.c
-libchacha_ssse3_la_SOURCES = src/chacha_krovetz.c
-libchacha_sse2_la_CFLAGS = $(SSE2_CFLAGS)
-libchacha_ssse3_la_CFLAGS = $(SSSE3_CFLAGS) -DOTTERY_BUILDING_SSSE3_IMPL
-
-libottery_la_CFLAGS += -DOTTERY_HAVE_SSSE3_IMPL
-libottery_la_LIBADD += $(noinst_LTLIBRARIES)
-
-else
-
-# On other platforms, we treat chacha_krovetz.c like any other source
-# file.  TODO: It isn't built if SIMD is disabled on the configure
-# command line, but it also shouldn't be built if platform detection
-# indicates it won't compile.
-libottery_la_SOURCES += src/chacha_krovetz.c
-
+# chacha_krovetz.c has to be built using special command-line options,
+# and therefore must be put in its own "convenience library."
+noinst_LTLIBRARIES =
+if SIMD_CHACHA_1
+noinst_LTLIBRARIES  += libchacha-simd1.la
+libottery_la_LIBADD += libchacha-simd1.la
+libchacha_simd1_la_SOURCES = src/chacha_krovetz.c
+libchacha_simd1_la_CFLAGS  = $(SIMD1_CFLAGS) -DOTTERY_BUILDING_SIMD1
 endif
 
-endif # SIMD
+# We may want to compile it twice with two different sets of options.
+if SIMD_CHACHA_2
+noinst_LTLIBRARIES  += libchacha-simd2.la
+libottery_la_LIBADD += libchacha-simd2.la
+libchacha_simd2_la_SOURCES = src/chacha_krovetz.c
+libchacha_simd2_la_CFLAGS  = $(SIMD2_CFLAGS) -DOTTERY_BUILDING_SIMD2
+endif
 
 #
 # Installed headers and other data.

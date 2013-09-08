@@ -307,12 +307,14 @@ chacha20_krovetz_generate(void *state, uint8_t *output, uint32_t idx)
   chacha ## r ## _krovetz_generate              \
 }
 
-#if defined(__SSSE3__) && defined(OTTERY_BUILDING_SSSE3_IMPL)
-const struct ottery_prf ottery_prf_chacha8_krovetz_ssse3_ = PRF_CHACHA(8);
-const struct ottery_prf ottery_prf_chacha12_krovetz_ssse3_ = PRF_CHACHA(12);
-const struct ottery_prf ottery_prf_chacha20_krovetz_ssse3_ = PRF_CHACHA(20);
+#if defined OTTERY_BUILDING_SIMD1
+const struct ottery_prf ottery_prf_chacha8_krovetz_1_ = PRF_CHACHA(8);
+const struct ottery_prf ottery_prf_chacha12_krovetz_1_ = PRF_CHACHA(12);
+const struct ottery_prf ottery_prf_chacha20_krovetz_1_ = PRF_CHACHA(20);
+#elif defined OTTERY_BUILDING_SIMD2
+const struct ottery_prf ottery_prf_chacha8_krovetz_2_ = PRF_CHACHA(8);
+const struct ottery_prf ottery_prf_chacha12_krovetz_2_ = PRF_CHACHA(12);
+const struct ottery_prf ottery_prf_chacha20_krovetz_2_ = PRF_CHACHA(20);
 #else
-const struct ottery_prf ottery_prf_chacha8_krovetz_ = PRF_CHACHA(8);
-const struct ottery_prf ottery_prf_chacha12_krovetz_ = PRF_CHACHA(12);
-const struct ottery_prf ottery_prf_chacha20_krovetz_ = PRF_CHACHA(20);
+#error "Which PRF symbols am I supposed to define?"
 #endif

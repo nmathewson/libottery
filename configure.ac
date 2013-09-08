@@ -49,8 +49,6 @@ OTTERY_ARG_DISABLE([clear-after-yield],
 OTTERY_ARG_DISABLE([wipe-stack],
   [erasure of stack memory that may retain secret information.])
 
-AM_CONDITIONAL(SIMD, [test $enable_simd = yes])
-
 #
 # C compiler configuration.
 #
@@ -62,74 +60,8 @@ dnl This has to appear before any compilation checks.
 dnl AC_USE_SYSTEM_EXTENSIONS is reliably available since autoconf 2.59.
 AC_USE_SYSTEM_EXTENSIONS
 
-#
-# C environment.
-#
-
-# On x86 (-32 or -64), if the compiler supports both SSE2-only and
-# SSE2+SSSE3 compilation modes, we want to compile chacha_krovetz.c
-# both ways and select which one is best for the CPU at runtime.
-
-AC_CACHE_CHECK([for SSE2 intrinsics], [ac_cv_cpu_x86_sse2_intrinsics],
-  [ac_cv_cpu_x86_sse2_intrinsics=no
-  save_CFLAGS="$CFLAGS"
-  for opts in "-msse2 -mno-sse3" ; do
-    CFLAGS="$save_CFLAGS $opts"
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#if !__SSE2__
-#error "SSE2 test macro should be defined"
-#endif
-#if __SSSE3__
-#error "SSSE3 test macro should not be defined"
-#endif
-#include <emmintrin.h>
-]], [[
- extern __m128i x;
- x = _mm_set_epi8(0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1);
-]])],
-      [ac_cv_cpu_x86_sse2_intrinsics="$opts"; break])
-  done
-  CFLAGS="$save_CFLAGS"
-])
-if test x"$ac_cv_cpu_x86_sse2_intrinsics" = xno; then
-  SSE2_CFLAGS=
-else
-  SSE2_CFLAGS="$ac_cv_cpu_x86_sse2_intrinsics"
-fi
-AC_SUBST(SSE2_CFLAGS)
-
-AC_CACHE_CHECK([for SSSE3 intrinsics], [ac_cv_cpu_x86_ssse3_intrinsics],
-  [ac_cv_cpu_x86_ssse3_intrinsics=no
-  save_CFLAGS="$CFLAGS"
-  for opts in "-mssse3" ; do
-    CFLAGS="$save_CFLAGS $opts"
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#if !__SSE2__
-#error "SSE2 test macro should be defined"
-#endif
-#if !__SSSE3__
-#error "SSSE3 test macro should be defined"
-#endif
-#include <emmintrin.h>
-#include <tmmintrin.h>
-]], [[
- extern __m128i x, y;
- y = _mm_shuffle_epi8((__m128i)x,
-         _mm_set_epi8(14,13,12,15,10,9,8,11,6,5,4,7,2,1,0,3));
-]])],
-      [ac_cv_cpu_x86_ssse3_intrinsics="$opts"; break])
-  done
-  CFLAGS="$save_CFLAGS"
-])
-if test x"$ac_cv_cpu_x86_ssse3_intrinsics" = xno; then
-  SSSE3_CFLAGS=
-else
-  SSSE3_CFLAGS="$ac_cv_cpu_x86_ssse3_intrinsics"
-fi
-AC_SUBST(SSSE3_CFLAGS)
-
-AM_CONDITIONAL(CHACHA_KROVETZ_X86_TWO_FLAVORS,
-  [test x"$SSE2_CFLAGS" != x && test x"$SSSE3_CFLAGS" != x])
+dnl Determine whether and how to compile chacha_krovetz.c.
+OTTERY_USE_SIMD
 
 # Initialize libtool.  Must be done after the compiler is set up.
 
