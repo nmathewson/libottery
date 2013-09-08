@@ -1,5 +1,4 @@
-# Some versions of aclocal will fail if this directory doesn't exist, so
-# we need it shipped in version control, but none of its contents are to
-# be checked in.  (Except this file.)
-*
-!.gitignore
+# Some of the files in this directory are created by autoreconf and shouldn't
+# be checked in; others are part of our source code.
+libtool.m4
+lt*.m4

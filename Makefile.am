@@ -59,6 +59,8 @@ libottery_la_SOURCES =				\
 	src/ottery_global.c			\
 	src/ottery_osrng.c
 
+if SIMD
+
 if CHACHA_KROVETZ_X86_TWO_FLAVORS
 
 # On X86 or X86_64, we build chacha_krovetz.c in an SSE2 flavor and a
@@ -76,11 +78,15 @@ libottery_la_LIBADD += $(noinst_LTLIBRARIES)
 
 else
 
-# On other platforms, we treat chacha_krovetz.c like any other source file.
-# TODO: It shouldn't be built at all if we have no SIMD.
+# On other platforms, we treat chacha_krovetz.c like any other source
+# file.  TODO: It isn't built if SIMD is disabled on the configure
+# command line, but it also shouldn't be built if platform detection
+# indicates it won't compile.
 libottery_la_SOURCES += src/chacha_krovetz.c
 
 endif
+
+endif # SIMD
 
 #
 # Installed headers and other data.
@@ -212,6 +218,7 @@ EXTRA_DIST =					\
 	test/hs/test_ottery.hs			\
 	etc/doxygen.conf			\
 	etc/uncrustify.cfg			\
+	m4/ottery_local.m4			\
 	COPYING					\
 	README.md				\
 	TODO

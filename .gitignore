@@ -41,6 +41,8 @@ stamp-h1
 /libchacha-ssse3.la
 /libchacha-sse2.la
 
+/ottery-*.tar.gz
+
 /doxygen
 
 /src/ottery-config.h

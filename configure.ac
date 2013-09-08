@@ -32,58 +32,24 @@ AM_INIT_AUTOMAKE
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES])
 
 # Configuration options.
-# TODO: Remove some of these.
-AC_ARG_ENABLE(pid-check,
-     AS_HELP_STRING(--disable-pid-check,
-         [Disable checks to see if the process has forked. Dangerous!]))
-if test "$enable_pid_check" = no; then
-   AC_DEFINE(OTTERY_NO_PID_CHECK, 1, [If defined, disable PID checking. (DANGER!)])
-fi
+# TODO: Remove as many of these as practical.  (Many reduce safety in
+# the name of speed.)
+OTTERY_ARG_DISABLE([pid-check],
+  [checks to see if the process has forked. Dangerous!])
+OTTERY_ARG_DISABLE([init-check],
+  [checks to make sure that the PRNG is initialized. Dangerous!])
+OTTERY_ARG_DISABLE([simd],
+  [optimized cryptographic primitives that use SIMD instructions.])
+OTTERY_ARG_DISABLE([locks],
+  [internal locking for thread safety.])
+OTTERY_ARG_DISABLE([spinlocks],
+  [use of spinlocks for thread safety.])
+OTTERY_ARG_DISABLE([clear-after-yield],
+  [automatic clearing of internal buffers.])
+OTTERY_ARG_DISABLE([wipe-stack],
+  [erasure of stack memory that may retain secret information.])
 
-AC_ARG_ENABLE(init-check,
-     AS_HELP_STRING(--disable-init-check,
-         [Disable checks to make sure that the PRNG is initialized. Dangerous!]))
-if test "$enable_init_check" = no; then
-   AC_DEFINE(OTTERY_NO_INIT_CHECK, 1, [If defined, disable initialization checking. (DANGER!)])
-fi
-
-AC_ARG_ENABLE(simd,
-     AS_HELP_STRING(--disable-simd,
-         [Don't build with support for fast crypto using SIMD]), ,
-	 enable_simd=yes)
-if test "$enable_simd" = no; then
-   AC_DEFINE(OTTERY_NO_VECS, 1, [If defined, disable SIMD crypto])
-fi
-
-AC_ARG_ENABLE(locks,
-     AS_HELP_STRING(--disable-locks,
-         [Don't build with locking support]), , enable_locks=yes)
-if test "$enable_locks" = no; then
-   AC_DEFINE(OTTERY_NO_LOCKS, 1, [If defined, disable locking])
-fi
-
-AC_ARG_ENABLE(spinlocks,
-     AS_HELP_STRING(--disable-spinlocks,
-         [When using locking, don't use spinlocks]), , enable_spinlocks=yes)
-if test "$enable_spinlocks" = no; then
-   AC_DEFINE(OTTERY_NO_SPINLOCKS, 1, [If defined, don't use spinlocks for locking])
-fi
-
-AC_ARG_ENABLE(clear-after-yield,
-     AS_HELP_STRING(--disable-clear-after-yield,
-         [Don't clear data from our buffer immediately after yielding it]), ,
-	 enable_clear_after_yield=yes)
-if test "$enable_clear_after_yield" = no; then
-   AC_DEFINE(OTTERY_NO_CLEAR_AFTER_YIELD, 1, [If defined, don't clear the buffer after producing output.])
-fi
-
-AC_ARG_ENABLE(wipe-stack,
-     AS_HELP_STRING(--disable-wipe-stack,
-         [Don't attempt to wipe the stack after calling the crypto core]), ,
-	 enable_wipe_stack=yes)
-if test "$enable_wipe_stack" = no; then
-   AC_DEFINE(OTTERY_NO_WIPE_STACK, 1, [If defined, don't try to wipe the stack after calling the crypto core.])
-fi
+AM_CONDITIONAL(SIMD, [test $enable_simd = yes])
 
 #
 # C compiler configuration.

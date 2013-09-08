@@ -104,7 +104,7 @@ int ottery_os_randbytes_(const struct ottery_osrng_config *config,
  */
 void ottery_memclear_(void *mem, size_t len);
 
-#if !defined(OTTERY_NO_VECS)   \
+#if !defined(OTTERY_NO_SIMD)   \
   && (defined(__ARM_NEON__) || \
   defined(__ALTIVEC__)  ||     \
   defined(__SSE2__))
