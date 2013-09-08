@@ -60,13 +60,18 @@ dnl This has to appear before any compilation checks.
 dnl AC_USE_SYSTEM_EXTENSIONS is reliably available since autoconf 2.59.
 AC_USE_SYSTEM_EXTENSIONS
 
-dnl Determine whether and how to compile chacha_krovetz.c.
+# Determine whether and how to compile chacha_krovetz.c.
 OTTERY_USE_SIMD
 
 # Initialize libtool.  Must be done after the compiler is set up.
-
 dnl Some systems still ship a libtool.m4 that predates the change to LT_INIT.
 AC_PROG_LIBTOOL
+
+#
+# Tests for headers and functions.
+#
+
+AC_CHECK_FUNCS_ONCE([arc4random arc4random_buf])
 
 # Python and Haskell are used in the test suite.
 # Do these checks last so the warnings don't scroll off the user's terminal.
