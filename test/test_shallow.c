@@ -142,7 +142,7 @@ test_osrandom(void *arg)
   for (j = 0; j < 64; ++j)
     tt_int_op(0, !=, buf[j]);
 
-  cfg.disabled_sources = OTTERY_ENTROPY_SRC_RDRAND;
+  cfg.disabled_sources = OTTERY_ENTROPY_SRC_RDRAND|OTTERY_ENTROPY_SRC_EGD;
   cfg.urandom_fname = "/dev/please-dont-create-this-file";
   flags = 0;
   tt_int_op(OTTERY_ERR_INIT_STRONG_RNG, ==,
@@ -419,7 +419,7 @@ test_bad_init(void *arg)
   tt_int_op(OTTERY_ERR_INIT_STRONG_RNG, ==, OTTERY_INIT(&cfg));
 
   ottery_config_set_urandom_device_(&cfg,"/dev/null");
-  ottery_config_disable_entropy_sources_(&cfg, OTTERY_ENTROPY_SRC_RDRAND);
+  ottery_config_disable_entropy_sources_(&cfg, OTTERY_ENTROPY_SRC_RDRAND|OTTERY_ENTROPY_SRC_EGD);
   tt_int_op(OTTERY_ERR_ACCESS_STRONG_RNG, ==, OTTERY_INIT(&cfg));
 
   ottery_config_set_urandom_device_(&cfg, NULL);
@@ -624,7 +624,7 @@ test_fatal(void *arg)
   ottery_st_rand_unsigned(&st);
   st.pid = getpid() + 100; /* force a postfork reseed. */
   st.osrng_config.urandom_fname = "/dev/null"; /* make reseed impossible */
-  st.osrng_config.disabled_sources = OTTERY_ENTROPY_SRC_RDRAND;
+  st.osrng_config.disabled_sources = OTTERY_ENTROPY_SRC_RDRAND|OTTERY_ENTROPY_SRC_EGD;
   tt_int_op(got_fatal_err, ==, 0);
   ottery_st_rand_unsigned(&st);
   tt_int_op(got_fatal_err, ==,
@@ -635,7 +635,7 @@ test_fatal(void *arg)
   ottery_st_rand_unsigned_nolock(&st_nl);
   st_nl.pid = getpid() + 100; /* force a postfork reseed. */
   st_nl.osrng_config.urandom_fname = "/dev/null"; /* make reseed impossible */
-  st_nl.osrng_config.disabled_sources = OTTERY_ENTROPY_SRC_RDRAND;
+  st_nl.osrng_config.disabled_sources = OTTERY_ENTROPY_SRC_RDRAND|OTTERY_ENTROPY_SRC_EGD;
   tt_int_op(got_fatal_err, ==, 0);
   ottery_st_rand_unsigned_nolock(&st_nl);
   tt_int_op(got_fatal_err, ==,
