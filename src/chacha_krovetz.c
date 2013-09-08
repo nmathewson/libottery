@@ -287,9 +287,9 @@ chacha20_krovetz_generate(void *state, uint8_t *output, uint32_t idx)
   ottery_blocks_chacha_krovetz(20, output, idx * IDX_STEP, st);
 }
 
-#ifdef __SSE3__
-#define NEED_CPUCAP OTTERY_CPUCAP_SSE3|OTTERY_CPUCAP_SIMD
-#define FLAV "-SSE3"
+#ifdef __SSSE3__
+#define NEED_CPUCAP OTTERY_CPUCAP_SSSE3|OTTERY_CPUCAP_SIMD
+#define FLAV "-SSSE3"
 #else
 #define NEED_CPUCAP OTTERY_CPUCAP_SIMD
 #define FLAV "-DEFAULT"
@@ -307,10 +307,10 @@ chacha20_krovetz_generate(void *state, uint8_t *output, uint32_t idx)
   chacha ## r ## _krovetz_generate              \
 }
 
-#if defined(__SSE3__) && defined(OTTERY_BUILDING_SSE3_IMPL)
-const struct ottery_prf ottery_prf_chacha8_krovetz_sse3_ = PRF_CHACHA(8);
-const struct ottery_prf ottery_prf_chacha12_krovetz_sse3_ = PRF_CHACHA(12);
-const struct ottery_prf ottery_prf_chacha20_krovetz_sse3_ = PRF_CHACHA(20);
+#if defined(__SSSE3__) && defined(OTTERY_BUILDING_SSSE3_IMPL)
+const struct ottery_prf ottery_prf_chacha8_krovetz_ssse3_ = PRF_CHACHA(8);
+const struct ottery_prf ottery_prf_chacha12_krovetz_ssse3_ = PRF_CHACHA(12);
+const struct ottery_prf ottery_prf_chacha20_krovetz_ssse3_ = PRF_CHACHA(20);
 #else
 const struct ottery_prf ottery_prf_chacha8_krovetz_ = PRF_CHACHA(8);
 const struct ottery_prf ottery_prf_chacha12_krovetz_ = PRF_CHACHA(12);

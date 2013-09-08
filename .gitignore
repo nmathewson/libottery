@@ -38,7 +38,7 @@ stamp-h1
 /libottery.la
 /libottery.a
 /libottery.pc
-/libchacha-sse3.la
+/libchacha-ssse3.la
 /libchacha-sse2.la
 
 /doxygen

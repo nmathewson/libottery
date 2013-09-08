@@ -81,11 +81,11 @@ const struct ottery_prf *prfs_midrange[] = {
 #define prfs_midrange prfs_no_simd
 #endif
 
-#if defined(OTTERY_HAVE_SSE3_IMPL) && defined(OTTERY_HAVE_SIMD_IMPL)
+#if defined(OTTERY_HAVE_SSSE3_IMPL) && defined(OTTERY_HAVE_SIMD_IMPL)
 const struct ottery_prf *prfs_best[] = {
-  &ottery_prf_chacha8_krovetz_sse3_,
-  &ottery_prf_chacha12_krovetz_sse3_,
-  &ottery_prf_chacha20_krovetz_sse3_,
+  &ottery_prf_chacha8_krovetz_ssse3_,
+  &ottery_prf_chacha12_krovetz_ssse3_,
+  &ottery_prf_chacha20_krovetz_ssse3_,
   NULL
 };
 #else

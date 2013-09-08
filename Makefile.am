@@ -83,19 +83,19 @@ OTTERY_CORE_SRC =				\
 	src/ottery_global.c			\
 	src/ottery_osrng.c
 
-if X86
+if CHACHA_KROVETZ_X86_TWO_FLAVORS
 # On X86 or X86_64, we build chacha_krovetz.c in an SSE2 flavor and a
-# SSE3 flavor, detecting at runtime which to use.  We need to put them
+# SSSE3 flavor, detecting at runtime which to use.  We need to put them
 # in separate .la libraries, since automake supports per-library CFLAGS,
 # but not per-file CFLAGS.
 OTTERY_ARCH_SRC =
-OTTERY_LIBS_EXTRA = libchacha-sse3.la libchacha-sse2.la
+OTTERY_LIBS_EXTRA = libchacha-ssse3.la libchacha-sse2.la
 noinst_LTLIBRARIES = $(OTTERY_LIBS_EXTRA)
-libchacha_sse3_la_SOURCES = src/chacha_krovetz.c
+libchacha_ssse3_la_SOURCES = src/chacha_krovetz.c
 libchacha_sse2_la_SOURCES = src/chacha_krovetz.c
-libchacha_sse3_la_CFLAGS = -msse3 -DOTTERY_BUILDING_SSE3_IMPL
-libchacha_sse2_la_CFLAGS = -msse2 -mno-sse3
-CFLAGS_EXTRA = -DOTTERY_HAVE_SSE3_IMPL
+libchacha_ssse3_la_CFLAGS = $(SSSE3_CFLAGS) -DOTTERY_BUILDING_SSSE3_IMPL
+libchacha_sse2_la_CFLAGS = $(SSE2_CFLAGS)
+CFLAGS_EXTRA = -DOTTERY_HAVE_SSSE3_IMPL
 else
 
 # On other platforms, we treat chacha_krovetz.c like any other source file.
@@ -271,14 +271,3 @@ uncrustify:
 
 reset-gcov:
 	rm -f {src,test}/*.gcda
-
-#coverage:
-#	gcov -o src $(OTTERY_BASE_OBJS:.o=.c)
-#	if [ "$(X86)" = 1 ]; then 					\
-#	   gcov -o src/chacha_krovetz_sse2.o src/chacha_krovetz.c && 	\
-#	       mv chacha_krovetz.c.gcov chacha_krovetz_sse2.c.gcov ;	\
-#	   gcov -o src/chacha_krovetz_sse3.o src/chacha_krovetz.c && 	\
-#	       mv chacha_krovetz.c.gcov chacha_krovetz_sse3.c.gcov ;	\
-#	else 								\
-#	   gcov -o src src/chacha_krovetz.c; 				\
-#	fi

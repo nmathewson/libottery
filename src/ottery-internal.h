@@ -265,7 +265,7 @@ void ottery_config_disable_entropy_sources_(struct ottery_config *cfg,
 void ottery_fatal_error_(int error);
 
 #define OTTERY_CPUCAP_SIMD (1<<0)
-#define OTTERY_CPUCAP_SSE3 (1<<1)
+#define OTTERY_CPUCAP_SSSE3 (1<<1)
 #define OTTERY_CPUCAP_AES  (1<<2)
 #define OTTERY_CPUCAP_RAND (1<<3)
 
@@ -299,10 +299,10 @@ extern const struct ottery_prf ottery_prf_chacha12_krovetz_;
 extern const struct ottery_prf ottery_prf_chacha20_krovetz_;
 #endif
 /** @} */
-#ifdef OTTERY_HAVE_SSE3_IMPL
-extern const struct ottery_prf ottery_prf_chacha8_krovetz_sse3_;
-extern const struct ottery_prf ottery_prf_chacha12_krovetz_sse3_;
-extern const struct ottery_prf ottery_prf_chacha20_krovetz_sse3_;
+#ifdef OTTERY_HAVE_SSSE3_IMPL
+extern const struct ottery_prf ottery_prf_chacha8_krovetz_ssse3_;
+extern const struct ottery_prf ottery_prf_chacha12_krovetz_ssse3_;
+extern const struct ottery_prf ottery_prf_chacha20_krovetz_ssse3_;
 #endif
 #endif
 

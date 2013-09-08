@@ -151,26 +151,70 @@ dnl We use libtool for building shared libraries.
 AC_PROG_LIBTOOL
 AC_SUBST(LIBTOOL_DEPS)
 
-dnl Our build setup is a bit different if we're on an X86 or X86_64, since
-dnl we'll be building separate sse2 and sse3 versions of the simd code.
-dnl We'll detect now what the compiler thinks we're building for.
-AC_MSG_CHECKING([whether CPU is X86 or X86_64])
-AC_TRY_COMPILE(,
-	[
-#if defined(i386) || \
-    defined(__i386) || \
-    defined(__x86_64) || \
-    defined(__M_IX86) || \
-    defined(_M_IX86) || \
-    defined(__INTEL_COMPILER)
-#else
-die horribly
+# On x86 (-32 or -64), if the compiler supports both SSE2-only and
+# SSE2+SSSE3 compilation modes, we want to compile chacha_krovetz.c
+# both ways and select which one is best for the CPU at runtime.
+
+AC_CACHE_CHECK([for SSE2 intrinsics], [ac_cv_cpu_x86_sse2_intrinsics],
+  [ac_cv_cpu_x86_sse2_intrinsics=no
+  save_CFLAGS="$CFLAGS"
+  for opts in "-msse2 -mno-sse3" ; do
+    CFLAGS="$save_CFLAGS $opts"
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#if !__SSE2__
+#error "SSE2 test macro should be defined"
 #endif
-	],
-	is_x86=yes; AC_MSG_RESULT(yes),
-	is_x86=no; AC_MSG_RESULT(no),
-)
-AM_CONDITIONAL(X86, [test "$is_x86" = "yes"])
+#if __SSSE3__
+#error "SSSE3 test macro should not be defined"
+#endif
+#include <emmintrin.h>
+]], [[
+ extern __m128i x;
+ x = _mm_set_epi8(0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1);
+]])],
+      [ac_cv_cpu_x86_sse2_intrinsics="$opts"; break])
+  done
+  CFLAGS="$save_CFLAGS"
+])
+if test x"$ac_cv_cpu_x86_sse2_intrinsics" = xno; then
+  SSE2_CFLAGS=
+else
+  SSE2_CFLAGS="$ac_cv_cpu_x86_sse2_intrinsics"
+fi
+AC_SUBST(SSE2_CFLAGS)
+
+AC_CACHE_CHECK([for SSSE3 intrinsics], [ac_cv_cpu_x86_ssse3_intrinsics],
+  [ac_cv_cpu_x86_ssse3_intrinsics=no
+  save_CFLAGS="$CFLAGS"
+  for opts in "-mssse3" ; do
+    CFLAGS="$save_CFLAGS $opts"
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#if !__SSE2__
+#error "SSE2 test macro should be defined"
+#endif
+#if !__SSSE3__
+#error "SSSE3 test macro should be defined"
+#endif
+#include <emmintrin.h>
+#include <tmmintrin.h>
+]], [[
+ extern __m128i x, y;
+ y = _mm_shuffle_epi8((__m128i)x,
+         _mm_set_epi8(14,13,12,15,10,9,8,11,6,5,4,7,2,1,0,3));
+]])],
+      [ac_cv_cpu_x86_ssse3_intrinsics="$opts"; break])
+  done
+  CFLAGS="$save_CFLAGS"
+])
+if test x"$ac_cv_cpu_x86_ssse3_intrinsics" = xno; then
+  SSSE3_CFLAGS=
+else
+  SSSE3_CFLAGS="$ac_cv_cpu_x86_ssse3_intrinsics"
+fi
+AC_SUBST(SSSE3_CFLAGS)
+
+AM_CONDITIONAL(CHACHA_KROVETZ_X86_TWO_FLAVORS,
+  [test x"$SSE2_CFLAGS" != x && test x"$SSSE3_CFLAGS" != x])
 
 dnl Generate a pkgconfig file.
 AC_CONFIG_FILES( [libottery.pc] )
