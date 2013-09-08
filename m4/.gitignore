@@ -1,0 +1,5 @@
+# Some versions of aclocal will fail if this directory doesn't exist, so
+# we need it shipped in version control, but none of its contents are to
+# be checked in.  (Except this file.)
+*
+!.gitignore
