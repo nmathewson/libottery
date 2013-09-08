@@ -11,19 +11,20 @@
 #  work in doc/cc0.txt.  If not, see
 #  <http://creativecommons.org/publicdomain/zero/1.0/>.
 
-# Required options to set-up automake.
 #    foreign -- this project doesn't need to have a GNU-style file layout.
-#    1.9 -- require autmake 1.9 or later
+#    1.9 -- require automake 1.9 or later
 #    subdir-objects -- store object files in subdirectories corresponding
 #        to the source that produced them.
 AUTOMAKE_OPTIONS = foreign 1.9 subdir-objects
 
-# Find macros in m4/
+# Find macros in m4/. This is *not* redundant with AC_CONFIG_MACRO_DIR
+# over in configure.ac, unfortunately.
 ACLOCAL_AMFLAGS = -I m4
 
-# VERSION_INFO used for compatibility and versioning with libtool.
+# VERSION_INFO defines the ABI version (aka 'soname') of the library
+# we build.  Do not confuse this with the version number set by AC_INIT!
 #
-# To increment a VERSION_INFO (current:revision:age):
+# To increment VERSION_INFO (current:revision:age):
 #    If the ABI didn't change:
 #        Return (current:revision+1:age)
 #    If the ABI changed, but it's backward-compatible:
@@ -31,52 +32,27 @@ ACLOCAL_AMFLAGS = -I m4
 #    If the ABI changed and it isn't backward-compatible:
 #        Return (current+1:0:0)
 #
-VERSION_INFO = 0:0:0
-#
 # History:
-#    0:0:0 -- Libottery 0.0.0 (before the first releaes)
+#    0:0:0 -- Libottery 0.0.0 (before the first release)
+#
+VERSION_INFO = 0:0:0
 
-# We make sure that we've built all of these before we run make check
-TEST_PROGS = test/test_vectors test/bench_rng test/dump_bytes	\
-	test/test_memclear test/test_shallow test/test_deep
+# Compiler and linker options to apply to everything.
+# TODO: Make sure these all work
+# TODO: Use -pthread more judiciously.
+AM_CFLAGS = -O3 -Wall -W -pthread -I $(top_srcdir)/src
 
-# These are actually the programs that constitute our unit tests.  We
-# define a few more below too.
-TESTS = test/test_memclear test/test_shallow test/test_deep \
-	test/test_vector_cmp.sh
+#
+# The library itself.
+#
 
-check_PROGRAMS = $(TEST_PROGS)
-
-######
-# Here are the things we actually install.  The .la suffix indicates that
-# we're making a libtool library.
 lib_LTLIBRARIES = libottery.la
-pkgconfigdir=$(libdir)/pkgconfig
-pkgconfig_DATA  = libottery.pc
-include_HEADERS	=				\
-	src/ottery.h				\
-	src/ottery_common.h			\
-	src/ottery_nolock.h			\
-	src/ottery_st.h
+libottery_la_CFLAGS =
+libottery_la_LDFLAGS = -version-info $(VERSION_INFO)
+libottery_la_LIBADD =
 
-######
-# We need to ship these headers, but we don't install them.
-noinst_HEADERS = 			\
-	src/chacha_merged_ecrypt.h 	\
-	src/ottery-internal.h 		\
-	test/st_wrappers.h 		\
-	test/streams.h 			\
-	test/tinytest.h 		\
-	test/tinytest_macros.h
-
-#####
-# LDFLAGS that we want to add to all LDFLAGS
-GENERIC_LDFLAGS = -version-info $(VERSION_INFO)
-
-####
-# This source constitutes libottery unconditionally, no matter the build
-# options.
-OTTERY_CORE_SRC =				\
+# This code is always included in the library, regardless of build options.
+libottery_la_SOURCES =				\
 	src/chacha_merged.c			\
 	src/ottery.c				\
 	src/ottery_cpuinfo.c			\
@@ -84,74 +60,84 @@ OTTERY_CORE_SRC =				\
 	src/ottery_osrng.c
 
 if CHACHA_KROVETZ_X86_TWO_FLAVORS
+
 # On X86 or X86_64, we build chacha_krovetz.c in an SSE2 flavor and a
 # SSSE3 flavor, detecting at runtime which to use.  We need to put them
 # in separate .la libraries, since automake supports per-library CFLAGS,
 # but not per-file CFLAGS.
-OTTERY_ARCH_SRC =
-OTTERY_LIBS_EXTRA = libchacha-ssse3.la libchacha-sse2.la
-noinst_LTLIBRARIES = $(OTTERY_LIBS_EXTRA)
-libchacha_ssse3_la_SOURCES = src/chacha_krovetz.c
+noinst_LTLIBRARIES = libchacha-sse2.la libchacha-ssse3.la
 libchacha_sse2_la_SOURCES = src/chacha_krovetz.c
-libchacha_ssse3_la_CFLAGS = $(SSSE3_CFLAGS) -DOTTERY_BUILDING_SSSE3_IMPL
+libchacha_ssse3_la_SOURCES = src/chacha_krovetz.c
 libchacha_sse2_la_CFLAGS = $(SSE2_CFLAGS)
-CFLAGS_EXTRA = -DOTTERY_HAVE_SSSE3_IMPL
+libchacha_ssse3_la_CFLAGS = $(SSSE3_CFLAGS) -DOTTERY_BUILDING_SSSE3_IMPL
+
+libottery_la_CFLAGS += -DOTTERY_HAVE_SSSE3_IMPL
+libottery_la_LIBADD += $(noinst_LTLIBRARIES)
+
 else
 
 # On other platforms, we treat chacha_krovetz.c like any other source file.
-OTTERY_ARCH_SRC = src/chacha_krovetz.c
-CFLAGS_EXTRA =
-OTTERY_LIBS_EXTRA =
+# TODO: It shouldn't be built at all if we have no SIMD.
+libottery_la_SOURCES += src/chacha_krovetz.c
+
 endif
 
-# Define the CFLAGS to build with
-# TODO: Make sure these all work
-# TODO: Use -pthread more judiciously.
-AM_CFLAGS = -O3 -Wall -W -Wextra -pthread $(CFLAGS_EXTRA) -I $(top_srcdir)/src
+#
+# Installed headers and other data.
+#
 
-#####
-# Define how to build libottery itself.
-libottery_la_SOURCES = $(OTTERY_CORE_SRC) $(OTTERY_ARCH_SRC)
-libottery_la_LDFLAGS = $(GENERIC_LDFLAGS)
-libottery_la_LIBADD = $(OTTERY_LIBS_EXTRA)
+include_HEADERS	=				\
+	src/ottery.h				\
+	src/ottery_common.h			\
+	src/ottery_nolock.h			\
+	src/ottery_st.h
 
-#####
-# Things we need to distribute not listed elsewhere.
-EXTRA_DIST =					\
-	test/make_test_vectors.py		\
-	test/test_vector_cmp.sh			\
-	test/test_spec_cmp.sh			\
-	test/test_spec_seed			\
-	test/hs/Ottery.hs			\
-	test/hs/ChaCha.hs			\
-	test/hs/test_ottery.hs			\
-	etc/doxygen.conf			\
-	etc/uncrustify.cfg			\
-	COPYING					\
-	README.md				\
-	TODO
+pkgconfigdir=$(libdir)/pkgconfig
+pkgconfig_DATA  = libottery.pc
 
+#
+# Testing
+#
 
-#####
-# TESTING
+# Default set of actual test cases.
+TESTS = test/test_memclear test/test_shallow test/test_deep \
+	test/test_vector_cmp.sh
 
-# How to build test/test_vectors, the program that generates test vectors
-# for the different chacha implementations
-test_test_vectors_SOURCES = test/test_vectors.c test/streams.c
-test_test_vectors_LDADD = libottery.la
+# Programs to compile before running the tests
+check_PROGRAMS = test/test_vectors test/bench_rng test/dump_bytes	\
+		 test/test_memclear test/test_shallow test/test_deep
 
 # Data generated by test/test_vectors and by test/make_test_vectors.py.
-# We add this here to make sure that it really *is* generated.
-noinst_DATA =					\
+# Also needs to exist before running the tests.
+check_DATA =					\
 	test/test_vectors.expected		\
 	test/test_vectors.actual		\
 	test/test_vectors.actual-nosimd		\
 	test/test_vectors.actual-midrange
 
 # The python script that generates test/test_vectors.expected
-noinst_SCRIPTS = test/make_test_vectors.py
+check_SCRIPTS = test/make_test_vectors.py
 
-###
+test_test_vectors_SOURCES = test/test_vectors.c test/streams.c
+test_test_vectors_LDADD = libottery.la
+
+# TODO: skip this test if libcrypto is unavailable
+test_bench_rng_SOURCES = test/bench_rng.c
+test_bench_rng_LDADD = libottery.la -lcrypto
+
+test_dump_bytes_SOURCES = test/dump_bytes.c
+test_dump_bytes_LDADD = libottery.la
+
+test_test_memclear_SOURCES = test/test_memclear.c
+test_test_memclear_LDADD = libottery.la
+
+test_test_shallow_SOURCES = test/test_shallow.c test/tinytest.c
+test_test_shallow_LDADD = libottery.la
+
+test_test_deep_SOURCES = test/test_deep.c test/tinytest.c
+test_test_deep_LDADD = libottery.la
+
+# TODO: Skip when Python is unavailable.
 test/test_vectors.expected: $(top_srcdir)/test/make_test_vectors.py
 	$(AM_V_GEN)$(PYTHON) $(top_srcdir)/test/make_test_vectors.py > test/test_vectors.expected
 
@@ -163,32 +149,6 @@ test/test_vectors.actual-midrange: test/test_vectors
 
 test/test_vectors.actual-nosimd: test/test_vectors
 	$(AM_V_GEN)./test/test_vectors no-simd > test/test_vectors.actual-nosimd
-
-
-# How to build the benchmark program.  Note that it currently links openssl
-# unconditionally.
-# TODO: Fix that.
-test_bench_rng_SOURCES = test/bench_rng.c
-test_bench_rng_LDADD = libottery.la -lcrypto
-
-# How to build the 'dump some bytes' program we use as input to dieharder.
-test_dump_bytes_SOURCES = test/dump_bytes.c
-test_dump_bytes_LDADD = libottery.la
-
-# How to build the program we use to make sure our memclear trick works.
-test_test_memclear_SOURCES = test/test_memclear.c
-test_test_memclear_LDADD = libottery.la
-
-# How to build our 'shallow' unit tests.  These are the ones that assume
-# we want to test our RNG qua RNG, but which don't assume we know its
-# internals too well.
-test_test_shallow_SOURCES = test/test_shallow.c test/tinytest.c
-test_test_shallow_LDADD = libottery.la
-
-# How to build our 'deep' unit tests. These ones check the specific
-# behavior of the way that ottery wraps its underlying PRF.
-test_test_deep_SOURCES = test/test_deep.c test/tinytest.c
-test_test_deep_LDADD = libottery.la
 
 #####
 # If we have a haskell, we can run our "Spec" tests.
@@ -202,7 +162,7 @@ test_test_spec_LDADD = libottery.la
 
 # More generated info that we'll need to make sure we generate to run
 # our unit tests.
-noinst_DATA += 				\
+check_DATA += 				\
 	test/hs/test_ottery.output 	\
 	test/test_spec.output
 
@@ -228,18 +188,42 @@ TESTS += test/test_spec_cmp.sh
 
 endif
 
+#
+# Miscellaneous
+#
 
-#####
-# Files to remove on 'make clean' not listed elsewhere.
-CLEANFILES = $(noinst_DATA) test/hs/*.hi test/hs/*.o test/hs/test_ottery
+# Internal-use headers
+noinst_HEADERS = 			\
+	src/chacha_merged_ecrypt.h 	\
+	src/ottery-internal.h 		\
+	test/st_wrappers.h 		\
+	test/streams.h 			\
+	test/tinytest.h 		\
+	test/tinytest_macros.h
 
+# Things we need to distribute, not listed elsewhere.
+EXTRA_DIST =					\
+	test/make_test_vectors.py		\
+	test/test_vector_cmp.sh			\
+	test/test_spec_cmp.sh			\
+	test/test_spec_seed			\
+	test/hs/Ottery.hs			\
+	test/hs/ChaCha.hs			\
+	test/hs/test_ottery.hs			\
+	etc/doxygen.conf			\
+	etc/uncrustify.cfg			\
+	COPYING					\
+	README.md				\
+	TODO
 
-#####
-# MISCELLANEOUS TARGETS
-
-# Rebuild the doxygen documentation
-doxygen:
-	doxygen etc/doxygen.conf
+# Files to remove on 'make clean', not listed elsewhere.
+CLEANFILES = $(noinst_DATA) test/hs/*.hi test/hs/*.o test/hs/test_ottery \
+	test/test_vectors.expected \
+	test/test_vectors.actual \
+	test/test_vectors.actual-nosimd \
+	test/test_vectors.actual-midrange \
+	test/hs/test_ottery.output \
+	test/test_spec.output
 
 # Files to clean up with uncrustify.
 UNCRUSTIFY_FILES =				\
@@ -269,5 +253,6 @@ UNCRUSTIFY_FILES =				\
 uncrustify:
 	uncrustify -c etc/uncrustify.cfg --replace -l C $(UNCRUSTIFY_FILES)
 
-reset-gcov:
-	rm -f {src,test}/*.gcda
+# Rebuild the doxygen documentation
+doxygen:
+	doxygen etc/doxygen.conf
