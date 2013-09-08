@@ -15,7 +15,6 @@
 #define OTTERY_INTERNAL_H_HEADER_INCLUDED_
 #include <stdint.h>
 #include <sys/types.h>
-#include <sys/socket.h> //TODO: fix windows.  Can we get this out of here?
 #include "ottery-config.h"
 
 #ifndef OTTERY_NO_LOCKS
@@ -65,6 +64,8 @@
 #define OTTERY_ENTROPY_SRC_EGD            0x0800
 /** @} */
 
+struct sockaddr;
+
 /** Configuration for the strong RNG the we use for entropy. */
 struct ottery_osrng_config {
   /** The filename to use as /dev/urandom. Ignored if this
@@ -72,7 +73,8 @@ struct ottery_osrng_config {
    * the default value. */
   const char *urandom_fname;
   /** DOCDOC */
-  struct sockaddr_storage egd_sockaddr;
+  struct sockaddr *egd_sockaddr;
+  int egd_socklen;
   /** DOCDOC */
   uint32_t disabled_sources;
 };
