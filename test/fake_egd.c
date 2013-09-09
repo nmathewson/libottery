@@ -133,6 +133,7 @@ main(int argc, char **argv)
         printf("Unrecognized option %s\n", argv[i]);
         return 1;
       }
+      continue;
     }
     if (getport(argv[i], &port) == 0) {
       ++n_addrs;
@@ -195,8 +196,7 @@ main(int argc, char **argv)
     return 1;
   }
 
-  if (reply(fd) < 0)
-    return 1;
+  (void) reply(fd);
 
   close(fd);
   close(listener);

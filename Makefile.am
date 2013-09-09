@@ -240,6 +240,11 @@ TESTS += test/test_spec_cmp.sh
 
 endif
 
+#####
+# If we have a python, we can run the EGD tests.
+if USEPYTHON
+TESTS += test/test_egd.py
+endif
 
 #####
 # Files to remove on 'make clean' not listed elsewhere.

@@ -29,8 +29,8 @@ main(int argc, char **argv)
 {
   struct sockaddr_un sun;
   struct ottery_osrng_config cfg;
-  unsigned char buf[256];
-  unsigned char scratch[256];
+  unsigned char buf[257];
+  unsigned char scratch[257];
   long n;
   char *endp;
   uint32_t flags;
@@ -42,8 +42,8 @@ main(int argc, char **argv)
     return 1;
   }
   n = strtol(argv[1], &endp, 10);
-  if (n < 0 || n >= 256 || *endp) {
-    printf("First argument must be in 0..255\n");
+  if (n < 0 || n > 256 || *endp) {
+    printf("First argument must be in 0..256\n");
     return 1;
   }
   if (strlen(argv[2])+1 >= sizeof(sun.sun_path)) {
@@ -55,6 +55,9 @@ main(int argc, char **argv)
   memset(&cfg, 0, sizeof(cfg));
 
   sun.sun_family = AF_UNIX;
+  if (!strcmp(argv[2], "_BROKEN_FAMILY_"))
+    sun.sun_family = 0xf0;
+
   memcpy(sun.sun_path, argv[2], strlen(argv[2])+1);
   cfg.egd_sockaddr = (void*)&sun;
   cfg.egd_socklen = sizeof(sun);
@@ -70,7 +73,6 @@ main(int argc, char **argv)
     for (i=0; i<n; ++i) printf("%02x", buf[i]);
     puts("");
   } else {
-    perror("randbytes");
     printf("ERR:%d\n",result);
   }
   return 0;
