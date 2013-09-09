@@ -64,6 +64,8 @@
 #define OTTERY_ENTROPY_SRC_EGD            0x0800
 /** @} */
 
+#define OTTERY_ENTROPY_ALL_SOURCES        0xfff00
+
 struct sockaddr;
 
 /** Configuration for the strong RNG the we use for entropy. */

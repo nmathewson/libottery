@@ -38,7 +38,8 @@ VERSION_INFO = 0:0:0
 
 # We make sure that we've built all of these before we run make check
 TEST_PROGS = test/test_vectors test/bench_rng test/dump_bytes	\
-	test/test_memclear test/test_shallow test/test_deep
+	test/test_memclear test/test_shallow test/test_deep	\
+	test/test_egd test/fake_egd
 
 # These are actually the programs that constitute our unit tests.  We
 # define a few more below too.
@@ -193,6 +194,13 @@ test_test_shallow_LDADD = libottery.la
 # behavior of the way that ottery wraps its underlying PRF.
 test_test_deep_SOURCES = test/test_deep.c test/tinytest.c
 test_test_deep_LDADD = libottery.la
+
+# How to build our EGD testing tool and our fake egd implementation.
+test_test_egd_SOURCES = test/test_egd.c
+test_test_egd_LDADD = libottery.la
+
+# How to build our EGD testing tool and our fake egd implementation.
+test_fake_egd_SOURCES = test/fake_egd.c
 
 #####
 # If we have a haskell, we can run our "Spec" tests.
