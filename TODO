@@ -45,7 +45,7 @@ BEFORE FIRST ALPHA VERSION
 BEFORE VERSION 1:
 
   o Detect CPU features at runtime.
-    o In particular, detecting SSE3/SSE2 could be a bit of a win.
+    o In particular, detecting SSSE3/SSE2 could be a bit of a win.
     - Detect ARM neon
     - Detect altivec simd
 

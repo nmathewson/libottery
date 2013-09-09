@@ -113,13 +113,6 @@ int ottery_os_randbytes_(const struct ottery_osrng_config *config,
  */
 void ottery_memclear_(void *mem, size_t len);
 
-#if !defined(OTTERY_NO_VECS)   \
-  && (defined(__ARM_NEON__) || \
-  defined(__ALTIVEC__)  ||     \
-  defined(__SSE2__))
-#define OTTERY_HAVE_SIMD_IMPL
-#endif
-
 /**
  * Information on a single pseudorandom function that we can use to generate
  * a bytestream which (we hope) an observer can't distinguish from random
@@ -274,7 +267,7 @@ void ottery_config_disable_entropy_sources_(struct ottery_config *cfg,
 void ottery_fatal_error_(int error);
 
 #define OTTERY_CPUCAP_SIMD (1<<0)
-#define OTTERY_CPUCAP_SSE3 (1<<1)
+#define OTTERY_CPUCAP_SSSE3 (1<<1)
 #define OTTERY_CPUCAP_AES  (1<<2)
 #define OTTERY_CPUCAP_RAND (1<<3)
 
@@ -295,24 +288,23 @@ extern const struct ottery_prf ottery_prf_chacha12_merged_;
 extern const struct ottery_prf ottery_prf_chacha20_merged_;
 /**@}*/
 
-#ifdef OTTERY_HAVE_SIMD_IMPL
 /**
  * @brief SIMD-basd ChaCha implementations.
  *
  * These are much, much faster.
  *
  * @{ */
-#ifdef OTTERY_HAVE_SIMD_IMPL
-extern const struct ottery_prf ottery_prf_chacha8_krovetz_;
-extern const struct ottery_prf ottery_prf_chacha12_krovetz_;
-extern const struct ottery_prf ottery_prf_chacha20_krovetz_;
+#ifdef HAVE_SIMD_CHACHA
+extern const struct ottery_prf ottery_prf_chacha8_krovetz_1_;
+extern const struct ottery_prf ottery_prf_chacha12_krovetz_1_;
+extern const struct ottery_prf ottery_prf_chacha20_krovetz_1_;
+#endif
+
+#ifdef HAVE_SIMD_CHACHA_2
+extern const struct ottery_prf ottery_prf_chacha8_krovetz_2_;
+extern const struct ottery_prf ottery_prf_chacha12_krovetz_2_;
+extern const struct ottery_prf ottery_prf_chacha20_krovetz_2_;
 #endif
 /** @} */
-#ifdef OTTERY_HAVE_SSE3_IMPL
-extern const struct ottery_prf ottery_prf_chacha8_krovetz_sse3_;
-extern const struct ottery_prf ottery_prf_chacha12_krovetz_sse3_;
-extern const struct ottery_prf ottery_prf_chacha20_krovetz_sse3_;
-#endif
-#endif
 
 #endif
