@@ -59,6 +59,9 @@ AC_ARG_ENABLE(wipe-stack,
      AS_HELP_STRING(--disable-wipe-stack,
          [Don't attempt to wipe the stack after calling the crypto core]), ,
 	 enable_wipe_stack=yes)
+AC_ARG_ENABLE(haskell-tests,
+     AS_HELP_STRING(--disable-haskell-tests,
+         [Do not try to build the haskell unit tests.]))
 
 if test "$enable_pid_check" = no; then
    AC_DEFINE(OTTERY_NO_PID_CHECK, 1, [If defined, disable PID checking. (DANGER!)])
@@ -90,7 +93,7 @@ AM_CONDITIONAL(USEPYTHON, [test "x$PYTHON" != "x"])
 
 AC_ARG_VAR(GHC)
 AC_CHECK_PROGS(GHC,    [ghc])
-AM_CONDITIONAL(USEGHC,    [test "x$GHC"    != "x"])
+AM_CONDITIONAL(USEGHC,    [test "x$GHC"    != "x" && test "$enable_haskell_tests" != "no"])
 
 dnl Try and get a full POSIX environment on systems where you need magic to
 dnl get it.  The AC_USE_SYSTEM_EXTENSIONS macro is best, but older autoconfs
