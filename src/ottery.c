@@ -161,15 +161,15 @@ ottery_get_impl(const char *impl)
 {
   int i;
   const struct ottery_prf *ALL_PRFS[] = {
-#if defined(OTTERY_HAVE_SSE3_IMPL) && defined(OTTERY_HAVE_SIMD_IMPL)
-    &ottery_prf_chacha20_krovetz_sse3_,
-    &ottery_prf_chacha12_krovetz_sse3_,
-    &ottery_prf_chacha8_krovetz_sse3_,
+#ifdef HAVE_SIMD_CHACHA_2
+    &ottery_prf_chacha20_krovetz_2_,
+    &ottery_prf_chacha12_krovetz_2_,
+    &ottery_prf_chacha8_krovetz_2_,
 #endif
-#ifdef OTTERY_HAVE_SIMD_IMPL
-    &ottery_prf_chacha20_krovetz_,
-    &ottery_prf_chacha12_krovetz_,
-    &ottery_prf_chacha8_krovetz_,
+#ifdef HAVE_SIMD_CHACHA_1
+    &ottery_prf_chacha20_krovetz_1_,
+    &ottery_prf_chacha12_krovetz_1_,
+    &ottery_prf_chacha8_krovetz_1_,
 #endif
     &ottery_prf_chacha20_merged_,
     &ottery_prf_chacha12_merged_,

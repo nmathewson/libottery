@@ -16,13 +16,6 @@
 #include <stdio.h>
 #include <sys/time.h>
 
-#if !(                    \
-  defined(__APPLE__) ||   \
-  defined(__FreeBSD__) || \
-  defined(__NetBSD__))
-#define NO_ARC4RANDOM
-#endif
-
 #ifdef _WIN32
 #define NO_URANDOM
 #else
@@ -180,7 +173,7 @@ time_urandom(void)
 void
 time_arc4random(void)
 {
-#ifndef NO_ARC4RANDOM
+#ifdef HAVE_ARC4RANDOM
   TIME_UNSIGNED_RNG((arc4random()));
 #endif
 }
@@ -212,7 +205,7 @@ time_libc_random_u64(void)
 }
 
 
-#ifndef NO_ARC4RANDOM
+#ifdef HAVE_ARC4RANDOM_BUF
 static inline uint64_t
 arc4random_u64(void)
 {
@@ -225,7 +218,7 @@ arc4random_u64(void)
 void
 time_arc4random_u64(void)
 {
-#ifndef NO_ARC4RANDOM
+#ifdef HAVE_ARC4RANDOM_BUF
   TIME_UNSIGNED_RNG((arc4random_u64()));
 #endif
 }
@@ -270,10 +263,11 @@ rdrandom_buf(void *b, size_t n)
 void
 time_arc4random_onebyte(void)
 {
-#ifndef NO_ARC4RANDOM
+#if HAVE_ARC4RANDOM_BUF
   TIME_BUF(1, arc4random_buf(buf, sizeof(buf)));
 #endif
 }
+
 void
 time_libc_onebyte(void)
 {
@@ -291,13 +285,15 @@ time_urandom_buf16(void)
   TIME_BUF(16, (urandom_buf(buf, sizeof(buf))));
 }
 #endif
+
 void
 time_arc4random_buf16(void)
 {
-#ifndef NO_ARC4RANDOM
+#ifdef HAVE_ARC4RANDOM_BUF
   TIME_BUF(16, (arc4random_buf(buf, sizeof(buf))));
 #endif
 }
+
 void
 time_libcrandom_buf16(void)
 {
@@ -324,18 +320,21 @@ time_urandom_buf1024(void)
   TIME_BUF(1024, (urandom_buf(buf, sizeof(buf))));
 }
 #endif
+
 void
 time_arc4random_buf1024(void)
 {
-#ifndef NO_ARC4RANDOM
+#ifdef HAVE_ARC4RANDOM_BUF
   TIME_BUF(1024, (arc4random_buf(buf, sizeof(buf))));
 #endif
 }
+
 void
 time_libcrandom_buf1024(void)
 {
   TIME_BUF(1024, (libc_random_buf(buf, sizeof(buf))));
 }
+
 void
 time_opensslrandom_buf1024(void)
 {

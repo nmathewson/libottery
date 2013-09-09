@@ -75,8 +75,8 @@ ottery_get_cpu_capabilities_(void)
   cpuid(1, res);
   if (res[3] & (1<<26))
     cap |= OTTERY_CPUCAP_SIMD;
-  if (res[2] & (1<<0))
-    cap |= OTTERY_CPUCAP_SSE3;
+  if (res[2] & (1<<9))
+    cap |= OTTERY_CPUCAP_SSSE3;
   if (res[2] & (1<<25))
     cap |= OTTERY_CPUCAP_AES;
   if (res[2] & (1<<30))

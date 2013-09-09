@@ -32,15 +32,16 @@ stamp-h1
 /install-sh
 /libtool
 /ltmain.sh
-/m4
 /missing
 /test-driver
 
 /libottery.la
 /libottery.a
 /libottery.pc
-/libchacha-sse3.la
-/libchacha-sse2.la
+/libchacha-simd1.la
+/libchacha-simd2.la
+
+/ottery-*.tar.gz
 
 /doxygen
 

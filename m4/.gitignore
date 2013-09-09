@@ -1,0 +1,4 @@
+# Some of the files in this directory are created by autoreconf and shouldn't
+# be checked in; others are part of our source code.
+libtool.m4
+lt*.m4

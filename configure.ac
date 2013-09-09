@@ -11,145 +11,108 @@
 #  work in doc/cc0.txt.  If not, see
 #  <http://creativecommons.org/publicdomain/zero/1.0/>.
 
-dnl Set up autoconf, and define the version number.
-AC_INIT(ottery, 0.0.0-dev)
+dnl Tested with this version of Autoconf; older might be feasible.
+AC_PREREQ([2.63])
 
-dnl We must have autoconf 2.59 or later.
-dnl TODO: Actually test with autoconf 2.59 to see if it works.
-AC_PREREQ(2.59)
-
-dnl Autoconf wants to know that the source actually is where we expect,
-dnl in case somebody overrode the default with --srcddir=
-AC_CONFIG_SRCDIR(src/ottery.c)
-
-dnl Look for extra macro definitions in the m4/ directory
+# Preliminaries.
+AC_INIT([ottery], [0.0.0-dev])
+AC_CONFIG_SRCDIR([src/ottery.c])
 AC_CONFIG_MACRO_DIR([m4])
 
-dnl We're going to be using automake.
+# config.status creates these files.
+AC_CONFIG_FILES([Makefile libottery.pc])
+AC_CONFIG_HEADERS([src/ottery-config.h])
+
+# Automake initialization.
 AM_INIT_AUTOMAKE
 
-dnl We'd like to use AM_SILENT_RULES if it's possible, for a nice
-dnl quiet build, but not every automake has it.
-m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+# AM_SILENT_RULES was added in automake 1.11.
+# Silent rules are off by default, but can be enabled at configure time
+# with --enable-silent-rules, or at make time with "make V=0".
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES])
 
-dnl Now process all of the --disable-foo options that we support.  Each has
-dnl a corresponding macro in ottery-config.h
-dnl TODO: Remove some of these.
-AC_ARG_ENABLE(pid-check,
-     AS_HELP_STRING(--disable-pid-check,
-         [Disable checks to see if the process has forked. Dangerous!]))
-AC_ARG_ENABLE(init-check,
-     AS_HELP_STRING(--disable-init-check,
-         [Disable checks to make sure that the PRNG is initialized. Dangerous!]))
-AC_ARG_ENABLE(simd,
-     AS_HELP_STRING(--disable-simd,
-         [Don't build with support for fast crypto using SIMD]), ,
-	 enable_simd=yes)
-AC_ARG_ENABLE(locks,
-     AS_HELP_STRING(--disable-locks,
-         [Don't build with locking support]), , enable_locks=yes)
-AC_ARG_ENABLE(spinlocks,
-     AS_HELP_STRING(--disable-spinlocks,
-         [When using locking, don't use spinlocks]]), , enable_spinlocks=yes)
-AC_ARG_ENABLE(clear-after-yield,
-     AS_HELP_STRING(--disable-clear-after-yield,
-         [Don't clear data from our buffer immediately after yielding it]), ,
-	 enable_clear_after_yield=yes)
-AC_ARG_ENABLE(wipe-stack,
-     AS_HELP_STRING(--disable-wipe-stack,
-         [Don't attempt to wipe the stack after calling the crypto core]), ,
-	 enable_wipe_stack=yes)
+# Configuration options.
+# TODO: Remove as many of these as practical.  (Many reduce safety in
+# the name of speed.)
+OTTERY_ARG_DISABLE([pid-check],
+  [checks to see if the process has forked. Dangerous!])
+OTTERY_ARG_DISABLE([init-check],
+  [checks to make sure that the PRNG is initialized. Dangerous!])
+OTTERY_ARG_DISABLE([simd],
+  [optimized cryptographic primitives that use SIMD instructions.])
+OTTERY_ARG_DISABLE([locks],
+  [internal locking for thread safety.])
+OTTERY_ARG_DISABLE([spinlocks],
+  [use of spinlocks for thread safety.])
+OTTERY_ARG_DISABLE([clear-after-yield],
+  [automatic clearing of internal buffers.])
+OTTERY_ARG_DISABLE([wipe-stack],
+  [erasure of stack memory that may retain secret information.])
 
-if test "$enable_pid_check" = no; then
-   AC_DEFINE(OTTERY_NO_PID_CHECK, 1, [If defined, disable PID checking. (DANGER!)])
-fi
-if test "$enable_init_check" = no; then
-   AC_DEFINE(OTTERY_NO_INIT_CHECK, 1, [If defined, disable initialization checking. (DANGER!)])
-fi
-if test "$enable_simd" = no; then
-   AC_DEFINE(OTTERY_NO_VECS, 1, [If defined, disable SIMD crypto])
-fi
-if test "$enable_locks" = no; then
-   AC_DEFINE(OTTERY_NO_LOCKS, 1, [If defined, disable locking])
-fi
-if test "$enable_spinlocks" = no; then
-   AC_DEFINE(OTTERY_NO_SPINLOCKS, 1, [If defined, don't use spinlocks for locking])
-fi
-if test "$enable_clear_after_yield" = no; then
-   AC_DEFINE(OTTERY_NO_CLEAR_AFTER_YIELD, 1, [If defined, don't clear the buffer after producing output.])
-fi
-if test "$enable_wipe_stack" = no; then
-   AC_DEFINE(OTTERY_NO_WIPE_STACK, 1, [If defined, don't try to wipe the stack after calling the crypto core.])
-fi
+#
+# C compiler configuration.
+#
 
-dnl See whether we have python and ghc; we use them in some of our tests
-dnl if they're available.
+AC_PROG_CC
+dnl This is necessary if using automake older than 1.14.
+AM_PROG_CC_C_O
+dnl This has to appear before any compilation checks.
+dnl AC_USE_SYSTEM_EXTENSIONS is reliably available since autoconf 2.59.
+AC_USE_SYSTEM_EXTENSIONS
+
+# Determine whether and how to compile chacha_krovetz.c.
+OTTERY_USE_SIMD
+
+# Initialize libtool.  Must be done after the compiler is set up.
+dnl Some systems still ship a libtool.m4 that predates the change to LT_INIT.
+AC_PROG_LIBTOOL
+
+#
+# Tests for headers and functions.
+#
+
+AC_CHECK_FUNCS_ONCE([arc4random arc4random_buf])
+
+# Python and Haskell are used in the test suite.
+# Do these checks last so the warnings don't scroll off the user's terminal.
+
 AC_ARG_VAR(PYTHON)
 AC_CHECK_PROGS(PYTHON, [python python2 python3])
+if test "x$PYTHON" = "x"; then
+  AC_MSG_WARN([Python unavailable; some tests will not be run.])
+fi
 AM_CONDITIONAL(USEPYTHON, [test "x$PYTHON" != "x"])
 
 AC_ARG_VAR(GHC)
-AC_CHECK_PROGS(GHC,    [ghc])
-AM_CONDITIONAL(USEGHC,    [test "x$GHC"    != "x"])
+AC_SUBST(GHC_MTL)
+GHC_MTL=no
+AC_CHECK_PROGS(GHC, [ghc])
+if test "x$GHC" = "x"; then
+  AC_MSG_WARN([GHC unavailable; some tests will not be run.])
+else
+  # In addition to the base Haskell compiler, the "Control.Monad.State"
+  # library is required (from the mtl package).
+  AC_CACHE_CHECK([for Control.Monad.State], ac_cv_ghc_control_monad_state, [
+    cat <<\EOF > conftest.hs
+import Control.Monad.State
+main = undefined
+EOF
+    $GHC -c conftest.hs 1>&AS_MESSAGE_LOG_FD 2>&AS_MESSAGE_LOG_FD
+    if test $? -eq 0; then
+      ac_cv_ghc_control_monad_state=yes
+    else
+      ac_cv_ghc_control_monad_state=no
+    fi
+    rm -f conftest.*
+  ])
+  if test $ac_cv_ghc_control_monad_state = yes; then
+    GHC_MTL=yes
+  else
+    AC_MSG_WARN([Control.Monad.State unavailable; some tests will not be run.])
+    AC_MSG_WARN([Control.Monad.State is in the Haskell package 'mtl'.])
+  fi
+fi
+AM_CONDITIONAL(USEGHC, [test "x$GHC" != "x" && test "$GHC_MTL" = "yes"])
 
-dnl Try and get a full POSIX environment on systems where you need magic to
-dnl get it.  The AC_USE_SYSTEM_EXTENSIONS macro is best, but older autoconfs
-dnl don't have it.
-ifdef([AC_USE_SYSTEM_EXTENSIONS], [
-AC_USE_SYSTEM_EXTENSIONS
-], [
-AC_AIX
-AC_GNU_SOURCE
-AC_Write
-])
-
-dnl MINIX our C macros to src/ottery-config.h.  This is an internal-use-only
-dnl file that we won't install.
-AC_CONFIG_HEADERS(src/ottery-config.h)
-
-dnl Make sure that we detect our platform and target platform in their
-dnl canonical form.
-AC_CANONICAL_BUILD
-AC_CANONICAL_HOST
-
-dnl Checks for programs we need to build and install
-AM_PROG_CC_C_O
-AC_PROG_INSTALL
-AC_PROG_LN_S
-
-dnl Work around old broken GCCs that needed the -traditional flag to work
-dnl properly.
-dnl TODO: Identify which versions and decide whether we care.
-AC_PROG_GCC_TRADITIONAL
-
-dnl We use libtool for building shared libraries.
-AC_PROG_LIBTOOL
-AC_SUBST(LIBTOOL_DEPS)
-
-dnl Our build setup is a bit different if we're on an X86 or X86_64, since
-dnl we'll be building separate sse2 and sse3 versions of the simd code.
-dnl We'll detect now what the compiler thinks we're building for.
-AC_MSG_CHECKING([whether CPU is X86 or X86_64])
-AC_TRY_COMPILE(,
-	[
-#if defined(i386) || \
-    defined(__i386) || \
-    defined(__x86_64) || \
-    defined(__M_IX86) || \
-    defined(_M_IX86) || \
-    defined(__INTEL_COMPILER)
-#else
-die horribly
-#endif
-	],
-	is_x86=yes; AC_MSG_RESULT(yes),
-	is_x86=no; AC_MSG_RESULT(no),
-)
-AM_CONDITIONAL(X86, [test "$is_x86" = "yes"])
-
-dnl Generate a pkgconfig file.
-AC_CONFIG_FILES( [libottery.pc] )
-
-dnl Generate the main makefile.
-AC_OUTPUT(Makefile)
-
+# Done.
+AC_OUTPUT
