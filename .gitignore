@@ -47,6 +47,8 @@ stamp-h1
 /src/ottery-config.h
 /src/ottery-config.h.in
 
+/test/fake_egd
+/test/test_egd
 /test/test_spec
 /test/test_spec.output
 /test/test_vectors
