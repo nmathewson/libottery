@@ -20,6 +20,21 @@ BEFORE EVERY RELEASE
 
 BEFORE FIRST BETA VERSION
 
+  - Migrate to autotools
+    (Because hand-editing the makefile is not actually a good interface.)
+    o Make it build.
+    o Make it detect X86 / X86_64
+    o Have everything use silent rules properly.
+    o Use autotools check system.
+    o Re-add the stuff that was in ottery-config.h
+    o Make it do everything the old makefile did
+    o Detect ghc
+    o Detect python
+    - Make it use the cflags I want.
+    . Fix up .gitignore
+
+  - First-class coverage support in autotools files.
+
   - Rename stir
 
   - TESTING

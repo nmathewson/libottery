@@ -259,7 +259,9 @@ test_uints(void *arg)
   if (USING_STATE()) {
     struct ottery_state *st = STATE();
     struct dummy_prf_state *dst = (void*)st->state;
+#ifndef OTTERY_NO_CLEAR_AFTER_YIELD
     tt_assert(0 == memcmp(st->buffer, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", 16));
+#endif
     tt_int_op(0, ==, st->block_counter);
     tt_int_op(16, ==, st->pos);
     tt_int_op(5, ==, dst->rotation[0]);
@@ -298,8 +300,10 @@ test_add_seed(void *arg)
   if (USING_STATE()) {
     struct ottery_state *st = STATE();
     struct dummy_prf_state *dst = (void*)st->state;
+#ifndef OTTERY_NO_CLEAR_AFTER_YIELD
     tt_assert(0 == memcmp(st->buffer, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
                           "\0\0\0\0\0\0\0\0", 24));
+#endif
     tt_int_op(0, ==, st->block_counter);
     tt_int_op(24, ==, st->pos);
 
@@ -367,7 +371,9 @@ test_buf_long_1(void *arg)
   if (USING_STATE()) {
     struct ottery_state *st = STATE();
     struct dummy_prf_state *dst = (void*)st->state;
+#ifndef OTTERY_NO_CLEAR_AFTER_YIELD
     tt_assert(0 == memcmp(st->buffer, "\0\0\0\0\0\0\0", 7));
+#endif
     tt_int_op(0, ==, st->block_counter);
     tt_int_op(7, ==, st->pos);
 

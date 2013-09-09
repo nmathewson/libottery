@@ -161,14 +161,16 @@ ottery_get_impl(const char *impl)
 {
   int i;
   const struct ottery_prf *ALL_PRFS[] = {
-#ifdef OTTERY_HAVE_SSE3_IMPL
+#if defined(OTTERY_HAVE_SSE3_IMPL) && defined(OTTERY_HAVE_SIMD_IMPL)
     &ottery_prf_chacha20_krovetz_sse3_,
     &ottery_prf_chacha12_krovetz_sse3_,
     &ottery_prf_chacha8_krovetz_sse3_,
 #endif
+#ifdef OTTERY_HAVE_SIMD_IMPL
     &ottery_prf_chacha20_krovetz_,
     &ottery_prf_chacha12_krovetz_,
     &ottery_prf_chacha8_krovetz_,
+#endif
     &ottery_prf_chacha20_merged_,
     &ottery_prf_chacha12_merged_,
     &ottery_prf_chacha8_merged_,
@@ -516,6 +518,8 @@ ottery_st_rand_check_init(struct ottery_state *st)
     ottery_fatal_error_(OTTERY_ERR_STATE_INIT);
     return -1;
   }
+#else
+  (void)st;
 #endif
   return 0;
 }

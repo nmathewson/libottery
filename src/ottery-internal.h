@@ -293,9 +293,11 @@ extern const struct ottery_prf ottery_prf_chacha20_merged_;
  * These are much, much faster.
  *
  * @{ */
+#ifdef OTTERY_HAVE_SIMD_IMPL
 extern const struct ottery_prf ottery_prf_chacha8_krovetz_;
 extern const struct ottery_prf ottery_prf_chacha12_krovetz_;
 extern const struct ottery_prf ottery_prf_chacha20_krovetz_;
+#endif
 /** @} */
 #ifdef OTTERY_HAVE_SSE3_IMPL
 extern const struct ottery_prf ottery_prf_chacha8_krovetz_sse3_;
