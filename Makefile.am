@@ -42,18 +42,19 @@ VERSION_INFO = 0:0:0
 # TODO: Use -pthread more judiciously.
 AM_CFLAGS = -O3 -Wall -W -pthread -I $(top_srcdir)/src
 
+#####
+# LDFLAGS that we want to add to all LDFLAG
+GENERIC_LDFLAGS = -version-info $(VERSION_INFO) -no-undefined
+
 #
 # The library itself.
 #
 
 lib_LTLIBRARIES = libottery.la
 libottery_la_CFLAGS =
-libottery_la_LDFLAGS = -version-info $(VERSION_INFO)
+libottery_la_LDFLAGS = $(GENERIC_LDFLAGS)
 libottery_la_LIBADD =
 
-#####
-# LDFLAGS that we want to add to all LDFLAGS
-GENERIC_LDFLAGS = -version-info $(VERSION_INFO)
 
 # This code is always included in the library, regardless of build options.
 libottery_la_SOURCES =				\
