@@ -53,6 +53,9 @@ static int ottery_st_reseed(struct ottery_state *state);
 static void ottery_wipe_stack_(void) __attribute__((noinline));
 #endif
 
+#define LOCK(st)   ACQUIRE_LOCK(&(st)->mutex)
+#define UNLOCK(st) RELEASE_LOCK(&(st)->mutex)
+
 size_t
 ottery_get_sizeof_config(void)
 {
@@ -115,36 +118,6 @@ ottery_wipe_stack_(void)
 }
 #else
 #define ottery_wipe_stack_() ((void)0)
-#endif
-
-#if defined(OTTERY_PTHREADS)
-/** Acquire the lock for the state "st". */
-#define LOCK(st) do {                 \
-    pthread_mutex_lock(&(st)->mutex); \
-} while (0)
-/** Release the lock for the state "st". */
-#define UNLOCK(st) do {                 \
-    pthread_mutex_unlock(&(st)->mutex); \
-} while (0)
-#elif defined(OTTERY_CRITICAL_SECTION)
-#define LOCK(st) do {                   \
-    EnterCriticalSection(&(st)->mutex); \
-} while (0)
-#define UNLOCK(st) do {                 \
-    LeaveCriticalSection(&(st)->mutex); \
-} while (0)
-#elif defined(OTTERY_OSATOMIC)
-#define LOCK(st) do {             \
-    OSSpinLockLock(&(st)->mutex); \
-} while (0)
-#define UNLOCK(st) do {             \
-    OSSpinLockUnlock(&(st)->mutex); \
-} while (0)
-#elif defined(OTTERY_NO_LOCKS)
-#define LOCK(st) ((void)0)
-#define UNLOCK(st) ((void)0)
-#else
-#error How do I lock?
 #endif
 
 int
@@ -295,16 +268,8 @@ ottery_st_initialize(struct ottery_state *st,
 
   if (locked) {
     /* Now set up the spinlock or mutex or hybrid thing. */
-#ifdef OTTERY_PTHREADS
-    if (pthread_mutex_init(&st->mutex, NULL))
+    if (INIT_LOCK(&st->mutex))
       return OTTERY_ERR_LOCK_INIT;
-#elif defined(OTTERY_CRITICAL_SECTION)
-    if (InitializeCriticalSectionAndSpinCount(&st->mutex, 3000) == 0)
-      return OTTERY_ERR_LOCK_INIT;
-#elif defined(OTTERY_OSATOMIC)
-    /* Setting an OSAtomic spinlock to 0 is all you need to do to
-     * initialize it.*/
-#endif
   }
 
   /* Check invariants for PRF, in case we wrote some bad code. */
@@ -452,13 +417,7 @@ ottery_st_add_seed_nolock(struct ottery_state_nolock *st, const uint8_t *seed, s
 void
 ottery_st_wipe(struct ottery_state *st)
 {
-#ifdef OTTERY_PTHREADS
-  pthread_mutex_destroy(&st->mutex);
-#elif defined(OTTERY_CRITICAL_SECTION)
-  DeleteCriticalSection(&st->mutex);
-#elif defined(OTTERY_OSATOMIC)
-  /* You don't need to do anything to tear down an OSAtomic spinlock. */
-#endif
+  DESTROY_LOCK(&st->mutex);
 
   ottery_st_wipe_nolock(st);
 }

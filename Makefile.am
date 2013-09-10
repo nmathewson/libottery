@@ -207,6 +207,7 @@ endif
 noinst_HEADERS = 			\
 	src/chacha_merged_ecrypt.h 	\
 	src/ottery-internal.h 		\
+	src/ottery-threading.h 		\
 	src/ottery_entropy_cryptgenrandom.c	\
 	src/ottery_entropy_egd.c	\
 	src/ottery_entropy_rdrand.c	\

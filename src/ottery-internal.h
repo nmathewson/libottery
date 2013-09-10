@@ -16,19 +16,7 @@
 #include <stdint.h>
 #include <sys/types.h>
 #include "ottery-config.h"
-
-#ifndef OTTERY_NO_LOCKS
-#if defined(__APPLE__) && !defined(OTTERY_NO_SPINLOCKS)
-#define OTTERY_OSATOMIC
-#include <libkern/OSAtomic.h>
-#elif defined(_WIN32)
-#define OTTERY_CRITICAL_SECTION
-#include <windows.h>
-#else
-#define OTTERY_PTHREADS
-#include <pthread.h>
-#endif
-#endif /* OTTERY_NO_LOCKS */
+#include "ottery-threading.h"
 
 /** Largest possible state_bytes value. */
 #define MAX_STATE_BYTES 64
@@ -230,13 +218,7 @@ struct __attribute__((aligned(16))) ottery_state {
    *
    * @{
    */
-#if defined(OTTERY_OSATOMIC)
-  OSSpinLock mutex;
-#elif defined(OTTERY_CRITICAL_SECTION)
-  CRITICAL_SECTION mutex;
-#elif defined(OTTERY_PTHREADS)
-  pthread_mutex_t mutex;
-#endif
+DECL_LOCK(mutex);
   /**@}*/
 };
 #endif
