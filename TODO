@@ -26,6 +26,11 @@ BEFORE FIRST ALPHA VERSION
 
   - Rename stir
 
+  - Refactor locking.
+    - Don't spin inappropriately.
+      - In particular, don't spin over any access to the entropy source!
+
+
   - TESTING
     . Add a benchmarking/timing feature
       - do it right. Use a CPU timer, not gettimeofday.
