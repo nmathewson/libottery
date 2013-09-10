@@ -62,6 +62,9 @@ dnl This has to appear before any compilation checks.
 dnl AC_USE_SYSTEM_EXTENSIONS is reliably available since autoconf 2.59.
 AC_USE_SYSTEM_EXTENSIONS
 
+# Autoconf defaults to -O2 for gcc, but we want -O3 for this library.
+CFLAGS="$[](AS_ECHO(["$[]CFLAGS"]) | sed s/-O2/-O3/)"
+
 # Determine whether and how to compile chacha_krovetz.c.
 OTTERY_USE_SIMD
 
