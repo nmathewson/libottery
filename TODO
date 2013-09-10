@@ -22,6 +22,8 @@ BEFORE FIRST ALPHA VERSION
 
   - First-class coverage support in autotools files.
 
+  - Triple-check that ssse3 code is getting built and run.
+
   - Rename stir
 
   - TESTING

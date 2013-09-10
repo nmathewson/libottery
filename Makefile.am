@@ -40,7 +40,7 @@ VERSION_INFO = 0:0:0
 # Compiler and linker options to apply to everything.
 # TODO: Make sure these all work
 # TODO: Use -pthread more judiciously.
-AM_CFLAGS = -O3 -Wall -W -pthread -I $(top_srcdir)/src
+AM_CFLAGS = -Wall -W -pthread -I $(top_srcdir)/src
 
 #####
 # LDFLAGS that we want to add to all LDFLAG
@@ -51,10 +51,8 @@ GENERIC_LDFLAGS = -version-info $(VERSION_INFO) -no-undefined
 #
 
 lib_LTLIBRARIES = libottery.la
-libottery_la_CFLAGS =
 libottery_la_LDFLAGS = $(GENERIC_LDFLAGS)
 libottery_la_LIBADD =
-
 
 # This code is always included in the library, regardless of build options.
 libottery_la_SOURCES =				\
@@ -71,7 +69,7 @@ if SIMD_CHACHA_1
 noinst_LTLIBRARIES  += libchacha-simd1.la
 libottery_la_LIBADD += libchacha-simd1.la
 libchacha_simd1_la_SOURCES = src/chacha_krovetz.c
-libchacha_simd1_la_CFLAGS  = $(SIMD1_CFLAGS) -DOTTERY_BUILDING_SIMD1
+libchacha_simd1_la_CFLAGS  = $(AM_CFLAGS) $(SIMD1_CFLAGS) -DOTTERY_BUILDING_SIMD1
 endif
 
 # We may want to compile it twice with two different sets of options.
@@ -79,7 +77,7 @@ if SIMD_CHACHA_2
 noinst_LTLIBRARIES  += libchacha-simd2.la
 libottery_la_LIBADD += libchacha-simd2.la
 libchacha_simd2_la_SOURCES = src/chacha_krovetz.c
-libchacha_simd2_la_CFLAGS  = $(SIMD2_CFLAGS) -DOTTERY_BUILDING_SIMD2
+libchacha_simd2_la_CFLAGS  = $(AM_CFLAGS) $(SIMD2_CFLAGS) -DOTTERY_BUILDING_SIMD2
 endif
 
 #
@@ -242,7 +240,10 @@ CLEANFILES = $(noinst_DATA) test/hs/*.hi test/hs/*.o test/hs/test_ottery \
 	test/test_vectors.actual-nosimd \
 	test/test_vectors.actual-midrange \
 	test/hs/test_ottery.output \
-	test/test_spec.output
+	test/test_spec.output \
+	*.gcov src/*.gcov test/*.gcov \
+	*.gcno src/*.gcno test/*.gcno \
+	*.gcda src/*.gcda test/*.gcda
 
 # Files to clean up with uncrustify.
 UNCRUSTIFY_FILES =				\
@@ -275,3 +276,20 @@ uncrustify:
 # Rebuild the doxygen documentation
 doxygen:
 	doxygen etc/doxygen.conf
+
+# Generate test coverage for the entire library.  Assumes gcov+gcc.
+# Probably doesn't work in a VPATH build.
+COVERAGE_CFLAGS = -fprofile-arcs -ftest-coverage
+coverage:
+	$(MAKE) clean check CFLAGS="$(CFLAGS) $(COVERAGE_CFLAGS)"
+	gcov -o src/.libs $(libottery_la_SOURCES)
+if SIMD_CHACHA_1
+	gcov -o src/.libs/libchacha_simd1_la-chacha_krovetz.o \
+	    src/chacha_krovetz.c && \
+	mv -f chacha_krovetz.c.gcov chacha_krovetz_simd1.c.gcov
+endif
+if SIMD_CHACHA_2
+	gcov -o src/.libs/libchacha_simd2_la-chacha_krovetz.o \
+	    src/chacha_krovetz.c && \
+	mv -f chacha_krovetz.c.gcov chacha_krovetz_simd2.c.gcov
+endif
