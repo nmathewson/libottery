@@ -18,6 +18,10 @@
 #include "ottery-config.h"
 #include "ottery-threading.h"
 
+#ifdef HAVE_PTHREAD_ATFORK
+#define OTTERY_FORK_COUNT
+#endif
+
 /** Largest possible state_bytes value. */
 #define MAX_STATE_BYTES 64
 /** Largest possible state_len value. */
@@ -197,6 +201,13 @@ struct __attribute__((aligned(16))) ottery_state {
    * from the OS. We use this to avoid use-after-fork problems; see
    * ottery_st_rand_lock_and_check(). */
   pid_t pid;
+#ifdef OTTERY_FORK_COUNT
+  /**
+   * The fork-count in which this PRF was most recently seeded from the OS.
+   * We use this also to avoid use-after-fork problems; see
+   * ottery_st_rand_lock_and_check(). */
+  unsigned fork_count;
+#endif
   /**
    * Combined flags_out results from all calls to the entropy source that
    * have influenced our current state.

@@ -120,6 +120,31 @@ ottery_wipe_stack_(void)
 #define ottery_wipe_stack_() ((void)0)
 #endif
 
+#ifdef OTTERY_FORK_COUNT
+/* TODO: This stuff should be locked or atomic. */
+static int pthread_atfork_installed = 0;
+static unsigned fork_counter = 0;
+static void increment_fork_counter(void)
+{
+  ++fork_counter;
+}
+#define INIT_FORK_COUNTING()                                    \
+  do {                                                          \
+    if (UNLIKELY (!pthread_atfork_installed)) {                 \
+      pthread_atfork_installed = 1;                             \
+      pthread_atfork(NULL, NULL, increment_fork_counter);       \
+    }                                                           \
+  } while (0)
+#define SET_FORK_COUNTER(st)                    \
+  ((st)->fork_count = fork_counter)
+#define FORK_COUNTER_MATCHES(st) \
+  ((st)->fork_count == fork_counter)
+#else
+#define INIT_FORK_COUNTING() ((void)0)
+#define SET_FORK_COUNTER(st) ((void)0)
+#define FORK_COUNTER_MATCHES(st) (1)
+#endif
+
 int
 ottery_config_init(struct ottery_config *cfg)
 {
@@ -248,6 +273,8 @@ ottery_st_initialize(struct ottery_state *st,
   const struct ottery_prf *prf = NULL;
   struct ottery_config cfg_tmp;
   int err;
+  INIT_FORK_COUNTING();
+
   /* We really need our state to be aligned. If it isn't, let's give an
    * error now, and not a crash when the SIMD instructions start to fail.
    */
@@ -299,6 +326,7 @@ ottery_st_initialize(struct ottery_state *st,
   st->magic = MAGIC(st);
 
   st->pid = getpid();
+  SET_FORK_COUNTER(st);
 
   return 0;
 }
@@ -488,13 +516,14 @@ static inline int
 ottery_st_rand_check_pid(struct ottery_state *st)
 {
 #ifndef OTTERY_NO_PID_CHECK
-  if (UNLIKELY(st->pid != getpid())) {
+  if (UNLIKELY(st->pid != getpid() || ! FORK_COUNTER_MATCHES(st))) {
     int err;
     if ((err = ottery_st_reseed(st))) {
       ottery_fatal_error_(OTTERY_ERR_FLAG_POSTFORK_RESEED|err);
       return -1;
     }
     st->pid = getpid();
+    SET_FORK_COUNTER(st);
   }
 #else
   (void) st;

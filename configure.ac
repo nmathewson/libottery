@@ -76,7 +76,11 @@ AC_PROG_LIBTOOL
 # Tests for headers and functions.
 #
 
-AC_CHECK_FUNCS_ONCE([arc4random arc4random_buf])
+AC_CHECK_FUNCS_ONCE([
+    arc4random
+    arc4random_buf
+    pthread_atfork
+  ])
 
 # Python and Haskell are used in the test suite.
 # Do these checks last so the warnings don't scroll off the user's terminal.

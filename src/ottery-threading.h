@@ -24,7 +24,7 @@
 #define OTTERY_CRITICAL_SECTION
 #include <windows.h>
 #else
-#define OTTERY_PTHREADS
+#define OTTERY_PTHREAD_LOCKS
 #include <pthread.h>
 #endif
 
@@ -34,11 +34,11 @@
 #define DECL_LOCK(mutex)  OSSpinLock mutex;
 #elif defined(OTTERY_CRITICAL_SECTION)
 #define DECL_LOCK(mutex)  CRITICAL_SECTION mutex;
-#elif defined(OTTERY_PTHREADS)
+#elif defined(OTTERY_PTHREAD_LOCKS)
 #define DECL_LOCK(mutex)  pthread_mutex_t mutex;
 #endif
 
-#if defined(OTTERY_PTHREADS)
+#if defined(OTTERY_PTHREAD_LOCKS)
 #define INIT_LOCK(mutex)                        \
   (pthread_mutex_init((mutex), NULL) != 0)
 /** Acquire the lock for the state "st". */
@@ -84,6 +84,10 @@
 #define RELEASE_LOCK(mutex) ((void)0)
 #else
 #error How do I lock?
+#endif
+
+#ifdef HAVE_PTHREAD_ATFORK && !defined(OTTERY_PTHREAD_LOCKS)
+#include <pthread.h>
 #endif
 
 #endif
