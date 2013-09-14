@@ -61,6 +61,8 @@ ottery_get_entropy_urandom(const struct ottery_entropy_config *cfg,
   ssize_t n;
   int result = 0;
   const char *urandom_fname;
+  struct stat st;
+  int check_device = !cfg || !cfg->allow_nondev_urandom;
 #ifndef O_CLOEXEC
 #define O_CLOEXEC 0
 #endif
@@ -72,6 +74,14 @@ ottery_get_entropy_urandom(const struct ottery_entropy_config *cfg,
   fd = open(urandom_fname, O_RDONLY|O_CLOEXEC);
   if (fd < 0)
     return OTTERY_ERR_INIT_STRONG_RNG;
+  if (fstat(fd, &st) < 0) {
+    close(fd);
+    return OTTERY_ERR_INIT_STRONG_RNG;
+  }
+  if (check_device && 0 == (st.st_mode & S_IFCHR)) {
+    close(fd);
+    return OTTERY_ERR_INIT_STRONG_RNG;
+  }
   n = ottery_read_n_bytes_from_file_(fd, out, outlen);
   if (n < 0 || (size_t)n != outlen)
     result = OTTERY_ERR_ACCESS_STRONG_RNG;

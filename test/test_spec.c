@@ -158,10 +158,12 @@ main(int argc, char **argv)
   ottery_config_set_urandom_device(&config, argv[1]);
   ottery_config_disable_entropy_sources(&config,
                   OTTERY_ENTROPY_ALL_SOURCES & ~OTTERY_ENTROPY_SRC_RANDOMDEV);
+  config.entropy_config.allow_nondev_urandom = 1;
 
   if (ottery_st_init(&state, &config)) {
     printf("couldn't initialize state\n"); return 1;
   }
+
   demo();
 
   return 0;

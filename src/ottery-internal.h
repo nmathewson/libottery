@@ -63,6 +63,11 @@ struct ottery_entropy_config {
   int egd_socklen;
   /** DOCDOC */
   uint32_t disabled_sources;
+
+  /** If true, we don't enforce that urandom_fname must be a device file.
+   * This is for testing, and is not exposed to user code.
+   */
+  unsigned allow_nondev_urandom;
 };
 
 /**
