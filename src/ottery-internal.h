@@ -77,6 +77,8 @@ struct ottery_osrng_config {
   int egd_socklen;
   /** DOCDOC */
   uint32_t disabled_sources;
+
+  unsigned int allow_nondev_urandom : 1;
 };
 
 /**

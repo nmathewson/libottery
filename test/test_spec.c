@@ -162,6 +162,8 @@ main(int argc, char **argv)
   if (ottery_st_init(&state, &config)) {
     printf("couldn't initialize state\n"); return 1;
   }
+  state.osrng_config.allow_nondev_urandom = 1;
+
   demo();
 
   return 0;
