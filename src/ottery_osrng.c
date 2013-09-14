@@ -20,7 +20,8 @@
 #include <string.h>
 
 #define SRC(x) OTTERY_ENTROPY_SRC_ ## x
-#define FL(x) OTTERY_ENTROPY_FL_ ## x
+#define DOM(x) OTTERY_ENTROPY_DOM_ ## x
+#define FL(x)  OTTERY_ENTROPY_FL_  ## x
 
 #include "ottery_entropy_cryptgenrandom.c"
 #include "ottery_entropy_urandom.c"
@@ -70,6 +71,9 @@ ottery_os_randbytes_(const struct ottery_osrng_config *config,
       continue;
     /* If some flags must be set, only use those. */
     if ((flags & select_sources) != select_sources)
+      continue;
+    /* If we already have input from a certain domain, we don't need more */
+    if ((flags & (got & OTTERY_ENTROPY_DOM_MASK)) != 0)
       continue;
     err = RAND_SOURCES[i].fn(config, scratch, n);
     if (err == 0) {

@@ -30,29 +30,39 @@
  *
  * @{ */
 /** An RNG that probably provides strong entropy. */
-#define OTTERY_ENTROPY_FL_STRONG  0x0001
-/** An RNG provided by the operating system. */
-#define OTTERY_ENTROPY_FL_OS      0x0002
-/** An RNG provided by the CPU. */
-#define OTTERY_ENTROPY_FL_CPU     0x0004
+#define OTTERY_ENTROPY_FL_STRONG          0x000001
 /** An RNG that runs very quickly. */
-#define OTTERY_ENTROPY_FL_FAST    0x0008
+#define OTTERY_ENTROPY_FL_FAST            0x000002
 /** @} */
+
+/**
+ * @brief Identifying external entropy domains.
+ */
+/** An RNG provided by the operating system. */
+#define OTTERY_ENTROPY_DOM_OS             0x000100
+/** An RNG provided by the CPU. */
+#define OTTERY_ENTROPY_DOM_CPU            0x000200
+/** An EGD-style entropy source */
+#define OTTERY_ENTROPY_DOM_EGD            0x000400
+/** @} */
+
+#define OTTERY_ENTROPY_DOM_MASK           0x00ff00
+
 /**
  * @brief External entropy sources
  *
  * @{ */
 /** A unix-style /dev/urandom device. */
-#define OTTERY_ENTROPY_SRC_RANDOMDEV      0x0100
+#define OTTERY_ENTROPY_SRC_RANDOMDEV      0x0010000
 /** The Windows CryptGenRandom call. */
-#define OTTERY_ENTROPY_SRC_CRYPTGENRANDOM 0x0200
+#define OTTERY_ENTROPY_SRC_CRYPTGENRANDOM 0x0020000
 /** The Intel RDRAND instruction. */
-#define OTTERY_ENTROPY_SRC_RDRAND         0x0400
+#define OTTERY_ENTROPY_SRC_RDRAND         0x0040000
 /** DOCDOC */
-#define OTTERY_ENTROPY_SRC_EGD            0x0800
+#define OTTERY_ENTROPY_SRC_EGD            0x0080000
 /** @} */
 
-#define OTTERY_ENTROPY_ALL_SOURCES        0xfff00
+#define OTTERY_ENTROPY_ALL_SOURCES        0x0fff0000
 
 struct sockaddr;
 

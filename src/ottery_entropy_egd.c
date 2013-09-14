@@ -65,6 +65,6 @@ ottery_os_randbytes_egd(const struct ottery_osrng_config *cfg,
 }
 
 #define ENTROPY_SOURCE_EGD \
-  { ottery_os_randbytes_egd, SRC(EGD)|FL(STRONG) }
+  { ottery_os_randbytes_egd, SRC(EGD)|DOM(EGD)|FL(STRONG) }
 
 #endif

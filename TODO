@@ -47,6 +47,8 @@ BEFORE FIRST ALPHA VERSION
       o Make the haskell clone work for output_len != 1024
       - Double-check the spec against the haskell clone
 
+  - Simplify large/small request issues?
+
   - Make sure that the reinitialization logic is threadsafe.
 
 BEFORE VERSION 1:
@@ -71,10 +73,12 @@ BEFORE VERSION 1:
       - Allow an fd.
       - Make sure it's a device!
     - Syscall/ioctl/arc4random
+    - Notion of redundant sources so we try syscall only if read fails.
     o rdrand instruction.
     o That windows thing.
     - User promises to seed (dangerous)
     - Ability to say "Still use X, but don't consider it strong."
+    - Better ways to combine data.
     o egd, prngd
     - Good API.
 

@@ -42,7 +42,7 @@ ottery_os_randbytes_cryptgenrandom(const struct ottery_osrng_config *cfg,
 
 #define ENTROPY_SOURCE_CRYPTGENRANDOM           \
   { ottery_os_randbytes_cryptgenrandom,         \
-      SRC(CRYPTGENRANDOM)|FL(OS)|FL(STRONG) }
+      SRC(CRYPTGENRANDOM)|DOM(OS)|FL(STRONG) }
 
 #endif
 

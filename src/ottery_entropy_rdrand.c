@@ -55,7 +55,7 @@ ottery_os_randbytes_rdrand(const struct ottery_osrng_config *cfg,
 }
 
 #define ENTROPY_SOURCE_RDRAND                                           \
-  { ottery_os_randbytes_rdrand,  SRC(RDRAND)|FL(CPU)|FL(FAST)|FL(STRONG) }
+  { ottery_os_randbytes_rdrand,  SRC(RDRAND)|DOM(CPU)|FL(FAST)|FL(STRONG) }
 
 #endif
 

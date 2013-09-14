@@ -112,7 +112,7 @@ test_osrandom(void *arg)
   memset(&cfg, 0, sizeof(cfg));
   /* randbytes must succeed. */
   tt_int_op(0, ==, ottery_os_randbytes_(NULL, 0, buf, 64, scratch, &flags));
-  tt_assert(flags & OTTERY_ENTROPY_FL_OS);
+  tt_assert(flags & OTTERY_ENTROPY_DOM_OS);
   tt_assert(flags & OTTERY_ENTROPY_FL_STRONG);
 
   /* Does it stop after the number of bytes we tell it? */
@@ -129,7 +129,7 @@ test_osrandom(void *arg)
   tt_int_op(0, ==, buf[64]);
   tt_int_op(0, ==, scratch[63]);
   tt_int_op(0, ==, scratch[64]);
-  tt_assert(flags & OTTERY_ENTROPY_FL_OS);
+  tt_assert(flags & OTTERY_ENTROPY_DOM_OS);
   tt_assert(flags & OTTERY_ENTROPY_FL_STRONG);
 
   /* Try it 8 times; make sure every byte is set at least once */
@@ -142,7 +142,7 @@ test_osrandom(void *arg)
   for (j = 0; j < 64; ++j)
     tt_int_op(0, !=, buf[j]);
 
-  cfg.disabled_sources = OTTERY_ENTROPY_SRC_RDRAND|OTTERY_ENTROPY_SRC_EGD;
+  cfg.disabled_sources = OTTERY_ENTROPY_ALL_SOURCES & ~OTTERY_ENTROPY_SRC_RANDOMDEV;
   cfg.urandom_fname = "/dev/please-dont-create-this-file";
   flags = 0;
   tt_int_op(OTTERY_ERR_INIT_STRONG_RNG, ==,
@@ -157,15 +157,15 @@ test_osrandom(void *arg)
   /* Make sure at least one OS source works. */
   cfg.disabled_sources = 0;
   flags = 0;
-  tt_int_op(0, ==, ottery_os_randbytes_(NULL, OTTERY_ENTROPY_FL_OS, buf, 64, scratch, &flags));
-  tt_assert(flags & OTTERY_ENTROPY_FL_OS);
+  tt_int_op(0, ==, ottery_os_randbytes_(NULL, OTTERY_ENTROPY_DOM_OS, buf, 64, scratch, &flags));
+  tt_assert(flags & OTTERY_ENTROPY_DOM_OS);
   tt_assert(flags & OTTERY_ENTROPY_FL_STRONG);
 
   /* Make sure at least one OS source works in another way. */
   cfg.disabled_sources = 0;
   ottery_disable_cpu_capabilities_(OTTERY_CPUCAP_RAND);
   tt_int_op(0, ==, ottery_os_randbytes_(NULL, 0, buf, 64, scratch, &flags));
-  tt_assert(flags & OTTERY_ENTROPY_FL_OS);
+  tt_assert(flags & OTTERY_ENTROPY_DOM_OS);
   tt_assert(flags & OTTERY_ENTROPY_FL_STRONG);
 
  end:
@@ -624,7 +624,7 @@ test_fatal(void *arg)
   ottery_st_rand_unsigned(&st);
   st.pid = getpid() + 100; /* force a postfork reseed. */
   st.osrng_config.urandom_fname = "/dev/null"; /* make reseed impossible */
-  st.osrng_config.disabled_sources = OTTERY_ENTROPY_SRC_RDRAND|OTTERY_ENTROPY_SRC_EGD;
+  st.osrng_config.disabled_sources = OTTERY_ENTROPY_ALL_SOURCES & ~OTTERY_ENTROPY_SRC_RANDOMDEV;
   tt_int_op(got_fatal_err, ==, 0);
   ottery_st_rand_unsigned(&st);
   tt_int_op(got_fatal_err, ==,
@@ -635,7 +635,7 @@ test_fatal(void *arg)
   ottery_st_rand_unsigned_nolock(&st_nl);
   st_nl.pid = getpid() + 100; /* force a postfork reseed. */
   st_nl.osrng_config.urandom_fname = "/dev/null"; /* make reseed impossible */
-  st_nl.osrng_config.disabled_sources = OTTERY_ENTROPY_SRC_RDRAND|OTTERY_ENTROPY_SRC_EGD;
+  st_nl.osrng_config.disabled_sources = OTTERY_ENTROPY_ALL_SOURCES & ~OTTERY_ENTROPY_SRC_RANDOMDEV;
   tt_int_op(got_fatal_err, ==, 0);
   ottery_st_rand_unsigned_nolock(&st_nl);
   tt_int_op(got_fatal_err, ==,

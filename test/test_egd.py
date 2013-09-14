@@ -75,17 +75,17 @@ class EGDTests(unittest.TestCase):
 
     def test_succeed_16(self):
         d = run_egd(["16", SOCKNAME], [SOCKNAME])
-        self.assertEquals(d['FLAGS'], '801')
+        self.assertEquals(d['FLAGS'], '80401')
         self.assertEquals(d['BYTES'], b2a_hex(o_fortuna[:16]))
 
     def test_succeed_0(self):
         d = run_egd(["0", SOCKNAME], [SOCKNAME])
-        self.assertEquals(d['FLAGS'], '801')
+        self.assertEquals(d['FLAGS'], '80401')
         self.assertEquals(d['BYTES'], b2a_hex(o_fortuna[:0]))
 
     def test_succeed_255(self):
         d = run_egd(["255", SOCKNAME], [SOCKNAME])
-        self.assertEquals(d['FLAGS'], '801')
+        self.assertEquals(d['FLAGS'], '80401')
         self.assertEquals(d['BYTES'], b2a_hex(o_fortuna[:255]))
 
     def test_fail_noegd(self):

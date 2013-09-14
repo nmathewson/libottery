@@ -80,6 +80,6 @@ ottery_os_randbytes_urandom(const struct ottery_osrng_config *cfg,
 }
 
 #define ENTROPY_SOURCE_URANDOM \
-  { ottery_os_randbytes_urandom, SRC(RANDOMDEV)|FL(OS)|FL(STRONG) }
+  { ottery_os_randbytes_urandom, SRC(RANDOMDEV)|DOM(OS)|FL(STRONG) }
 
 #endif
