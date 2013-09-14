@@ -72,6 +72,7 @@ BEFORE VERSION 1:
       - Make it user-specified
       - Allow an fd.
       - Make sure it's a device!
+        - Make sure it has correct major/minor?
     - Syscall/ioctl/arc4random
     - Notion of redundant sources so we try syscall only if read fails.
     o rdrand instruction.
