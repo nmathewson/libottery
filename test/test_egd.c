@@ -30,7 +30,7 @@ main(int argc, char **argv)
   struct sockaddr_un sun;
   struct ottery_osrng_config cfg;
   unsigned char buf[257];
-  unsigned char scratch[257];
+  size_t buflen = 257;
   long n;
   char *endp;
   uint32_t flags;
@@ -64,9 +64,9 @@ main(int argc, char **argv)
   cfg.disabled_sources =
     OTTERY_ENTROPY_ALL_SOURCES & ~OTTERY_ENTROPY_SRC_EGD;
 
-  result = ottery_os_randbytes_(&cfg, 0, buf, (size_t) n, scratch, &flags);
+  result = ottery_os_randbytes_(&cfg, 0, buf, (size_t) n, &buflen, &flags);
 
-  if (result == 0) {
+  if (result == 0 && buflen == (size_t)n) {
     int i;
     printf("FLAGS:%x\n",flags);
     printf("BYTES:");

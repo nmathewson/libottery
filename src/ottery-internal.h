@@ -80,25 +80,31 @@ struct ottery_osrng_config {
 };
 
 /**
- * Interface to the operating system's strong RNG.  If this were fast,
- * we'd just use it for everything, and forget about having a userspace
- * PRNG.  Unfortunately, it typically isn't.
+ * Return the buffer size to allocate when getting at least n bytes from each
+ * entropy source.  We might not actually need so many. */
+size_t ottery_os_randbytes_bufsize_(size_t n);
+
+/**
+ * Interface to underlying strong RNGs.  If this were fast, we'd just use it
+ * for everything, and forget about having a userspace PRNG.  Unfortunately,
+ * it typically isn't.
  *
  * @param config A correctly set-up ottery_osrng_config.
  * @param require_flags Only run entropy sources with *all* of these
  *      OTTERY_ENTROPY_* flags set. Set this to 0 to use all the sources
  *      that work.
  * @param bytes A buffer to receive random bytes.
- * @param n The number of bytes to write
- * @param scratch Scratch space at least n bytes in size.
+ * @param n The number of bytes to try to get from each entropy source.
+ * @param bufsize The number of bytes available in the buffer; modified
+ *      to hold the number of bytes actually written.
  * @param flags_out Set to a bitwise OR of all of the OTTERY_ENTROPY_* flags
  *      for sources in the result.
- * @return 0 on success, or an error code on failure. On failure, it is not
+ * @return Zero on success, or an error code on failure. On failure, it is not
  *   safe to treat the contents of the buffer as random at all.
  */
 int ottery_os_randbytes_(const struct ottery_osrng_config *config,
                          uint32_t require_flags,
-                         uint8_t *bytes, size_t n, uint8_t *scratch,
+                         uint8_t *bytes, size_t n, size_t *bufsize,
                          uint32_t *flags_out);
 
 /**

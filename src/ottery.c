@@ -49,6 +49,8 @@
 static inline int ottery_st_rand_lock_and_check(struct ottery_state *st)
 __attribute__((always_inline));
 static int ottery_st_reseed(struct ottery_state *state);
+static int ottery_st_add_seed_impl(struct ottery_state *st, const uint8_t *seed, size_t n, int locking, int check_magic);
+
 #ifndef OTTERY_NO_WIPE_STACK
 static void ottery_wipe_stack_(void) __attribute__((noinline));
 #endif
@@ -311,12 +313,26 @@ ottery_st_reseed(struct ottery_state *st)
   /* XXXX Add seed rather than starting from scratch? */
   int err;
   uint32_t flags=0;
+  size_t buflen = ottery_os_randbytes_bufsize_(st->prf.state_bytes);
+  uint8_t *buf = alloca(buflen);
+  if (!buf)
+    return OTTERY_ERR_INIT_STRONG_RNG;
+
   if ((err = ottery_os_randbytes_(&st->osrng_config, 0,
-                                  st->buffer, st->prf.state_bytes,
-                                  st->buffer+st->prf.state_bytes,
+                                  buf, st->prf.state_bytes,
+                                  &buflen,
                                   &flags)))
     return err;
-  st->prf.setup(st->state, st->buffer);
+  if (buflen < st->prf.state_bytes)
+    return OTTERY_ERR_ACCESS_STRONG_RNG;
+  st->prf.setup(st->state, buf);
+  if (buflen > st->prf.state_bytes)
+    ottery_st_add_seed_impl(st,
+                            buf + st->prf.state_bytes,
+                            buflen - st->prf.state_bytes,
+                            0,
+                            0);
+  ottery_memclear_(buf, buflen);
   st->last_osrng_flags = flags;
   st->entropy_src_flags = flags;
 
@@ -341,10 +357,10 @@ ottery_st_init_nolock(struct ottery_state_nolock *st,
 }
 
 static int
-ottery_st_add_seed_impl(struct ottery_state *st, const uint8_t *seed, size_t n, int locking)
+ottery_st_add_seed_impl(struct ottery_state *st, const uint8_t *seed, size_t n, int locking, int check_magic)
 {
 #ifndef OTTERY_NO_INIT_CHECK
-  if (UNLIKELY(st->magic != MAGIC(st))) {
+  if (check_magic && UNLIKELY(st->magic != MAGIC(st))) {
     ottery_fatal_error_(OTTERY_ERR_STATE_INIT);
     return OTTERY_ERR_STATE_INIT;
   }
@@ -352,19 +368,25 @@ ottery_st_add_seed_impl(struct ottery_state *st, const uint8_t *seed, size_t n, 
 
   /* If the user passed NULL, then we should reseed from the operating
    * system. */
-  uint8_t tmp_seed[MAX_STATE_BYTES];
+  uint8_t *tmp_seed = NULL;
+  size_t tmp_seed_len = 0;
   uint32_t flags = 0;
 
   if (!seed || !n) {
-    uint8_t scratch[MAX_STATE_BYTES];
-    int r;
-    if ((r = ottery_os_randbytes_(&st->osrng_config, 0,
-                                  tmp_seed, st->prf.state_bytes, scratch,
-                                  &flags)))
-      return r;
+    int err;
+    tmp_seed_len = ottery_os_randbytes_bufsize_(st->prf.state_bytes);
+    tmp_seed = alloca(tmp_seed_len);
+    if (!tmp_seed)
+      return OTTERY_ERR_INIT_STRONG_RNG;
+    n = tmp_seed_len;
+    if ((err = ottery_os_randbytes_(&st->osrng_config, 0,
+                                    tmp_seed, st->prf.state_bytes,
+                                    &n,
+                                    &flags)))
+      return err;
+    if (n < st->prf.state_bytes)
+      return OTTERY_ERR_ACCESS_STRONG_RNG;
     seed = tmp_seed;
-    n = st->prf.state_bytes;
-    ottery_memclear_(scratch, MAX_STATE_BYTES);
   }
 
   if (locking)
@@ -397,7 +419,8 @@ ottery_st_add_seed_impl(struct ottery_state *st, const uint8_t *seed, size_t n, 
     UNLOCK(st);
 
   /* If we used stack-allocated seed material, wipe it. */
-  ottery_memclear_(tmp_seed, sizeof(tmp_seed));
+  if (tmp_seed)
+    ottery_memclear_(tmp_seed, tmp_seed_len);
 
   return 0;
 }
@@ -405,12 +428,12 @@ ottery_st_add_seed_impl(struct ottery_state *st, const uint8_t *seed, size_t n, 
 int
 ottery_st_add_seed(struct ottery_state *st, const uint8_t *seed, size_t n)
 {
-  return ottery_st_add_seed_impl(st, seed, n, 1);
+  return ottery_st_add_seed_impl(st, seed, n, 1, 1);
 }
 int
 ottery_st_add_seed_nolock(struct ottery_state_nolock *st, const uint8_t *seed, size_t n)
 {
-  return ottery_st_add_seed_impl(st, seed, n, 0);
+  return ottery_st_add_seed_impl(st, seed, n, 0, 1);
 }
 
 
