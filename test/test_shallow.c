@@ -135,6 +135,17 @@ test_osrandom(void *arg)
   tt_assert(flags & OTTERY_ENTROPY_DOM_OS);
   tt_assert(flags & OTTERY_ENTROPY_FL_STRONG);
 
+  /* Can we get an odd number of bytes from each source? */
+  memset(buf, 0, sizeof(buf));
+  flags = 0;
+  n = 66;
+  tt_int_op(0, ==, ottery_os_randbytes_(NULL, 0, buf, 7, &n, &flags));
+  tt_int_op(n, >=, 0);
+  tt_int_op((n % 7), ==, 0);
+  tt_int_op(0, ==, buf[n]);
+  tt_assert(flags & OTTERY_ENTROPY_DOM_OS);
+  tt_assert(flags & OTTERY_ENTROPY_FL_STRONG);
+
   /* Try it 8 times; make sure every byte is set at least once */
   n = 0;
   for (i = 0; i < 7; ++i) {
