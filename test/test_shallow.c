@@ -189,7 +189,7 @@ test_osrandom(void *arg)
   cfg.disabled_sources = 0;
   ottery_disable_cpu_capabilities_(OTTERY_CPUCAP_RAND);
   n = 66;
-  tt_int_op(0, ==, ottery_os_randbytes_(NULL, 0, buf, 64, &n, &flags));
+  tt_int_op(0, ==, ottery_os_randbytes_(NULL, 0, buf, 16, &n, &flags));
   tt_assert(flags & OTTERY_ENTROPY_DOM_OS);
   tt_assert(flags & OTTERY_ENTROPY_FL_STRONG);
 
