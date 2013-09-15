@@ -70,7 +70,7 @@ const struct ottery_prf *prfs_no_simd[] = {
   NULL
 };
 
-#ifdef HAVE_SIMD_CHACHA_1
+#ifdef HAVE_SIMD_CHACHA
 const struct ottery_prf *prfs_midrange[] = {
   &ottery_prf_chacha8_krovetz_1_,
   &ottery_prf_chacha12_krovetz_1_,

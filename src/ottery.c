@@ -139,7 +139,7 @@ ottery_get_impl(const char *impl)
     &ottery_prf_chacha12_krovetz_2_,
     &ottery_prf_chacha8_krovetz_2_,
 #endif
-#ifdef HAVE_SIMD_CHACHA_1
+#ifdef HAVE_SIMD_CHACHA
     &ottery_prf_chacha20_krovetz_1_,
     &ottery_prf_chacha12_krovetz_1_,
     &ottery_prf_chacha8_krovetz_1_,
