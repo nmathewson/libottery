@@ -87,6 +87,7 @@ dummy_prf_setup(void *state_, const uint8_t *bytes)
 {
   struct dummy_prf_state *state = state_;
   int i;
+
   for (i = 0; i < 4; ++i) {
     int r;
     unsigned char ch = bytes[i];
@@ -280,22 +281,28 @@ test_add_seed(void *arg)
   (void)arg;
   uint8_t buf[21];
 
-  tt_int_op(OTTERY_ADD_SEED((const uint8_t *)"Lorem ipsum", 11), ==, 0);
+  tt_int_op(OTTERY_ADD_SEED((const uint8_t *)"Lorem", 5), ==, 0);
 
   /* It starts by dumping the next block, which starts "Nbf1".  Then we
-   * xor in "Lore" and get [2, 13, 20, 84].  We set our key from this,
-   * and get rotations [ 19, 2, 13, 20 ], so the next block starts
-   * "Gqe4". Xor in "m ip" and get [42,81,12,68].  That produces rotations
-   * of [3, 10, 16, 12].  The next block starts with "Qyh,"; xor in "sum"
-   * and get [34,12,5,44].  Rotations are now [12, 2, 12, 5].  Now at
-   * last generate a block:
-   *     Zqd%mimnz"ux,vtjdg,fzaasq"ima"xthge%at,ugtezqu,td"pjekdje"ft,qny
+   * are going to take "Lorem" two bytes at a time: 
    *
-   * The first 4
+   *  "Nbf1" xor "Lo\0\0" is [2, 13, 102, 49],
+   *     which produces rotations [ 17, 2, 13, 5 ]
+   *     So the next block starts "Eqe%".
+   "  "Eqe%" xor "re\0\0" is [ 55, 20, 101, 37 ],
+   *     which produces rotations [ 5, 23, 20, 4 ]
+   *     So the next block starts "Sll$".
+   *  "Sll$" xor "m\0\0\0" is [ 62, 108, 108, 36 ],
+   *     which produces rotations [ 4, 4, 11, 11 ]
+   *
+   *  So the next block is
+   *     Rsc+ekltr$td$xspvi+lrczyi$hss$wzzid+sv+ayvdfiw+zv$opwmcpw$ez$sme
+   *
+   * The first 4 are the next key.  The rest are the block.
    */
   OTTERY_RAND_BYTES(buf, 20);
   buf[20] = 0;
-  tt_str_op((const char*)buf, ==, "mimnz\"ux,vtjdg,fzaas");
+  tt_str_op((const char*)buf, ==, "ekltr$td$xspvi+lrczy");
 
   if (USING_STATE()) {
     struct ottery_state *st = STATE();
@@ -307,10 +314,10 @@ test_add_seed(void *arg)
     tt_int_op(0, ==, st->block_counter);
     tt_int_op(24, ==, st->pos);
 
-    tt_int_op(5, ==, dst->rotation[0]);
-    tt_int_op(25, ==, dst->rotation[1]);
-    tt_int_op(16, ==, dst->rotation[2]);
-    tt_int_op(3, ==, dst->rotation[3]);
+    tt_int_op(11, ==, dst->rotation[0]);
+    tt_int_op(17, ==, dst->rotation[1]);
+    tt_int_op(18, ==, dst->rotation[2]);
+    tt_int_op(2, ==, dst->rotation[3]);
   }
 
  end:

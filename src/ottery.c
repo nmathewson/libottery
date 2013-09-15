@@ -376,7 +376,7 @@ ottery_st_add_seed_impl(struct ottery_state *st, const uint8_t *seed, size_t n, 
    */
   while (n) {
     unsigned i;
-    size_t m = n > st->prf.state_bytes ? st->prf.state_bytes : n;
+    size_t m = n > st->prf.state_bytes/2 ? st->prf.state_bytes/2 : n;
     ottery_st_nextblock_nolock_norekey(st);
     for (i = 0; i < m; ++i) {
       st->buffer[i] ^= seed[i];

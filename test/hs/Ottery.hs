@@ -180,7 +180,7 @@ addSeed prng seed
      | otherwise =
         let klen = keyLen (prf prng)
             x = take klen (generate prng (blocksPerCall prng))
-	    (y, rest) = splitAt klen seed
+	    (y, rest) = splitAt (klen `div` 2) seed
 	    y' = zeropad klen y
 	    newKeyBytes = [ a `xor` b | (a,b) <- zip x y' ]
 	    newKey = keyFunc (prf prng) newKeyBytes
