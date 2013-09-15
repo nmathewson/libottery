@@ -7,16 +7,16 @@ NOTES:
 THE SPEC:
 
 
-  We have three layers: an OS layer, a PRF layer and a PRNG layer.
+  We have three layers: an Entropy layer, a PRF layer and a PRNG layer.
 
-  The OS layer:
+  The Entropy layer:
 
     We assume one or more high-quality but slow sources of random bytes
-    from the operating system. On Windows we use CryptGenRandom.  On
-    non-Windows platforms we use /dev/urandom.
+    from the operating system, CPU, or another source.  We label them
+    Entropy_1 through Entropy_N for some N.
 
-    When use the OS layer to generate an n-byte value, we say:
-      OSRAND(n) -> bytes
+    When use the i'th entropy source to generate an n-byte value, we say:
+      ENTROPY_i(n) -> bytes
 
   The PRF layer:
 
@@ -40,6 +40,8 @@ THE SPEC:
        PRF(key,ctr) || PRF(key,ctr+1) || ... || PRF(key,ctr+N)
     where || denotes concatenation.
 
+    We require that KEY_LEN be even.
+
   The PRNG layer:
 
     The PRNG has a state consisting of a PRF key K and a
@@ -53,9 +55,16 @@ THE SPEC:
         Take the first KEY_LEN bytes of Output as the new value of K.
         Take the remainder of Output as the new value of BUF.
 
-    To "Construct" a PRNG, construct a PRNG state as
-        (OSRAND(KEY_LEN), nil).
-    and then Stir the PRNG to get the initial state.
+    To "Construct" a PRNG:
+        Construct a PRNG state as (ENTROPY_1(KEY_LEN), nil).
+
+        Then let S = ENTROPY_2(KEY_LEN) ||
+                     ENTROPY_3(KEY_LEN) || ... ENTROPY_N(KEY_LEN)
+        where || denotes concatenation.
+
+        Then invoke the "Add" procedure below to add "N" bytes of
+        seed to the state.
+
 
     "Removing" N bytes from BUF means to extract the first N bytes of
     BUF, deleting them from the buffer.  If possible, this deletion
@@ -104,12 +113,12 @@ THE SPEC:
 
      To "Add" N bytes of additional seed S to the state:
 
-        Pad S with 0 bytes to a multiple of KEY_LEN.
+        Pad S with 0 bytes to a multiple of KEY_LEN/2.
 
         While S is nonempty:
           Let X = the first KEY_LEN bytes of PRF(K, 0).
-          Let Y = Remove the first KEY_LEN bytes from S.
-          Replace K with X xor Y.
+          Let Y = Remove the first KEY_LEN/2 bytes from S.
+          XOR Y into the first KEY_LEN/2 bytes of X.
 
         Stir.
 
