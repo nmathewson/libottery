@@ -48,19 +48,26 @@ static struct ottery_randbytes_source {
   { NULL, 0 }
 };
 
+size_t
+ottery_os_randbytes_bufsize_(size_t n)
+{
+  return n * (sizeof(RAND_SOURCES)/sizeof(RAND_SOURCES[0]) - 1);
+}
 
 int
 ottery_os_randbytes_(const struct ottery_osrng_config *config,
                      uint32_t select_sources,
-                     uint8_t *bytes, size_t n,
-                     uint8_t *scratch, uint32_t *flags_out)
+                     uint8_t *bytes, size_t n, size_t *buflen,
+                     uint32_t *flags_out)
 {
-  int err = OTTERY_ERR_INIT_STRONG_RNG, i, last_err = 0;
-  size_t j;
+  ssize_t err = OTTERY_ERR_INIT_STRONG_RNG, last_err = 0;
+  int i;
   uint32_t got = 0;
+  uint8_t *next;
   const uint32_t disabled_sources = config ? config->disabled_sources : 0;
 
-  memset(bytes, 0, n);
+  memset(bytes, 0, *buflen);
+  next = bytes;
 
   *flags_out = 0;
 
@@ -75,15 +82,13 @@ ottery_os_randbytes_(const struct ottery_osrng_config *config,
     /* If we already have input from a certain domain, we don't need more */
     if ((flags & (got & OTTERY_ENTROPY_DOM_MASK)) != 0)
       continue;
-    err = RAND_SOURCES[i].fn(config, scratch, n);
+    /* If we can't write these bytes, don't try. */
+    if (next + n > bytes + *buflen)
+      break;
+    err = RAND_SOURCES[i].fn(config, next, n);
     if (err == 0) {
       got |= RAND_SOURCES[i].flags;
-      /* XXXXX In theory, we should be combining these sources with a better
-       * function than XOR. XOR is good enough if they're independent, though.
-       */
-      for (j = 0; j < n; ++j) {
-        bytes[j] ^= scratch[j];
-      }
+      next += n;
     } else {
       last_err = err;
     }
@@ -93,9 +98,8 @@ ottery_os_randbytes_(const struct ottery_osrng_config *config,
   if (0 == (got & OTTERY_ENTROPY_FL_STRONG))
     return last_err ? last_err : OTTERY_ERR_INIT_STRONG_RNG;
 
-  /* Wipe the scratch space */
-  ottery_memclear_(scratch, n);
-
   *flags_out = got;
+  *buflen = next - bytes;
+
   return 0;
 }

@@ -102,69 +102,94 @@ test_osrandom(void *arg)
 {
   (void) arg;
   uint8_t buf[66];
-  uint8_t scratch[66];
+  size_t n;
+
   struct ottery_osrng_config cfg;
-  int i, j;
+  int i;
+  size_t j;
   uint32_t flags=0;
 
   memset(buf, 0, sizeof(buf));
-  memset(scratch, 0, sizeof(scratch));
   memset(&cfg, 0, sizeof(cfg));
   /* randbytes must succeed. */
-  tt_int_op(0, ==, ottery_os_randbytes_(NULL, 0, buf, 64, scratch, &flags));
+  n = 66;
+  tt_int_op(0, ==, ottery_os_randbytes_(NULL, 0, buf, 16, &n, &flags));
+  tt_int_op(n, >=, 16);
+  tt_int_op((n % 16), ==, 0);
   tt_assert(flags & OTTERY_ENTROPY_DOM_OS);
   tt_assert(flags & OTTERY_ENTROPY_FL_STRONG);
 
   /* Does it stop after the number of bytes we tell it? */
+  tt_int_op(0, ==, buf[n]);
   tt_int_op(0, ==, buf[64]);
   tt_int_op(0, ==, buf[65]);
-  tt_int_op(0, ==, scratch[64]);
-  tt_int_op(0, ==, scratch[65]);
 
-  /* Can we get an odd number of bytes? */  memset(buf, 0, sizeof(buf));
-  memset(scratch, 0, sizeof(scratch));
+  /* Can we get an odd number of bytes? */
+  memset(buf, 0, sizeof(buf));
   flags = 0;
-  tt_int_op(0, ==, ottery_os_randbytes_(NULL, 0, buf, 63, scratch, &flags));
+  n = 66;
+  tt_int_op(0, ==, ottery_os_randbytes_(NULL, 0, buf, 63, &n, &flags));
+  tt_int_op(n, ==, 63);
   tt_int_op(0, ==, buf[63]);
   tt_int_op(0, ==, buf[64]);
-  tt_int_op(0, ==, scratch[63]);
-  tt_int_op(0, ==, scratch[64]);
+  tt_assert(flags & OTTERY_ENTROPY_DOM_OS);
+  tt_assert(flags & OTTERY_ENTROPY_FL_STRONG);
+
+  /* Can we get an odd number of bytes from each source? */
+  memset(buf, 0, sizeof(buf));
+  flags = 0;
+  n = 66;
+  tt_int_op(0, ==, ottery_os_randbytes_(NULL, 0, buf, 7, &n, &flags));
+  tt_int_op(n, >=, 0);
+  tt_int_op((n % 7), ==, 0);
+  tt_int_op(0, ==, buf[n]);
   tt_assert(flags & OTTERY_ENTROPY_DOM_OS);
   tt_assert(flags & OTTERY_ENTROPY_FL_STRONG);
 
   /* Try it 8 times; make sure every byte is set at least once */
+  n = 0;
   for (i = 0; i < 7; ++i) {
     uint8_t buf2[64];
-    tt_int_op(0, ==, ottery_os_randbytes_(NULL, 0, buf2, 64, scratch, &flags));
-    for (j = 0; j < 64; ++j)
+    size_t nn = 64;
+    tt_int_op(0, ==, ottery_os_randbytes_(NULL, 0, buf2, 16, &nn, &flags));
+    if (nn > n)
+      n = nn;
+    tt_int_op(nn, >, 0);
+    tt_int_op(nn, <=, 64);
+    for (j = 0; j < nn; ++j)
       buf[j] |= buf2[j];
   }
-  for (j = 0; j < 64; ++j)
+  for (j = 0; j < n; ++j)
     tt_int_op(0, !=, buf[j]);
+  TT_BLATHER(("All together I saw %d bytes", (int)n));
 
   cfg.disabled_sources = OTTERY_ENTROPY_ALL_SOURCES & ~OTTERY_ENTROPY_SRC_RANDOMDEV;
   cfg.urandom_fname = "/dev/please-dont-create-this-file";
   flags = 0;
+  n = 66;
   tt_int_op(OTTERY_ERR_INIT_STRONG_RNG, ==,
-            ottery_os_randbytes_(&cfg, 0, buf, 12, scratch, &flags));
+            ottery_os_randbytes_(&cfg, 0, buf, 12, &n, &flags));
   tt_int_op(flags, ==, 0);
 
   cfg.urandom_fname = "/dev/null";
+  n = 66;
   tt_int_op(OTTERY_ERR_ACCESS_STRONG_RNG, ==,
-            ottery_os_randbytes_(&cfg, 0, buf, 12, scratch, &flags));
+            ottery_os_randbytes_(&cfg, 0, buf, 12, &n, &flags));
   tt_int_op(flags, ==, 0);
 
   /* Make sure at least one OS source works. */
   cfg.disabled_sources = 0;
   flags = 0;
-  tt_int_op(0, ==, ottery_os_randbytes_(NULL, OTTERY_ENTROPY_DOM_OS, buf, 64, scratch, &flags));
+  n = 66;
+  tt_int_op(0, ==, ottery_os_randbytes_(NULL, OTTERY_ENTROPY_DOM_OS, buf, 64, &n, &flags));
   tt_assert(flags & OTTERY_ENTROPY_DOM_OS);
   tt_assert(flags & OTTERY_ENTROPY_FL_STRONG);
 
   /* Make sure at least one OS source works in another way. */
   cfg.disabled_sources = 0;
   ottery_disable_cpu_capabilities_(OTTERY_CPUCAP_RAND);
-  tt_int_op(0, ==, ottery_os_randbytes_(NULL, 0, buf, 64, scratch, &flags));
+  n = 66;
+  tt_int_op(0, ==, ottery_os_randbytes_(NULL, 0, buf, 16, &n, &flags));
   tt_assert(flags & OTTERY_ENTROPY_DOM_OS);
   tt_assert(flags & OTTERY_ENTROPY_FL_STRONG);
 
