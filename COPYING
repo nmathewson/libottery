@@ -12,3 +12,8 @@ Some of the unit tests for Libottery use the tinytest test
 infrastructure. See test/tinytest.c for the license that tinytest uses.  This
 license applies only to the files test/tinytest.c, test/tinytest.h, and
 test_tinytest_macros.c; it does not affect the rest of Libottery.
+
+The m4/ax_pthread.m4 autoconf macro is under the GPLv3, modified with a
+special exception to not place any requirementso on the generated "configure"
+file; see that file for more information. Its license does not affect the
+status of any other portion of Libottery.

@@ -16,16 +16,18 @@
 
 /* Locks */
 #ifdef OTTERY_NO_LOCKS
-
+/* Nothing here. */
 #elif defined(__APPLE__) && !defined(OTTERY_NO_SPINLOCKS)
 #define OTTERY_OSATOMIC_LOCKS
 #include <libkern/OSAtomic.h>
 #elif defined(_WIN32)
 #define OTTERY_CRITICAL_SECTION
 #include <windows.h>
-#else
+#elif defined(HAVE_PTHREAD)
 #define OTTERY_PTHREADS
 #include <pthread.h>
+#else
+#define OTTERY_NO_LOCKS
 #endif
 
 #ifdef OTTERY_NO_LOCKS

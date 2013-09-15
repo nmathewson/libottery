@@ -39,8 +39,7 @@ VERSION_INFO = 0:0:0
 
 # Compiler and linker options to apply to everything.
 # TODO: Make sure these all work
-# TODO: Use -pthread more judiciously.
-AM_CFLAGS = -Wall -W -pthread -I $(top_srcdir)/src
+AM_CFLAGS = -Wall -W $(PTHREAD_CFLAGS) -I $(top_srcdir)/src
 
 #####
 # LDFLAGS that we want to add to all LDFLAG
@@ -52,7 +51,7 @@ GENERIC_LDFLAGS = -version-info $(VERSION_INFO) -no-undefined
 
 lib_LTLIBRARIES = libottery.la
 libottery_la_LDFLAGS = $(GENERIC_LDFLAGS)
-libottery_la_LIBADD =
+libottery_la_LIBADD = $(PTHREAD_LIBS)
 
 # This code is always included in the library, regardless of build options.
 libottery_la_SOURCES =				\
@@ -118,26 +117,26 @@ check_DATA =					\
 check_SCRIPTS = test/make_test_vectors.py
 
 test_test_vectors_SOURCES = test/test_vectors.c test/streams.c
-test_test_vectors_LDADD = libottery.la
+test_test_vectors_LDADD = libottery.la $(PTHREAD_LIBS)
 
 # TODO: skip this test if libcrypto is unavailable
 test_bench_rng_SOURCES = test/bench_rng.c
-test_bench_rng_LDADD = libottery.la -lcrypto
+test_bench_rng_LDADD = libottery.la -lcrypto $(PTHREAD_LIBS)
 
 test_dump_bytes_SOURCES = test/dump_bytes.c
-test_dump_bytes_LDADD = libottery.la
+test_dump_bytes_LDADD = libottery.la $(PTHREAD_LIBS)
 
 test_test_memclear_SOURCES = test/test_memclear.c
-test_test_memclear_LDADD = libottery.la
+test_test_memclear_LDADD = libottery.la $(PTHREAD_LIBS)
 
 test_test_shallow_SOURCES = test/test_shallow.c test/tinytest.c
-test_test_shallow_LDADD = libottery.la
+test_test_shallow_LDADD = libottery.la $(PTHREAD_LIBS)
 
 test_test_deep_SOURCES = test/test_deep.c test/tinytest.c
-test_test_deep_LDADD = libottery.la
+test_test_deep_LDADD = libottery.la $(PTHREAD_LIBS)
 
 test_test_egd_SOURCES = test/test_egd.c
-test_test_egd_LDADD = libottery.la
+test_test_egd_LDADD = libottery.la $(PTHREAD_LIBS)
 
 # How to build our EGD testing tool and our fake egd implementation.
 test_fake_egd_SOURCES = test/fake_egd.c
@@ -163,7 +162,7 @@ if USEGHC
 # in Haskell, to make sure that our RNG is following the spec.
 check_PROGRAMS += test/test_spec
 test_test_spec_SOURCES = test/test_spec.c
-test_test_spec_LDADD = libottery.la
+test_test_spec_LDADD = libottery.la $(PTHREAD_LIBS)
 
 # More generated info that we'll need to make sure we generate to run
 # our unit tests.
@@ -294,3 +293,4 @@ if SIMD_CHACHA_2
 	    src/chacha_krovetz.c && \
 	mv -f chacha_krovetz.c.gcov chacha_krovetz_simd2.c.gcov
 endif
+

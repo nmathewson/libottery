@@ -72,6 +72,12 @@ OTTERY_USE_SIMD
 dnl Some systems still ship a libtool.m4 that predates the change to LT_INIT.
 AC_PROG_LIBTOOL
 
+# Check out what we need to do to build with pthreads (if anything)
+AX_PTHREAD()
+CC="$PTHREAD_CC"
+AC_SUBST(PTHREAD_CFLAGS)
+AC_SUBST(PTHREAD_LIBS)
+
 #
 # Tests for headers and functions.
 #

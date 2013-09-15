@@ -11,6 +11,7 @@ Version: @VERSION@
 Requires:
 Conflicts:
 Libs: -L${libdir} -lottery
+Libs.Private: @PTHREAD_LIBS@
 Cflags: -I${includedir}
 
 
