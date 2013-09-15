@@ -63,7 +63,7 @@
     LeaveCriticalSection(mutex); \
   } while (0)
 #define DESTROY_LOCK(mutex) do {                \
-    DeleteCriticalSection(&st->mutex);          \
+    DeleteCriticalSection(mutex);               \
   } while (0)
 
 #elif defined(OTTERY_OSATOMIC_LOCKS)
