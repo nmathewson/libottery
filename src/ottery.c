@@ -313,12 +313,12 @@ ottery_st_reseed(struct ottery_state *st)
   /* XXXX Add seed rather than starting from scratch? */
   int err;
   uint32_t flags=0;
-  size_t buflen = ottery_os_randbytes_bufsize_(st->prf.state_bytes);
+  size_t buflen = ottery_get_entropy_bufsize_(st->prf.state_bytes);
   uint8_t *buf = alloca(buflen);
   if (!buf)
     return OTTERY_ERR_INIT_STRONG_RNG;
 
-  if ((err = ottery_os_randbytes_(&st->osrng_config, 0,
+  if ((err = ottery_get_entropy_(&st->osrng_config, 0,
                                   buf, st->prf.state_bytes,
                                   &buflen,
                                   &flags)))
@@ -374,12 +374,12 @@ ottery_st_add_seed_impl(struct ottery_state *st, const uint8_t *seed, size_t n, 
 
   if (!seed || !n) {
     int err;
-    tmp_seed_len = ottery_os_randbytes_bufsize_(st->prf.state_bytes);
+    tmp_seed_len = ottery_get_entropy_bufsize_(st->prf.state_bytes);
     tmp_seed = alloca(tmp_seed_len);
     if (!tmp_seed)
       return OTTERY_ERR_INIT_STRONG_RNG;
     n = tmp_seed_len;
-    if ((err = ottery_os_randbytes_(&st->osrng_config, 0,
+    if ((err = ottery_get_entropy_(&st->osrng_config, 0,
                                     tmp_seed, st->prf.state_bytes,
                                     &n,
                                     &flags)))

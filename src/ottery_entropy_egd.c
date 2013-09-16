@@ -18,7 +18,7 @@
 
 /** DOCDOC */
 static int
-ottery_os_randbytes_egd(const struct ottery_osrng_config *cfg,
+ottery_get_entropy_egd(const struct ottery_osrng_config *cfg,
                         uint8_t *out, size_t outlen)
 {
   int sock, n, result;
@@ -65,6 +65,6 @@ ottery_os_randbytes_egd(const struct ottery_osrng_config *cfg,
 }
 
 #define ENTROPY_SOURCE_EGD \
-  { ottery_os_randbytes_egd, SRC(EGD)|DOM(EGD)|FL(STRONG) }
+  { ottery_get_entropy_egd, SRC(EGD)|DOM(EGD)|FL(STRONG) }
 
 #endif

@@ -49,13 +49,13 @@ static struct ottery_randbytes_source {
 };
 
 size_t
-ottery_os_randbytes_bufsize_(size_t n)
+ottery_get_entropy_bufsize_(size_t n)
 {
   return n * (sizeof(RAND_SOURCES)/sizeof(RAND_SOURCES[0]) - 1);
 }
 
 int
-ottery_os_randbytes_(const struct ottery_osrng_config *config,
+ottery_get_entropy_(const struct ottery_osrng_config *config,
                      uint32_t select_sources,
                      uint8_t *bytes, size_t n, size_t *buflen,
                      uint32_t *flags_out)

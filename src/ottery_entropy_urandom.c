@@ -38,7 +38,7 @@ ottery_read_n_bytes_from_file_(int fd, uint8_t *out, size_t n)
 /** Generate random bytes using the unix-style /dev/urandom RNG, or another
  * such device as configured in the configuration. */
 static int
-ottery_os_randbytes_urandom(const struct ottery_osrng_config *cfg,
+ottery_get_entropy_urandom(const struct ottery_osrng_config *cfg,
                             uint8_t *out, size_t outlen)
 {
   /* On most unixes these days, you can get strong random numbers from
@@ -80,6 +80,6 @@ ottery_os_randbytes_urandom(const struct ottery_osrng_config *cfg,
 }
 
 #define ENTROPY_SOURCE_URANDOM \
-  { ottery_os_randbytes_urandom, SRC(RANDOMDEV)|DOM(OS)|FL(STRONG) }
+  { ottery_get_entropy_urandom, SRC(RANDOMDEV)|DOM(OS)|FL(STRONG) }
 
 #endif

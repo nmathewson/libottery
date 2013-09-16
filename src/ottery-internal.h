@@ -82,7 +82,7 @@ struct ottery_osrng_config {
 /**
  * Return the buffer size to allocate when getting at least n bytes from each
  * entropy source.  We might not actually need so many. */
-size_t ottery_os_randbytes_bufsize_(size_t n);
+size_t ottery_get_entropy_bufsize_(size_t n);
 
 /**
  * Interface to underlying strong RNGs.  If this were fast, we'd just use it
@@ -102,7 +102,7 @@ size_t ottery_os_randbytes_bufsize_(size_t n);
  * @return Zero on success, or an error code on failure. On failure, it is not
  *   safe to treat the contents of the buffer as random at all.
  */
-int ottery_os_randbytes_(const struct ottery_osrng_config *config,
+int ottery_get_entropy_(const struct ottery_osrng_config *config,
                          uint32_t require_flags,
                          uint8_t *bytes, size_t n, size_t *bufsize,
                          uint32_t *flags_out);
