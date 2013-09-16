@@ -84,6 +84,15 @@ AC_SUBST(PTHREAD_LIBS)
 
 AC_CHECK_FUNCS_ONCE([arc4random arc4random_buf])
 
+# We need to build things a bit differently on Windows.
+AC_CACHE_CHECK([whether we are building for Windows], [ottery_cv_win32],
+ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+#ifdef _WIN32
+ the last platform on earth that doesnt act like unix
+#endif]])], [ottery_cv_win32=no], [ottery_cv_win32=yes]))
+
+AM_CONDITIONAL(WINDOWS, [test "x$ottery_cv_win32" = xyes])
+
 # Python and Haskell are used in the test suite.
 # Do these checks last so the warnings don't scroll off the user's terminal.
 
