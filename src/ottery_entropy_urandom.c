@@ -19,7 +19,7 @@
  * we reach an error.  Returns the number of bytes read.  If the return
  * value is less than n, an error occurred.
  */
-int
+static int
 ottery_read_n_bytes_from_file_(int fd, uint8_t *out, size_t n)
 {
   ssize_t r;
