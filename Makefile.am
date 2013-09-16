@@ -59,7 +59,7 @@ libottery_la_SOURCES =				\
 	src/ottery.c				\
 	src/ottery_cpuinfo.c			\
 	src/ottery_global.c			\
-	src/ottery_osrng.c
+	src/ottery_entropy.c
 
 # chacha_krovetz.c has to be built using special command-line options,
 # and therefore must be put in its own "convenience library."
@@ -257,7 +257,7 @@ UNCRUSTIFY_FILES =				\
 		src/ottery.c			\
 		src/ottery_cpuinfo.c		\
 		src/ottery_global.c		\
-		src/ottery_osrng.c		\
+		src/ottery_entropy.c		\
 		$(include_HEADERS)		\
 		src/chacha_merged_ecrypt.h 	\
 		src/ottery-internal.h 		\
