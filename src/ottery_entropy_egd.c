@@ -19,10 +19,12 @@
 /** DOCDOC */
 static int
 ottery_get_entropy_egd(const struct ottery_entropy_config *cfg,
-                        uint8_t *out, size_t outlen)
+                       struct ottery_entropy_state *state,
+                       uint8_t *out, size_t outlen)
 {
   int sock, n, result;
   unsigned char msg[2];
+  (void) state;
 
   if (! cfg || ! cfg->egd_sockaddr || ! cfg->egd_socklen)
     return OTTERY_ERR_INIT_STRONG_RNG;

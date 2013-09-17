@@ -119,7 +119,7 @@ test_osrandom(void *arg)
   memset(&cfg, 0, sizeof(cfg));
   /* randbytes must succeed. */
   n = 66;
-  tt_int_op(0, ==, ottery_get_entropy_(NULL, 0, buf, 16, &n, &flags));
+  tt_int_op(0, ==, ottery_get_entropy_(NULL, NULL, 0, buf, 16, &n, &flags));
   tt_int_op(n, >=, 16);
   tt_int_op((n % 16), ==, 0);
   tt_assert(flags & OTTERY_ENTROPY_DOM_OS);
@@ -134,7 +134,7 @@ test_osrandom(void *arg)
   memset(buf, 0, sizeof(buf));
   flags = 0;
   n = 66;
-  tt_int_op(0, ==, ottery_get_entropy_(NULL, 0, buf, 63, &n, &flags));
+  tt_int_op(0, ==, ottery_get_entropy_(NULL, NULL, 0, buf, 63, &n, &flags));
   tt_int_op(n, ==, 63);
   tt_int_op(0, ==, buf[63]);
   tt_int_op(0, ==, buf[64]);
@@ -145,7 +145,7 @@ test_osrandom(void *arg)
   memset(buf, 0, sizeof(buf));
   flags = 0;
   n = 66;
-  tt_int_op(0, ==, ottery_get_entropy_(NULL, 0, buf, 7, &n, &flags));
+  tt_int_op(0, ==, ottery_get_entropy_(NULL, NULL, 0, buf, 7, &n, &flags));
   tt_int_op(n, >=, 0);
   tt_int_op((n % 7), ==, 0);
   tt_int_op(0, ==, buf[n]);
@@ -157,7 +157,7 @@ test_osrandom(void *arg)
   for (i = 0; i < 7; ++i) {
     uint8_t buf2[64];
     size_t nn = 64;
-    tt_int_op(0, ==, ottery_get_entropy_(NULL, 0, buf2, 16, &nn, &flags));
+    tt_int_op(0, ==, ottery_get_entropy_(NULL, NULL, 0, buf2, 16, &nn, &flags));
     if (nn > n)
       n = nn;
     tt_int_op(nn, >, 0);
@@ -174,20 +174,20 @@ test_osrandom(void *arg)
   flags = 0;
   n = 66;
   tt_int_op(OTTERY_ERR_INIT_STRONG_RNG, ==,
-            ottery_get_entropy_(&cfg, 0, buf, 12, &n, &flags));
+            ottery_get_entropy_(&cfg, NULL, 0, buf, 12, &n, &flags));
   tt_int_op(flags, ==, 0);
 
   cfg.urandom_fname = "/dev/null";
   n = 66;
   tt_int_op(OTTERY_ERR_ACCESS_STRONG_RNG, ==,
-            ottery_get_entropy_(&cfg, 0, buf, 12, &n, &flags));
+            ottery_get_entropy_(&cfg, NULL, 0, buf, 12, &n, &flags));
   tt_int_op(flags, ==, 0);
 
   /* Make sure at least one OS source works. */
   cfg.disabled_sources = 0;
   flags = 0;
   n = 66;
-  tt_int_op(0, ==, ottery_get_entropy_(NULL, OTTERY_ENTROPY_DOM_OS, buf, 64, &n, &flags));
+  tt_int_op(0, ==, ottery_get_entropy_(NULL, NULL, OTTERY_ENTROPY_DOM_OS, buf, 64, &n, &flags));
   tt_assert(flags & OTTERY_ENTROPY_DOM_OS);
   tt_assert(flags & OTTERY_ENTROPY_FL_STRONG);
 
@@ -201,7 +201,7 @@ test_osrandom(void *arg)
   cfg.disabled_sources = ALL_ENTROPY_BUT(RANDOMDEV);
   n = sizeof(buf);
   tt_int_op(OTTERY_ERR_INIT_STRONG_RNG, ==,
-            ottery_get_entropy_(&cfg, 0, buf, 12, &n, &flags));
+            ottery_get_entropy_(&cfg, NULL, 0, buf, 12, &n, &flags));
 
   /* This should fail because it is not a device at all. */
   {
@@ -218,7 +218,7 @@ test_osrandom(void *arg)
     tempfname = tempfile;
     n = sizeof(buf);
     tt_int_op(OTTERY_ERR_INIT_STRONG_RNG, ==,
-              ottery_get_entropy_(&cfg, 0, buf, 12, &n, &flags));
+              ottery_get_entropy_(&cfg, NULL, 0, buf, 12, &n, &flags));
     close(cfg.urandom_fd);
   }
 
@@ -226,17 +226,18 @@ test_osrandom(void *arg)
   cfg.urandom_fd = open("/dev/urandom", O_RDONLY);
   tt_int_op(cfg.urandom_fd, >=, 0);
   n = sizeof(buf);
-  tt_int_op(0, ==, ottery_get_entropy_(&cfg, 0, buf, 12, &n, &flags));
+  tt_int_op(0, ==, ottery_get_entropy_(&cfg, NULL, 0, buf, 12, &n, &flags));
 
   close(cfg.urandom_fd);
 
 #endif
 
   /* Make sure at least one OS source works in another way. */
+  memset(&cfg, 0, sizeof(cfg));
   cfg.disabled_sources = 0;
   ottery_disable_cpu_capabilities_(OTTERY_CPUCAP_RAND);
   n = 66;
-  tt_int_op(0, ==, ottery_get_entropy_(NULL, 0, buf, 16, &n, &flags));
+  tt_int_op(0, ==, ottery_get_entropy_(NULL, NULL, 0, buf, 16, &n, &flags));
   tt_assert(flags & OTTERY_ENTROPY_DOM_OS);
   tt_assert(flags & OTTERY_ENTROPY_FL_STRONG);
 

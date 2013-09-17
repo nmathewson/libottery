@@ -39,6 +39,7 @@ ottery_read_n_bytes_from_file_(int fd, uint8_t *out, size_t n)
  * such device as configured in the configuration. */
 static int
 ottery_get_entropy_urandom(const struct ottery_entropy_config *cfg,
+                           struct ottery_entropy_state *state,
                             uint8_t *out, size_t outlen)
 {
   /* On most unixes these days, you can get strong random numbers from

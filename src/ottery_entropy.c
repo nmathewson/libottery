@@ -30,7 +30,9 @@
 
 /** Table of RNG functions and their properties. */
 static struct ottery_randbytes_source {
-  int (*fn)(const struct ottery_entropy_config *, uint8_t *, size_t);
+  int (*fn)(const struct ottery_entropy_config *,
+            struct ottery_entropy_state *,
+            uint8_t *, size_t);
   uint32_t flags;
 } RAND_SOURCES[] = {
 #ifdef ENTROPY_SOURCE_CRYPTGENRANDOM
@@ -56,6 +58,7 @@ ottery_get_entropy_bufsize_(size_t n)
 
 int
 ottery_get_entropy_(const struct ottery_entropy_config *config,
+                    struct ottery_entropy_state *state,
                      uint32_t select_sources,
                      uint8_t *bytes, size_t n, size_t *buflen,
                      uint32_t *flags_out)
@@ -85,7 +88,7 @@ ottery_get_entropy_(const struct ottery_entropy_config *config,
     /* If we can't write these bytes, don't try. */
     if (next + n > bytes + *buflen)
       break;
-    err = RAND_SOURCES[i].fn(config, next, n);
+    err = RAND_SOURCES[i].fn(config, state, next, n);
     if (err == 0) {
       got |= RAND_SOURCES[i].flags;
       next += n;

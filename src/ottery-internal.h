@@ -61,7 +61,7 @@ struct ottery_entropy_config {
   /** An fd to use to access /dev/urandom.  -1 if not set. Overrides
    * urandom_fname. */
   int urandom_fd;
-  unsigned urandom_fd_is_set; 
+  unsigned urandom_fd_is_set;
   /** DOCDOC */
   const struct sockaddr *egd_sockaddr;
   int egd_socklen;
@@ -72,6 +72,12 @@ struct ottery_entropy_config {
    * This is for testing, and is not exposed to user code.
    */
   unsigned allow_nondev_urandom;
+};
+
+struct ottery_entropy_state {
+  /* Cached value for the inode of the urandom device.  If this value changes,
+   * we assume that somebody messed with the fd by accident. */
+  uint64_t urandom_fd_inode;
 };
 
 /**
@@ -85,6 +91,7 @@ size_t ottery_get_entropy_bufsize_(size_t n);
  * it typically isn't.
  *
  * @param config A correctly set-up ottery_entropy_config.
+ * @param state A correctly set-up ottery_entropy_state.
  * @param require_flags Only run entropy sources with *all* of these
  *      OTTERY_ENTROPY_* flags set. Set this to 0 to use all the sources
  *      that work.
@@ -98,6 +105,7 @@ size_t ottery_get_entropy_bufsize_(size_t n);
  *   safe to treat the contents of the buffer as random at all.
  */
 int ottery_get_entropy_(const struct ottery_entropy_config *config,
+                        struct ottery_entropy_state *state,
                          uint32_t require_flags,
                          uint8_t *bytes, size_t n, size_t *bufsize,
                          uint32_t *flags_out);
@@ -215,9 +223,12 @@ struct __attribute__((aligned(16))) ottery_state {
    */
   uint32_t last_entropy_flags;
   /**
-   * Configuration and state for the entropy source.
+   * Configuration for the entropy source.
    */
   struct ottery_entropy_config entropy_config;
+  /** State for the entropy source.
+   */
+  struct ottery_entropy_state entropy_state;
   /**
    * @brief Locks for this structure.
    *

@@ -21,6 +21,7 @@
  * RNG. */
 static int
 ottery_get_entropy_cryptgenrandom(const struct ottery_entropy_config *cfg,
+                          struct ottery_entropy_state *state,
                           uint8_t *out, size_t outlen)
 {
   /* On Windows, CryptGenRandom is supposed to be a well-seeded
@@ -28,6 +29,7 @@ ottery_get_entropy_cryptgenrandom(const struct ottery_entropy_config *cfg,
   HCRYPTPROV provider;
   int retval = 0;
   (void) cfg;
+  (void) state;
 
   if (0 == CryptAcquireContext(&provider, NULL, NULL, PROV_RSA_FULL,
                                CRYPT_VERIFYCONTEXT))

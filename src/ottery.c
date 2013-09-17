@@ -340,7 +340,7 @@ ottery_st_reseed(struct ottery_state *st)
   if (!buf)
     return OTTERY_ERR_INIT_STRONG_RNG;
 
-  if ((err = ottery_get_entropy_(&st->entropy_config, 0,
+  if ((err = ottery_get_entropy_(&st->entropy_config, &st->entropy_state, 0,
                                   buf, st->prf.state_bytes,
                                   &buflen,
                                   &flags)))
@@ -401,7 +401,7 @@ ottery_st_add_seed_impl(struct ottery_state *st, const uint8_t *seed, size_t n, 
     if (!tmp_seed)
       return OTTERY_ERR_INIT_STRONG_RNG;
     n = tmp_seed_len;
-    if ((err = ottery_get_entropy_(&st->entropy_config, 0,
+    if ((err = ottery_get_entropy_(&st->entropy_config, &st->entropy_state, 0,
                                     tmp_seed, st->prf.state_bytes,
                                     &n,
                                     &flags)))

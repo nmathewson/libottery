@@ -64,7 +64,7 @@ main(int argc, char **argv)
   cfg.disabled_sources =
     OTTERY_ENTROPY_ALL_SOURCES & ~OTTERY_ENTROPY_SRC_EGD;
 
-  result = ottery_get_entropy_(&cfg, 0, buf, (size_t) n, &buflen, &flags);
+  result = ottery_get_entropy_(&cfg, NULL, 0, buf, (size_t) n, &buflen, &flags);
 
   if (result == 0 && buflen == (size_t)n) {
     int i;

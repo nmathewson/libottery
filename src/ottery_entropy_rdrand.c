@@ -32,11 +32,13 @@ rdrand(uint32_t *therand) {
 /** Generate bytes using the Intel RDRAND instruction. */
 static int
 ottery_get_entropy_rdrand(const struct ottery_entropy_config *cfg,
+                          struct ottery_entropy_state *state,
                            uint8_t *out, size_t outlen)
 {
   int err;
   uint32_t *up = (uint32_t *) out;
   (void) cfg;
+  (void) state;
   if (! (ottery_get_cpu_capabilities_() & OTTERY_CPUCAP_RAND))
     return OTTERY_ERR_INIT_STRONG_RNG;
   while (outlen >= 4) {
