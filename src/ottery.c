@@ -130,6 +130,7 @@ ottery_config_init(struct ottery_config *cfg)
   cfg->entropy_config.urandom_fd = -1;
   cfg->entropy_config.urandom_fd_is_set = 0;
   cfg->entropy_config.disabled_sources = 0;
+  cfg->entropy_config.weak_sources = 0;
   cfg->entropy_config.egd_sockaddr = NULL;
   cfg->entropy_config.egd_socklen = 0;
   cfg->entropy_config.allow_nondev_urandom = 0;
@@ -223,6 +224,14 @@ ottery_config_disable_entropy_sources(struct ottery_config *cfg,
                                       uint32_t disabled_sources)
 {
   cfg->entropy_config.disabled_sources =
+    (disabled_sources & OTTERY_ENTROPY_ALL_SOURCES);
+}
+
+void
+ottery_config_mark_entropy_sources_weak(struct ottery_config *cfg,
+                                        uint32_t disabled_sources)
+{
+  cfg->entropy_config.weak_sources =
     (disabled_sources & OTTERY_ENTROPY_ALL_SOURCES);
 }
 

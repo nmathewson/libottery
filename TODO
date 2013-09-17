@@ -51,8 +51,6 @@ BEFORE TELLING PEOPLE TO TRY IT.
   - mlock support of some kind.
 
 
-
-
 BEFORE VERSION 1:
 
   . Detect CPU features at runtime.
@@ -66,10 +64,10 @@ BEFORE VERSION 1:
     - Good build process
     - Coverage on Windows
 
-  - Other entropy sources
+  . Other entropy sources
     - Syscall/ioctl/arc4random??
     - User promises to seed (dangerous)
-    - Ability to say "Still use X, but don't consider it strong."
+    o Ability to say "Still use X, but don't consider it strong."
     - EGD support on windows
 
   - Possibly, add a "stir" step after seeding so that we are never

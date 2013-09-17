@@ -520,6 +520,13 @@ test_bad_init(void *arg)
   ottery_config_set_urandom_device(&cfg, NULL);
   tt_int_op(0, ==, OTTERY_INIT(&cfg));
 
+  ottery_config_init(&cfg);
+  ottery_config_mark_entropy_sources_weak(&cfg, ~0);
+  tt_int_op(OTTERY_ERR_INIT_STRONG_RNG, ==, OTTERY_INIT(&cfg));
+
+  ottery_config_mark_entropy_sources_weak(&cfg, OTTERY_ENTROPY_SRC_RDRAND);
+  tt_int_op(0, ==, OTTERY_INIT(&cfg));
+
  end:
   ;
 }

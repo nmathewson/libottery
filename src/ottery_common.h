@@ -241,6 +241,26 @@ void ottery_config_set_egd_socket(struct ottery_config *cfg,
 void ottery_config_disable_entropy_sources(struct ottery_config *cfg,
                                            uint32_t disabled_sources);
 
+/**
+ * Mark one or more entropy sources as "weak".
+ *
+ * Unlike a disabled source, we will still try to read entropy from
+ * a weak source -- but we will fail if _only_ weak sources are available.
+ *
+ * Note that if enough entropy sources are disabled and/or weak sources are
+ * failing, the state will not be able to get initialized, and libottery might
+ * not work.
+ *
+ * To use this function, you call it on an ottery_config structure after
+ * ottery_config_init(), and before passing that structure to
+ * ottery_st_init() or ottery_init().
+ *
+ * @param cfg A configuration in which to disable one or more entropy sources.
+ * @param weak_sources a bitwise combination of one or more
+ *    OTTERY_ENTROPY_SRC_* values to mark as weak.
+ */
+void ottery_config_mark_entropy_sources_weak(struct ottery_config *cfg,
+                                             uint32_t weak_source);
 
 /** Size reserved for struct ottery_config */
 #define OTTERY_CONFIG_DUMMY_SIZE_ 1024

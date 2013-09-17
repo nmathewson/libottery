@@ -90,7 +90,11 @@ ottery_get_entropy_(const struct ottery_entropy_config *config,
       break;
     err = RAND_SOURCES[i].fn(config, state, next, n);
     if (err == 0) {
-      got |= RAND_SOURCES[i].flags;
+      uint32_t flags = RAND_SOURCES[i].flags;
+      if (config && (flags & config->weak_sources))
+        flags &= ~OTTERY_ENTROPY_FL_STRONG;
+
+      got |= flags;
       next += n;
     } else {
       last_err = err;

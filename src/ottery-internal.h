@@ -65,8 +65,10 @@ struct ottery_entropy_config {
   /** DOCDOC */
   const struct sockaddr *egd_sockaddr;
   int egd_socklen;
-  /** DOCDOC */
+  /** Bitmask of sources to disable. */
   uint32_t disabled_sources;
+  /** Bitmask of sources to consider weak. */
+  uint32_t weak_sources;
 
   /** If true, we don't enforce that urandom_fname must be a device file.
    * This is for testing, and is not exposed to user code.
