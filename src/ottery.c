@@ -192,17 +192,27 @@ ottery_config_set_manual_prf_(struct ottery_config *cfg,
 }
 
 void
-ottery_config_set_urandom_device_(struct ottery_config *cfg,
-                                  const char *fname)
+ottery_config_set_urandom_device(struct ottery_config *cfg,
+                                 const char *fname)
 {
   cfg->entropy_config.urandom_fname = fname;
 }
 
 void
-ottery_config_disable_entropy_sources_(struct ottery_config *cfg,
-                                       uint32_t disabled_sources)
+ottery_config_set_egd_socket(struct ottery_config *cfg,
+                             const struct sockaddr *addr,
+                             int len)
 {
-  cfg->entropy_config.disabled_sources = disabled_sources;
+  cfg->entropy_config.egd_sockaddr = addr;
+  cfg->entropy_config.egd_socklen = len;
+}
+
+void
+ottery_config_disable_entropy_sources(struct ottery_config *cfg,
+                                      uint32_t disabled_sources)
+{
+  cfg->entropy_config.disabled_sources =
+    (disabled_sources & OTTERY_ENTROPY_ALL_SOURCES);
 }
 
 /**

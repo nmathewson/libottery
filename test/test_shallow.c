@@ -439,15 +439,15 @@ test_bad_init(void *arg)
   ottery_config_force_implementation(&cfg, "CHACHA20");
   tt_int_op(0, ==, OTTERY_INIT(&cfg));
 
-  ottery_config_set_urandom_device_(&cfg,"/dev/please-dont-add-this-device");
-  ottery_config_disable_entropy_sources_(&cfg, OTTERY_ENTROPY_SRC_RDRAND);
+  ottery_config_set_urandom_device(&cfg,"/dev/please-dont-add-this-device");
+  ottery_config_disable_entropy_sources(&cfg, OTTERY_ENTROPY_SRC_RDRAND);
   tt_int_op(OTTERY_ERR_INIT_STRONG_RNG, ==, OTTERY_INIT(&cfg));
 
-  ottery_config_set_urandom_device_(&cfg,"/dev/null");
-  ottery_config_disable_entropy_sources_(&cfg, OTTERY_ENTROPY_SRC_RDRAND|OTTERY_ENTROPY_SRC_EGD);
+  ottery_config_set_urandom_device(&cfg,"/dev/null");
+  ottery_config_disable_entropy_sources(&cfg, OTTERY_ENTROPY_SRC_RDRAND|OTTERY_ENTROPY_SRC_EGD);
   tt_int_op(OTTERY_ERR_ACCESS_STRONG_RNG, ==, OTTERY_INIT(&cfg));
 
-  ottery_config_set_urandom_device_(&cfg, NULL);
+  ottery_config_set_urandom_device(&cfg, NULL);
   tt_int_op(0, ==, OTTERY_INIT(&cfg));
 
  end:

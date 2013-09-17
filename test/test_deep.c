@@ -156,8 +156,8 @@ setup_state(const struct testcase_t *testcase)
   if (ottery_config_init(&cfg))
     return NULL;
   ottery_config_set_manual_prf_(&cfg, &dummy_prf);
-  ottery_config_set_urandom_device_(&cfg, "/dev/zero");
-  ottery_config_disable_entropy_sources_(&cfg, OTTERY_ENTROPY_SRC_RDRAND);
+  ottery_config_set_urandom_device(&cfg, "/dev/zero");
+  ottery_config_disable_entropy_sources(&cfg, OTTERY_ENTROPY_SRC_RDRAND);
 
   if (testcase->flags & OT_ENABLE_STATE) {
     state_allocation = malloc(ottery_get_sizeof_state() + 16);

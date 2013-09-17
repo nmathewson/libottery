@@ -46,22 +46,8 @@
 #define OTTERY_ENTROPY_DOM_EGD            0x000400
 /** @} */
 
-#define OTTERY_ENTROPY_DOM_MASK           0x00ff00
-
-/**
- * @brief External entropy sources
- *
- * @{ */
-/** A unix-style /dev/urandom device. */
-#define OTTERY_ENTROPY_SRC_RANDOMDEV      0x0010000
-/** The Windows CryptGenRandom call. */
-#define OTTERY_ENTROPY_SRC_CRYPTGENRANDOM 0x0020000
-/** The Intel RDRAND instruction. */
-#define OTTERY_ENTROPY_SRC_RDRAND         0x0040000
-/** DOCDOC */
-#define OTTERY_ENTROPY_SRC_EGD            0x0080000
-/** @} */
-
+#define OTTERY_ENTROPY_FLAG_MASK          0x000000ff
+#define OTTERY_ENTROPY_DOM_MASK           0x0000ff00
 #define OTTERY_ENTROPY_ALL_SOURCES        0x0fff0000
 
 struct sockaddr;
@@ -73,7 +59,7 @@ struct ottery_entropy_config {
    * the default value. */
   const char *urandom_fname;
   /** DOCDOC */
-  struct sockaddr *egd_sockaddr;
+  const struct sockaddr *egd_sockaddr;
   int egd_socklen;
   /** DOCDOC */
   uint32_t disabled_sources;
@@ -243,19 +229,6 @@ struct ottery_config;
 void ottery_config_set_manual_prf_(struct ottery_config *cfg,
                                    const struct ottery_prf *prf);
 
-/**
- * For testing: override the use of /dev/urandom for initial
- * RNG seeding.  The fname pointe must remain value for the lifetime
- * of the ottery state.  Has no effect when /dev/urandom is not used.
- */
-void ottery_config_set_urandom_device_(struct ottery_config *cfg,
-                                       const char *fname);
-
-/**
- * For testing: DOCDOC.
- */
-void ottery_config_disable_entropy_sources_(struct ottery_config *cfg,
-                                            uint32_t disabled_sources);
 
 /** Called when a fatal error has occurred: Die horribly, or invoke
  * ottery_fatal_handler. */

@@ -139,6 +139,86 @@ int ottery_config_init(struct ottery_config *cfg);
 int ottery_config_force_implementation(struct ottery_config *cfg,
                                        const char *impl);
 
+/**
+ * Set a device file to use as a source of strong entropy.
+ *
+ * To use this function, you call it on an ottery_config structure after
+ * ottery_config_init(), and before passing that structure to
+ * ottery_st_init() or ottery_init().
+ *
+ * By default, libottery will try /dev/urandom on Unix-like systems.
+ *
+ * @param cfg The configuration structure to configure.
+ * @param fname The name of the device to use instead of /dev/urandom.  This
+ *   pointer is copied around, and must not be freed while any libottery state
+ *   configured using this structure is still in use.
+ *
+ */
+void ottery_config_set_urandom_device(struct ottery_config *cfg,
+                                      const char *fname);
+
+struct sockaddr;
+
+/**
+ * Configure a socket at which to find a local copy of some service
+ * implementing the EGD (entropy-gathering daemon) protocol.
+ *
+ * Unless this function is called, EGD is not used by default.
+
+ * To use this function, you call it on an ottery_config structure after
+ * ottery_config_init(), and before passing that structure to
+ * ottery_st_init() or ottery_init().
+ *
+ * TODO: This is not implemented for Windows yet.
+ *
+ * @param cfg The configuration structure to configure.
+ * @param addr The address of the daemon. Obviously, this should be
+ *   some port on localhost, or a unix socket.  This pointer is copied
+ *   around, and must not be freed while any libottery state configured
+ *   using this structure is still in use.
+ * @param len the length of the address.
+ *
+ */
+void ottery_config_set_egd_socket(struct ottery_config *cfg,
+                                  const struct sockaddr *addr,
+                                  int len);
+
+/**
+ * @brief External entropy sources.
+ *
+ * These can be passed as a bitmask to ottery_config_disable_entropy_sources.
+ *
+ * @{ */
+/** A unix-style /dev/urandom device. */
+#define OTTERY_ENTROPY_SRC_RANDOMDEV      0x0010000
+/** The Windows CryptGenRandom call. */
+#define OTTERY_ENTROPY_SRC_CRYPTGENRANDOM 0x0020000
+/** The Intel RDRAND instruction. */
+#define OTTERY_ENTROPY_SRC_RDRAND         0x0040000
+/** Some local server obeying the EGD protocol.  Has no effect unless
+ * ottery_config_set_egd_socket was called. */
+#define OTTERY_ENTROPY_SRC_EGD            0x0080000
+/** @} */
+
+/**
+ * Disable the use of one or more entropy sources.
+ *
+ * Note that if enough entropy sources are disabled, the state will
+ * not be able to get initialized, and libottery might not work.
+ *
+ * To use this function, you call it on an ottery_config structure after
+ * ottery_config_init(), and before passing that structure to
+ * ottery_st_init() or ottery_init().
+ *
+ * @param cfg A configuration in which to disable one or more entropy sources.
+ * @param disabled_sources a bitwise combination of one or more
+ *    OTTERY_ENTROPY_SRC_* values to disable.
+ *
+ */
+void ottery_config_disable_entropy_sources(struct ottery_config *cfg,
+                                           uint32_t disabled_sources);
+
+
 /** Size reserved for struct ottery_config */
 #define OTTERY_CONFIG_DUMMY_SIZE_ 1024
 

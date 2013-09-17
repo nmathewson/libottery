@@ -155,8 +155,8 @@ main(int argc, char **argv)
     return 0;
   }
 
-  ottery_config_set_urandom_device_(&config, argv[1]);
-  ottery_config_disable_entropy_sources_(&config,
+  ottery_config_set_urandom_device(&config, argv[1]);
+  ottery_config_disable_entropy_sources(&config,
                   OTTERY_ENTROPY_ALL_SOURCES & ~OTTERY_ENTROPY_SRC_RANDOMDEV);
 
   if (ottery_st_init(&state, &config)) {
