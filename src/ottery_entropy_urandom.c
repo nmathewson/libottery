@@ -39,6 +39,7 @@ ottery_read_n_bytes_from_file_(int fd, uint8_t *out, size_t n)
  * such device as configured in the configuration. */
 static int
 ottery_get_entropy_urandom(const struct ottery_entropy_config *cfg,
+                           struct ottery_entropy_state *state,
                             uint8_t *out, size_t outlen)
 {
   /* On most unixes these days, you can get strong random numbers from
@@ -61,21 +62,52 @@ ottery_get_entropy_urandom(const struct ottery_entropy_config *cfg,
   ssize_t n;
   int result = 0;
   const char *urandom_fname;
+  struct stat st;
+  int own_fd = 0;
+  int check_device = !cfg || !cfg->allow_nondev_urandom;
 #ifndef O_CLOEXEC
 #define O_CLOEXEC 0
 #endif
-  if (cfg && cfg->urandom_fname)
-    urandom_fname = cfg->urandom_fname;
-  else
-    urandom_fname = "/dev/urandom";
+  if (cfg && cfg->urandom_fd_is_set && cfg->urandom_fd >= 0) {
+    fd = cfg->urandom_fd;
+  } else {
+    if (cfg && cfg->urandom_fname)
+      urandom_fname = cfg->urandom_fname;
+    else
+      urandom_fname = "/dev/urandom";
 
-  fd = open(urandom_fname, O_RDONLY|O_CLOEXEC);
-  if (fd < 0)
-    return OTTERY_ERR_INIT_STRONG_RNG;
+    fd = open(urandom_fname, O_RDONLY|O_CLOEXEC);
+    own_fd = 1;
+    if (fd < 0)
+      return OTTERY_ERR_INIT_STRONG_RNG;
+  }
+  if (fstat(fd, &st) < 0) {
+    result = OTTERY_ERR_INIT_STRONG_RNG;
+    goto end;
+  }
+  if (check_device) {
+    if (0 == (st.st_mode & S_IFCHR)) {
+      result = OTTERY_ERR_INIT_STRONG_RNG;
+      goto end;
+    }
+
+    if (state) {
+      if (0 == state->urandom_fd_inode) {
+        state->urandom_fd_inode = (uint64_t) st.st_ino;
+      } else if ((uint64_t)st.st_ino != state->urandom_fd_inode) {
+        close(fd);
+        return OTTERY_ERR_ACCESS_STRONG_RNG;
+      }
+    }
+  }
+
   n = ottery_read_n_bytes_from_file_(fd, out, outlen);
   if (n < 0 || (size_t)n != outlen)
     result = OTTERY_ERR_ACCESS_STRONG_RNG;
-  close(fd);
+
+ end:
+  if (own_fd)
+    close(fd);
   return result;
 }
 

@@ -70,12 +70,12 @@ BEFORE VERSION 1:
     - Coverage on Windows
 
   . Other entropy sources besides /dev/urandom
-    - User-specified /dev/*random
+    o User-specified /dev/*random
       o Implement
       o Make it user-specified
-      - Allow an fd.
-      - Make sure it's a device!
-        - Make sure it has correct major/minor?
+      o Allow an fd.
+      o Make sure it's a device!
+      o Make sure that its inode does not change.
     - Syscall/ioctl/arc4random??
     o Notion of redundant sources so we try syscall only if read fails.
     o rdrand instruction.
@@ -117,6 +117,8 @@ SOMEDAY:
   - Port to ancient operating systems
 
   - Port to weird chips.
+
+  - Make sure that allegedly random device has correct major/minor
 
   - Handle fork even better. Ideas:
     - mutex/state in a shared mmap?

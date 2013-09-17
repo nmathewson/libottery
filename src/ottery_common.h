@@ -157,6 +157,29 @@ int ottery_config_force_implementation(struct ottery_config *cfg,
 void ottery_config_set_urandom_device(struct ottery_config *cfg,
                                       const char *fname);
 
+/**
+ * Set a device file to use as a source of strong entropy from the operating
+ * system.
+ *
+ * To use this function, you call it on an ottery_config structure after
+ * ottery_config_init(), and before passing that structure to
+ * ottery_st_init() or ottery_init().
+ *
+ * This function overrides the default behavior, and overrides any
+ * setting in ottery_config_set_urandom_device.
+ *
+ * You MUST NOT change the the file descriptor while any libottery PRNG
+ * configured with it is still running. For example, don't close it, or use
+ * dup2 to make it refer to a different file, or anything like that.
+ *
+ * It is probably a good idea to open the file with the CLOEXEC flag set.
+ *
+ * @param cfg The configuration structure to configure.
+ * @param fd A file descriptor to use as an OS rng source.
+ */
+void ottery_config_set_urandom_fd(struct ottery_config *cfg,
+                                  int fd);
+
 struct sockaddr;
 
 /**

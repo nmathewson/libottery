@@ -127,9 +127,12 @@ ottery_config_init(struct ottery_config *cfg)
 {
   cfg->impl = NULL;
   cfg->entropy_config.urandom_fname = NULL;
+  cfg->entropy_config.urandom_fd = -1;
+  cfg->entropy_config.urandom_fd_is_set = 0;
   cfg->entropy_config.disabled_sources = 0;
   cfg->entropy_config.egd_sockaddr = NULL;
   cfg->entropy_config.egd_socklen = 0;
+  cfg->entropy_config.allow_nondev_urandom = 0;
   return 0;
 }
 
@@ -196,6 +199,14 @@ ottery_config_set_urandom_device(struct ottery_config *cfg,
                                  const char *fname)
 {
   cfg->entropy_config.urandom_fname = fname;
+}
+
+void
+ottery_config_set_urandom_fd(struct ottery_config *cfg,
+                             int fd)
+{
+  cfg->entropy_config.urandom_fd = fd;
+  cfg->entropy_config.urandom_fd_is_set = (fd >= 0);
 }
 
 void
@@ -329,7 +340,7 @@ ottery_st_reseed(struct ottery_state *st)
   if (!buf)
     return OTTERY_ERR_INIT_STRONG_RNG;
 
-  if ((err = ottery_get_entropy_(&st->entropy_config, 0,
+  if ((err = ottery_get_entropy_(&st->entropy_config, &st->entropy_state, 0,
                                   buf, st->prf.state_bytes,
                                   &buflen,
                                   &flags)))
@@ -390,7 +401,7 @@ ottery_st_add_seed_impl(struct ottery_state *st, const uint8_t *seed, size_t n, 
     if (!tmp_seed)
       return OTTERY_ERR_INIT_STRONG_RNG;
     n = tmp_seed_len;
-    if ((err = ottery_get_entropy_(&st->entropy_config, 0,
+    if ((err = ottery_get_entropy_(&st->entropy_config, &st->entropy_state, 0,
                                     tmp_seed, st->prf.state_bytes,
                                     &n,
                                     &flags)))
