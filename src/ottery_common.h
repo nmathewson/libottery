@@ -235,7 +235,8 @@ void ottery_config_set_egd_socket(struct ottery_config *cfg,
  *
  * @param cfg A configuration in which to disable one or more entropy sources.
  * @param disabled_sources a bitwise combination of one or more
- *    OTTERY_ENTROPY_SRC_* values to disable.
+ *    OTTERY_ENTROPY_SRC_* values to disable. This will replace
+ *    any previous bitmask of disabled sources.
  *
  */
 void ottery_config_disable_entropy_sources(struct ottery_config *cfg,
@@ -257,7 +258,8 @@ void ottery_config_disable_entropy_sources(struct ottery_config *cfg,
  *
  * @param cfg A configuration in which to disable one or more entropy sources.
  * @param weak_sources a bitwise combination of one or more
- *    OTTERY_ENTROPY_SRC_* values to mark as weak.
+ *    OTTERY_ENTROPY_SRC_* values to mark as weak.  This will replace
+ *    any previous bitmask of weak sources.
  */
 void ottery_config_mark_entropy_sources_weak(struct ottery_config *cfg,
                                              uint32_t weak_source);
