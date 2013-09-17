@@ -73,9 +73,10 @@ BEFORE VERSION 1:
     - User-specified /dev/*random
       o Implement
       o Make it user-specified
-      - Allow an fd.
-      - Make sure it's a device!
-        - Make sure it has correct major/minor?
+      o Allow an fd.
+      o Make sure it's a device!
+      - Make sure it has correct major/minor?
+      - Make sure major/minor doesn't change on us.
     - Syscall/ioctl/arc4random??
     o Notion of redundant sources so we try syscall only if read fails.
     o rdrand instruction.

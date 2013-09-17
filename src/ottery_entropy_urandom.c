@@ -66,14 +66,18 @@ ottery_get_entropy_urandom(const struct ottery_entropy_config *cfg,
 #ifndef O_CLOEXEC
 #define O_CLOEXEC 0
 #endif
-  if (cfg && cfg->urandom_fname)
-    urandom_fname = cfg->urandom_fname;
-  else
-    urandom_fname = "/dev/urandom";
+  if (cfg && cfg->urandom_fd_is_set && cfg->urandom_fd >= 0) {
+    fd = cfg->urandom_fd;
+  } else {
+    if (cfg && cfg->urandom_fname)
+      urandom_fname = cfg->urandom_fname;
+    else
+      urandom_fname = "/dev/urandom";
 
-  fd = open(urandom_fname, O_RDONLY|O_CLOEXEC);
-  if (fd < 0)
-    return OTTERY_ERR_INIT_STRONG_RNG;
+    fd = open(urandom_fname, O_RDONLY|O_CLOEXEC);
+    if (fd < 0)
+      return OTTERY_ERR_INIT_STRONG_RNG;
+  }
   if (fstat(fd, &st) < 0) {
     close(fd);
     return OTTERY_ERR_INIT_STRONG_RNG;

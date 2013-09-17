@@ -58,6 +58,10 @@ struct ottery_entropy_config {
    * is not a unix-like operating system. If this is NULL, we use
    * the default value. */
   const char *urandom_fname;
+  /** An fd to use to access /dev/urandom.  -1 if not set. Overrides
+   * urandom_fname. */
+  int urandom_fd;
+  unsigned urandom_fd_is_set; 
   /** DOCDOC */
   const struct sockaddr *egd_sockaddr;
   int egd_socklen;
