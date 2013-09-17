@@ -109,6 +109,7 @@ test_osrandom(void *arg)
   size_t n;
 
   struct ottery_entropy_config cfg;
+  struct ottery_entropy_state state;
   int i;
   size_t j;
   uint32_t flags=0;
@@ -223,10 +224,30 @@ test_osrandom(void *arg)
   }
 
   /* Now try to succeed. */
+  memset(&state, 0, sizeof(state));
   cfg.urandom_fd = open("/dev/urandom", O_RDONLY);
   tt_int_op(cfg.urandom_fd, >=, 0);
   n = sizeof(buf);
-  tt_int_op(0, ==, ottery_get_entropy_(&cfg, NULL, 0, buf, 12, &n, &flags));
+  tt_int_op(0, ==, ottery_get_entropy_(&cfg, &state, 0, buf, 12, &n, &flags));
+  tt_int_op(state.urandom_fd_inode, !=, 0);
+
+  /* It should work a second time too. */
+  n = sizeof(buf);
+puts("+++");
+  tt_int_op(0, ==, ottery_get_entropy_(&cfg, &state, 0, buf, 12, &n, &flags));
+puts("+++!");
+
+  /* Now let's get sneaky. */
+  {
+    int devnullfd = open("/dev/null", O_RDONLY);
+    tt_int_op(devnullfd, >=, 0);
+    tt_int_op(cfg.urandom_fd, ==, dup2(devnullfd, cfg.urandom_fd));
+    close(devnullfd);
+
+    n = sizeof(buf);
+    tt_int_op(OTTERY_ERR_ACCESS_STRONG_RNG, ==,
+              ottery_get_entropy_(&cfg, &state, 0, buf, 12, &n, &flags));
+  }
 
   close(cfg.urandom_fd);
 
