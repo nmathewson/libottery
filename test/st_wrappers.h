@@ -32,8 +32,9 @@
    USING_STATE() ? ottery_st_wipe(STATE()) : ottery_wipe())
 
 #define OTTERY_STIR()                                       \
-  (USING_NOLOCK() ? ottery_st_stir_nolock(STATE_NOLOCK()) : \
-   USING_STATE() ? ottery_st_stir(STATE()) : ottery_stir())
+  (USING_NOLOCK() ? ottery_st_prevent_backtracking_nolock(STATE_NOLOCK()) : \
+   USING_STATE() ? ottery_st_prevent_backtracking(STATE()) :            \
+   ottery_prevent_backtracking())
 
 #define OTTERY_ADD_SEED(seed,n)                                            \
   (USING_NOLOCK() ? ottery_st_add_seed_nolock(STATE_NOLOCK(),(seed),(n)) : \

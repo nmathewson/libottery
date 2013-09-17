@@ -26,7 +26,7 @@ BEFORE TELLING PEOPLE TO TRY IT.
 
   - Triple-check that ssse3 code is getting built and run.
 
-  - Rename stir
+  o Rename stir
 
   - Refactor locking.
     - Don't spin inappropriately.

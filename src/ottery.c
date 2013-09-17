@@ -520,7 +520,7 @@ ottery_st_wipe_nolock(struct ottery_state_nolock *st)
 }
 
 void
-ottery_st_stir_nolock(struct ottery_state_nolock *st)
+ottery_st_prevent_backtracking_nolock(struct ottery_state_nolock *st)
 {
 #ifdef OTTERY_NO_CLEAR_AFTER_YIELD
   memset(st->buffer, 0, st->pos);
@@ -530,10 +530,10 @@ ottery_st_stir_nolock(struct ottery_state_nolock *st)
 }
 
 void
-ottery_st_stir(struct ottery_state *st)
+ottery_st_prevent_backtracking(struct ottery_state *st)
 {
   LOCK(st);
-  ottery_st_stir_nolock(st);
+  ottery_st_prevent_backtracking_nolock(st);
   UNLOCK(st);
 }
 

@@ -115,18 +115,20 @@ int ottery_add_seed(const uint8_t *seed, size_t n);
 void ottery_wipe(void);
 
 /**
- * Explicitly "stir" the libottery global state.
+ * Explicitly tell libottery to prevent backtracking attacks. (Usually
+ * needless.)
  *
- * Once the state has been stirred, an attacker who compromises the state
+ * Once this function has been called, an attacker who compromises the state
  * later on will not be able to recover bytes that have previously been
  * returned by any of the ottery_rand_* functions.
  *
- * Libottery provides backtracking resistance by default, so unless you have
- * manually recompiled libottery with the OTTERY_NO_CLEAR_AFTER_YIELD option,
- * this function isn't necessary and has no effect.  Even *with* the
- * OTTERY_NO_CLEAR_AFTER_YIELD, this function isn't necessary in ordinary
- * operation: the libottery state is implicitly "stirred" every 1k or so.
+ * You should not usually need to call this function: Libottery provides
+ * backtracking resistance by default, so unless you have manually recompiled
+ * with the OTTERY_NO_CLEAR_AFTER_YIELD option, this function isn't
+ * necessary and has no effect.  Even *with* OTTERY_NO_CLEAR_AFTER_YIELD,
+ * this function isn't necessary in ordinary operation: the libottery state is
+ * implicitly "stirred" every 1k or so.
  */
-void ottery_stir(void);
+void ottery_prevent_backtracking(void);
 
 #endif

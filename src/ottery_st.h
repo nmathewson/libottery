@@ -102,21 +102,22 @@ int ottery_st_add_seed(struct ottery_state *st, const uint8_t *seed, size_t n);
 void ottery_st_wipe(struct ottery_state *st);
 
 /**
- * Explicitly "stir" an ottery_state structure.
+ * Explicitly prevent backtracking attacks. (Usually needless).
  *
- * Once the state has been stirred, an attacker who compromises the state
+ * Once this function has been called, an attacker who compromises the state
  * later on will not be able to recover bytes that have previously been
  * returned by any of the ottery_st_rand_* functions.
  *
- * Libottery provides backtracking resistance by default, so unless you have
- * manually recompiled libottery with the OTTERY_NO_CLEAR_AFTER_YIELD option,
- * this function isn't necessary and has no effect.  Even *with* the
- * OTTERY_NO_CLEAR_AFTER_YIELD, this function isn't necessary in ordinary
- * operation: the libottery state is implicitly "stirred" every 1k or so.
+ * You should not usually need to call this function: Libottery provides
+ * backtracking resistance by default, so unless you have manually recompiled
+ * with the OTTERY_NO_CLEAR_AFTER_YIELD option, this function isn't
+ * necessary and has no effect.  Even *with* OTTERY_NO_CLEAR_AFTER_YIELD,
+ * this function isn't necessary in ordinary operation: the libottery state is
+ * implicitly "stirred" every 1k or so.
  *
  * @param st The state to stir.
  */
-void ottery_st_stir(struct ottery_state *st);
+void ottery_st_prevent_backtracking(struct ottery_state *st);
 
 /**
  * Use an ottery_state structure to fill a buffer with random bytes.

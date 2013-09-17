@@ -66,10 +66,10 @@ ottery_wipe(void)
 }
 
 void
-ottery_stir(void)
+ottery_prevent_backtracking(void)
 {
   CHECK_INIT();
-  ottery_st_stir(&ottery_global_state_);
+  ottery_st_prevent_backtracking(&ottery_global_state_);
 }
 
 void

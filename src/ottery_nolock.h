@@ -108,21 +108,22 @@ int ottery_st_add_seed_nolock(struct ottery_state_nolock *st, const uint8_t *see
 void ottery_st_wipe_nolock(struct ottery_state_nolock *st);
 
 /**
- * Explicitly "stir" an ottery_state_nolock structure.
+ * Explicitly prevent backtracking attacks. (Usually needless).
  *
- * Once the state has been stirred, an attacker who compromises the state
+ * Once this function has been called, an attacker who compromises the state
  * later on will not be able to recover bytes that have previously been
- * returned by any of the ottery_st_rand_* functions.
+ * returned by any of the ottery_st_rand_*_nolock functions.
  *
- * Libottery provides backtracking resistance by default, so unless you have
- * manually recompiled libottery with the OTTERY_NO_CLEAR_AFTER_YIELD option,
- * this function isn't necessary and has no effect.  Even *with* the
- * OTTERY_NO_CLEAR_AFTER_YIELD, this function isn't necessary in ordinary
- * operation: the libottery state is implicitly "stirred" every 1k or so.
+ * You should not usually need to call this function: Libottery provides
+ * backtracking resistance by default, so unless you have manually recompiled
+ * with the OTTERY_NO_CLEAR_AFTER_YIELD option, this function isn't
+ * necessary and has no effect.  Even *with* OTTERY_NO_CLEAR_AFTER_YIELD,
+ * this function isn't necessary in ordinary operation: the libottery state is
+ * implicitly "stirred" every 1k or so.
  *
  * @param st The state to stir.
  */
-void ottery_st_stir_nolock(struct ottery_state_nolock *st);
+void ottery_st_prevent_backtracking_nolock(struct ottery_state_nolock *st);
 
 /**
  * Use an ottery_state_nolock structure to fill a buffer with random bytes.
