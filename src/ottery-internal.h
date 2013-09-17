@@ -61,9 +61,11 @@ struct ottery_entropy_config {
   /** An fd to use to access /dev/urandom.  -1 if not set. Overrides
    * urandom_fname. */
   int urandom_fd;
+  /** True if urandom_fd has been set. */
   unsigned urandom_fd_is_set;
-  /** DOCDOC */
+  /** Socket for egd */
   const struct sockaddr *egd_sockaddr;
+  /** Socklen for egd_sockaddr. */
   int egd_socklen;
   /** Bitmask of sources to disable. */
   uint32_t disabled_sources;

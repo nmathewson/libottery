@@ -16,7 +16,11 @@
 /* TODO: Support win32. */
 #include <sys/socket.h>
 
-/** DOCDOC */
+/** Implement an entropy-source that uses the EGD protocol.  The
+ * Entropy-Gathering Daemon is program (actually, one of several programs)
+ * that watches system events, periodically runs commands whose outputs have
+ * high variance, and so on.  It communicates over a simple socket-based
+ * protocol, of which we use only a tiny piece. */
 static int
 ottery_get_entropy_egd(const struct ottery_entropy_config *cfg,
                        struct ottery_entropy_state *state,
