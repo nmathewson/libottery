@@ -28,7 +28,7 @@ int
 main(int argc, char **argv)
 {
   struct sockaddr_un sun;
-  struct ottery_osrng_config cfg;
+  struct ottery_entropy_config cfg;
   unsigned char buf[257];
   size_t buflen = 257;
   long n;

@@ -67,7 +67,7 @@
 struct sockaddr;
 
 /** Configuration for the strong RNG the we use for entropy. */
-struct ottery_osrng_config {
+struct ottery_entropy_config {
   /** The filename to use as /dev/urandom. Ignored if this
    * is not a unix-like operating system. If this is NULL, we use
    * the default value. */
@@ -89,7 +89,7 @@ size_t ottery_get_entropy_bufsize_(size_t n);
  * for everything, and forget about having a userspace PRNG.  Unfortunately,
  * it typically isn't.
  *
- * @param config A correctly set-up ottery_osrng_config.
+ * @param config A correctly set-up ottery_entropy_config.
  * @param require_flags Only run entropy sources with *all* of these
  *      OTTERY_ENTROPY_* flags set. Set this to 0 to use all the sources
  *      that work.
@@ -102,7 +102,7 @@ size_t ottery_get_entropy_bufsize_(size_t n);
  * @return Zero on success, or an error code on failure. On failure, it is not
  *   safe to treat the contents of the buffer as random at all.
  */
-int ottery_get_entropy_(const struct ottery_osrng_config *config,
+int ottery_get_entropy_(const struct ottery_entropy_config *config,
                          uint32_t require_flags,
                          uint8_t *bytes, size_t n, size_t *bufsize,
                          uint32_t *flags_out);
@@ -225,7 +225,7 @@ struct __attribute__((aligned(16))) ottery_state {
   /**
    * Configuration and state for the entropy source.
    */
-  struct ottery_osrng_config osrng_config;
+  struct ottery_entropy_config osrng_config;
   /**
    * @brief Locks for this structure.
    *

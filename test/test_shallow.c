@@ -104,7 +104,7 @@ test_osrandom(void *arg)
   uint8_t buf[66];
   size_t n;
 
-  struct ottery_osrng_config cfg;
+  struct ottery_entropy_config cfg;
   int i;
   size_t j;
   uint32_t flags=0;

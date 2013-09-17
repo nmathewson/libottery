@@ -20,7 +20,7 @@
 /** Generate random bytes using the Windows CryptGenRandom operating-system
  * RNG. */
 static int
-ottery_get_entropy_cryptgenrandom(const struct ottery_osrng_config *cfg,
+ottery_get_entropy_cryptgenrandom(const struct ottery_entropy_config *cfg,
                           uint8_t *out, size_t outlen)
 {
   /* On Windows, CryptGenRandom is supposed to be a well-seeded
