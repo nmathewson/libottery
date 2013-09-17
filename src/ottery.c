@@ -126,8 +126,10 @@ int
 ottery_config_init(struct ottery_config *cfg)
 {
   cfg->impl = NULL;
-  cfg->urandom_fname = NULL;
-  cfg->disabled_sources = 0;
+  cfg->entropy_config.urandom_fname = NULL;
+  cfg->entropy_config.disabled_sources = 0;
+  cfg->entropy_config.egd_sockaddr = NULL;
+  cfg->entropy_config.egd_socklen = 0;
   return 0;
 }
 
@@ -193,14 +195,14 @@ void
 ottery_config_set_urandom_device_(struct ottery_config *cfg,
                                   const char *fname)
 {
-  cfg->urandom_fname = fname;
+  cfg->entropy_config.urandom_fname = fname;
 }
 
 void
 ottery_config_disable_entropy_sources_(struct ottery_config *cfg,
                                        uint32_t disabled_sources)
 {
-  cfg->disabled_sources = disabled_sources;
+  cfg->entropy_config.disabled_sources = disabled_sources;
 }
 
 /**
@@ -286,9 +288,8 @@ ottery_st_initialize(struct ottery_state *st,
       (sizeof(struct ottery_config) > OTTERY_CONFIG_DUMMY_SIZE_))
     return OTTERY_ERR_INTERNAL;
 
-  /* XXXXX Have a better way to copy these over. */
-  st->osrng_config.urandom_fname = config->urandom_fname;
-  st->osrng_config.disabled_sources = config->disabled_sources;
+  memcpy(&st->osrng_config, &config->entropy_config,
+         sizeof(struct ottery_entropy_config));
 
   /* Copy the PRF into place. */
   memcpy(&st->prf, prf, sizeof(*prf));

@@ -171,11 +171,8 @@ struct ottery_config {
   /** The PRF that we should use.  If NULL, we use the default. */
   const struct ottery_prf *impl;
 
-  /** The filename for urandom to use. If NULL, we use the default. */
-  const char *urandom_fname;
-
-  /** Don't use any sources with *any* of these flags set. */
-  uint32_t disabled_sources;
+  /** Configuration for how we will set up our entropy sources. */
+  struct ottery_entropy_config entropy_config;
 };
 
 #define ottery_state_nolock ottery_state
