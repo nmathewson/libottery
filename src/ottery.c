@@ -76,6 +76,18 @@ ottery_get_sizeof_state_nolock(void)
   return sizeof(struct ottery_state_nolock);
 }
 
+const char *
+ottery_get_version_string(void)
+{
+  return OTTERY_VERSION_STRING;
+}
+
+uint32_t
+ottery_get_version(void)
+{
+  return OTTERY_VERSION;
+}
+
 uint32_t
 ottery_get_build_flags(void)
 {

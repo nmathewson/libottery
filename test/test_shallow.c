@@ -771,12 +771,43 @@ test_build_flags(void *arg)
   ;
 }
 
+static void
+test_versions(void *arg)
+{
+  int n;
+  unsigned a,b,c;
+  char more1, more2;
+  (void) arg;
+
+  tt_int_op(OTTERY_VERSION, ==, ottery_get_version());
+  tt_str_op(OTTERY_VERSION_STRING, ==, ottery_get_version_string());
+
+  n = sscanf(OTTERY_VERSION_STRING, "%u.%u.%u%c%c",
+             &a,&b,&c,&more1,&more2);
+  tt_int_op(n, >=, 3);
+  if (n >= 4)
+    tt_int_op(more1, ==, '-');
+
+  tt_int_op((OTTERY_VERSION >>24) & 0xff, ==, a);
+  tt_int_op((OTTERY_VERSION >>16) & 0xff, ==, b);
+  tt_int_op((OTTERY_VERSION >>8) & 0xff,  ==, c);
+
+  if (n >= 4)
+    tt_int_op(OTTERY_VERSION & 0xff, !=, 0);
+  else
+    tt_int_op(OTTERY_VERSION & 0xff, ==, 0);
+
+ end:
+  ;
+}
+
 struct testcase_t misc_tests[] = {
   { "osrandom", test_osrandom, TT_FORK, NULL, NULL },
   { "get_sizeof", test_get_sizeof, 0, NULL, NULL },
   { "select_prf", test_select_prf, TT_FORK, 0, NULL },
   { "fatal", test_fatal, TT_FORK, NULL, NULL },
   { "build_flags", test_build_flags, 0, NULL, NULL },
+  { "versions", test_versions, 0, NULL, NULL },
   END_OF_TESTCASES
 };
 

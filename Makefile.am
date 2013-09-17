@@ -87,7 +87,8 @@ include_HEADERS	=				\
 	src/ottery.h				\
 	src/ottery_common.h			\
 	src/ottery_nolock.h			\
-	src/ottery_st.h
+	src/ottery_st.h				\
+	src/ottery_version.h
 
 pkgconfigdir=$(libdir)/pkgconfig
 pkgconfig_DATA  = libottery.pc

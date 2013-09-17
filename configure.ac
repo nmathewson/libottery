@@ -16,12 +16,14 @@ AC_PREREQ([2.63])
 
 # Preliminaries.
 AC_INIT([ottery], [0.0.0-dev])
+OTTERY_VERSION="0x00000001"
+OTTERY_VERSION_STRING="$PACKAGE_VERSION"
 AC_CONFIG_SRCDIR([src/ottery.c])
 AC_CONFIG_MACRO_DIR([m4])
 
 # config.status creates these files.
 AC_CONFIG_FILES([Makefile libottery.pc])
-AC_CONFIG_HEADERS([src/ottery-config.h])
+AC_CONFIG_HEADERS([src/ottery-config.h src/ottery_version.h])
 
 # Automake initialization.
 AM_INIT_AUTOMAKE
@@ -133,6 +135,12 @@ EOF
   fi
 fi
 AM_CONDITIONAL(USEGHC, [test "x$GHC" != "x" && test "$GHC_MTL" = "yes"])
+
+# Set up version numbers
+AC_DEFINE_UNQUOTED([OTTERY_VERSION], [$OTTERY_VERSION],
+    [Version of libottery])
+AC_DEFINE_UNQUOTED([OTTERY_VERSION_STRING], ["$OTTERY_VERSION_STRING"],
+    [Human-readable version of libottery])
 
 # Done.
 AC_OUTPUT

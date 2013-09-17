@@ -16,6 +16,10 @@
 #include <stdint.h>
 #include <sys/types.h>
 
+#ifndef OTTERY_INTERNAL
+#include <ottery_version.h>
+#endif
+
 /** @file */
 
 struct ottery_config;
@@ -334,5 +338,16 @@ size_t ottery_get_sizeof_config(void);
  * library less safe to use!
  */
 uint32_t ottery_get_build_flags(void);
+
+/**
+ * Return a run-time version number for Libottery.  The first three bytes are
+ * the major number, minor number, and patch-level respectively.  The final
+ * byte is 0 for a released version, and nonzero otherwise.
+ */
+uint32_t ottery_get_version(void);
+/**
+ * Return a human-readable string representing the run-time Libottery version.
+ */
+const char *ottery_get_version_string(void);
 
 #endif

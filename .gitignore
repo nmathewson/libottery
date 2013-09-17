@@ -18,6 +18,7 @@ test*.trs
 .deps
 .dirstamp
 stamp-h1
+stamp-h2
 /autom4te.cache
 /compile
 /config.log
@@ -47,6 +48,7 @@ stamp-h1
 
 /src/ottery-config.h
 /src/ottery-config.h.in
+/src/ottery_version.h
 
 /test/fake_egd
 /test/test_egd
