@@ -15,6 +15,8 @@ BEFORE EVERY RELEASE
 
   - Dieharder
 
+  - Resolve all XXXX/TODO items in the code.
+
   - Build and test on:
     - Windows, Windows64 (mingw)
     - ARM
@@ -23,6 +25,8 @@ BEFORE EVERY RELEASE
     - Fedora
 
 BEFORE TELLING PEOPLE TO TRY IT.
+
+  - Resolve all XXXX/TODO items in the code.
 
   - Triple-check that ssse3 code is getting built and run.
 
@@ -39,16 +43,15 @@ BEFORE TELLING PEOPLE TO TRY IT.
   - Make sure that the reinitialization logic is threadsafe.
 
   - Rudimentary prediction resistance:
-    - opportunistic, if you have a fast entropy source.
-    - timed?
-    - every N bytes?
+    - Opportunistic, if you have a fast entropy source.
+      - Configurable to use other sources.
 
   o Function to return a bitmask of any bogus options that the library was
     built with.
 
   - pthread_atfork for fork handling
 
-  - mlock support of some kind.
+  - mlock support of some kind
 
 
 BEFORE VERSION 1:
@@ -76,6 +79,11 @@ BEFORE VERSION 1:
   - Test on altivec, fix whatever I broke there.
 
 SOMEDAY:
+
+  - Better prediction resistance:
+    - timed?
+    - every N bytes
+
   - avoid redundant initialization checks.
 
   . Option to avoid leaving stuff on the stack.
