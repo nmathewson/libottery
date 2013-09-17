@@ -751,11 +751,32 @@ test_fatal(void *arg)
   ;
 }
 
+static void
+test_build_flags(void *arg)
+{
+  uint32_t f;
+  (void) arg;
+
+  f = ottery_get_build_flags();
+
+  TT_BLATHER(("Build flags: %x", (unsigned)f));
+
+#ifdef OTTERY_NO_WIPE_STACK
+  tt_int_op(f & OTTERY_BLDFLG_NO_WIPE_STACK, !=, 0);
+#else
+  tt_int_op(f & OTTERY_BLDFLG_NO_WIPE_STACK, ==, 0);
+#endif
+
+ end:
+  ;
+}
+
 struct testcase_t misc_tests[] = {
   { "osrandom", test_osrandom, TT_FORK, NULL, NULL },
   { "get_sizeof", test_get_sizeof, 0, NULL, NULL },
   { "select_prf", test_select_prf, TT_FORK, 0, NULL },
   { "fatal", test_fatal, TT_FORK, NULL, NULL },
+  { "build_flags", test_build_flags, 0, NULL, NULL },
   END_OF_TESTCASES
 };
 

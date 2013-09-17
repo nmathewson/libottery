@@ -76,6 +76,31 @@ ottery_get_sizeof_state_nolock(void)
   return sizeof(struct ottery_state_nolock);
 }
 
+uint32_t
+ottery_get_build_flags(void)
+{
+  uint32_t result = 0;
+#ifdef OTTERY_NO_PID_CHECK
+  result |= OTTERY_BLDFLG_NO_PID_CHECK;
+#endif
+#ifdef OTTERY_NO_INIT_CHECK
+  result |= OTTERY_BLDFLG_NO_INIT_CHECK;
+#endif
+#ifdef OTTERY_NO_LOCKS
+  result |= OTTERY_BLDFLG_NO_LOCKING;
+#endif
+#ifdef OTTERY_NO_CLEAR_AFTER_YIELD
+  result |= OTTERY_BLDFLG_NO_CLEAR_AFTER_YIELD;
+#endif
+#ifdef OTTERY_NO_WIPE_STACK
+  result |= OTTERY_BLDFLG_NO_WIPE_STACK;
+#endif
+#ifdef OTTERY_NO_SIMD
+  result |= OTTERY_BLDFLG_NO_SIMD;
+#endif
+  return result;
+}
+
 #ifndef OTTERY_NO_CLEAR_AFTER_YIELD
 /** Used to zero out the contents of our buffer after we've just given a few
  * to the user. */

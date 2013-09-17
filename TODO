@@ -43,7 +43,7 @@ BEFORE TELLING PEOPLE TO TRY IT.
     - timed?
     - every N bytes?
 
-  - Function to return a bitmask of any bogus options that the library was
+  o Function to return a bitmask of any bogus options that the library was
     built with.
 
   - pthread_atfork for fork handling

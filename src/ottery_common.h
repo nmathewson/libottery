@@ -296,4 +296,43 @@ struct ottery_config {
  */
 size_t ottery_get_sizeof_config(void);
 
+/**
+ * @name libottery build flag
+ *
+ * @see ottery_Get_build_flags()
+ *
+ * @{
+ */
+/** Set if libottery was built with PID checking disabled. If this option is
+ * present, fork()ing can be dangerous. */
+#define OTTERY_BLDFLG_NO_PID_CHECK         0x00000001
+/** Set if libottery was built with initialization checking disabled. If this
+ * option is present, libottery might use an uninitialized, unseeded PRNGs.
+ */
+#define OTTERY_BLDFLG_NO_INIT_CHECK        0x00000002
+/** Set if locking was disabled. If this option is present, no libottery
+ * state, including the global state, is thread-safe. */
+#define OTTERY_BLDFLG_NO_LOCKING           0x00000004
+/** Set if the clear-after-yield feature was disabled. If this option is
+ * present, backtracking-resistance is somewhat compromised. */
+#define OTTERY_BLDFLG_NO_CLEAR_AFTER_YIELD 0x00000008
+/** Set if the stack-wiping feature was disabled. If this option is
+ * present, programs which accidentally read uninitialized data from the
+ * stack may leak some cryptographic state. */
+#define OTTERY_BLDFLG_NO_WIPE_STACK        0x00000010
+/** Set if SIMD support was disabled. This will make libottery slower. */
+#define OTTERY_BLDFLG_NO_SIMD              0x00010000
+/** @} */
+
+/** A bitmask of any flags that might affect safe and secure program
+ * operation. */
+#define OTTERY_BLDFLG_MASK_SAFETY          0x0000ffff
+
+/**
+ * Return a bitmask of flags describing the compile-time options that this
+ * libottery instance was built with. Some of these flags might make the
+ * library less safe to use!
+ */
+uint32_t ottery_get_build_flags(void);
+
 #endif
