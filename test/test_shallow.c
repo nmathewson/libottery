@@ -28,6 +28,7 @@
 #include "tinytest_macros.h"
 
 #include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -97,6 +98,9 @@ test_get_sizeof(void *arg)
   ;
 }
 
+#define ALL_ENTROPY_BUT(x) \
+  (OTTERY_ENTROPY_ALL_SOURCES & ~ OTTERY_ENTROPY_SRC_##x)
+
 static void
 test_osrandom(void *arg)
 {
@@ -108,6 +112,8 @@ test_osrandom(void *arg)
   int i;
   size_t j;
   uint32_t flags=0;
+  char tempfile[] = "ottery_test_temp.XXXXXXXX";
+  const char *tempfname = NULL;
 
   memset(buf, 0, sizeof(buf));
   memset(&cfg, 0, sizeof(cfg));
@@ -163,7 +169,7 @@ test_osrandom(void *arg)
     tt_int_op(0, !=, buf[j]);
   TT_BLATHER(("All together I saw %d bytes", (int)n));
 
-  cfg.disabled_sources = OTTERY_ENTROPY_ALL_SOURCES & ~OTTERY_ENTROPY_SRC_RANDOMDEV;
+  cfg.disabled_sources = ALL_ENTROPY_BUT(RANDOMDEV);
   cfg.urandom_fname = "/dev/please-dont-create-this-file";
   flags = 0;
   n = 66;
@@ -185,6 +191,47 @@ test_osrandom(void *arg)
   tt_assert(flags & OTTERY_ENTROPY_DOM_OS);
   tt_assert(flags & OTTERY_ENTROPY_FL_STRONG);
 
+#ifndef _WIN32
+  /* Make sure we can access the PRNG by device number. */
+
+  /* Fail on fstat. */
+  memset(&cfg, 0, sizeof(cfg));
+  cfg.urandom_fd = 9999;   /* This should fail when we try to stat the device*/
+  cfg.urandom_fd_is_set = 1;
+  cfg.disabled_sources = ALL_ENTROPY_BUT(RANDOMDEV);
+  n = sizeof(buf);
+  tt_int_op(OTTERY_ERR_INIT_STRONG_RNG, ==,
+            ottery_get_entropy_(&cfg, 0, buf, 12, &n, &flags));
+
+  /* This should fail because it is not a device at all. */
+  {
+
+    cfg.urandom_fd = mkstemp(tempfile);
+    cfg.urandom_fd_is_set = 1;
+    tt_int_op(cfg.urandom_fd, >=, 0);
+    write(cfg.urandom_fd, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", 45);
+    close(cfg.urandom_fd);
+
+    cfg.urandom_fd = open(tempfile, O_RDONLY);
+    tt_int_op(cfg.urandom_fd, >=, 0);
+
+    tempfname = tempfile;
+    n = sizeof(buf);
+    tt_int_op(OTTERY_ERR_INIT_STRONG_RNG, ==,
+              ottery_get_entropy_(&cfg, 0, buf, 12, &n, &flags));
+    close(cfg.urandom_fd);
+  }
+
+  /* Now try to succeed. */
+  cfg.urandom_fd = open("/dev/urandom", O_RDONLY);
+  tt_int_op(cfg.urandom_fd, >=, 0);
+  n = sizeof(buf);
+  tt_int_op(0, ==, ottery_get_entropy_(&cfg, 0, buf, 12, &n, &flags));
+
+  close(cfg.urandom_fd);
+
+#endif
+
   /* Make sure at least one OS source works in another way. */
   cfg.disabled_sources = 0;
   ottery_disable_cpu_capabilities_(OTTERY_CPUCAP_RAND);
@@ -194,7 +241,8 @@ test_osrandom(void *arg)
   tt_assert(flags & OTTERY_ENTROPY_FL_STRONG);
 
  end:
-  ;
+  if (tempfname)
+    unlink(tempfname);
 }
 
 static void
@@ -649,7 +697,7 @@ test_fatal(void *arg)
   ottery_st_rand_unsigned(&st);
   st.pid = getpid() + 100; /* force a postfork reseed. */
   st.entropy_config.urandom_fname = "/dev/null"; /* make reseed impossible */
-  st.entropy_config.disabled_sources = OTTERY_ENTROPY_ALL_SOURCES & ~OTTERY_ENTROPY_SRC_RANDOMDEV;
+  st.entropy_config.disabled_sources = ALL_ENTROPY_BUT(RANDOMDEV);
   tt_int_op(got_fatal_err, ==, 0);
   ottery_st_rand_unsigned(&st);
   tt_int_op(got_fatal_err, ==,
@@ -660,7 +708,7 @@ test_fatal(void *arg)
   ottery_st_rand_unsigned_nolock(&st_nl);
   st_nl.pid = getpid() + 100; /* force a postfork reseed. */
   st_nl.entropy_config.urandom_fname = "/dev/null"; /* make reseed impossible */
-  st_nl.entropy_config.disabled_sources = OTTERY_ENTROPY_ALL_SOURCES & ~OTTERY_ENTROPY_SRC_RANDOMDEV;
+  st_nl.entropy_config.disabled_sources = ALL_ENTROPY_BUT(RANDOMDEV);
   tt_int_op(got_fatal_err, ==, 0);
   ottery_st_rand_unsigned_nolock(&st_nl);
   tt_int_op(got_fatal_err, ==,
