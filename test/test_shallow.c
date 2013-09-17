@@ -500,7 +500,7 @@ test_reseed_stir(void *arg)
 
   /* Now check failing ADD_SEED. */
   if (state) {
-    state->osrng_config.disabled_sources = ~0;
+    state->entropy_config.disabled_sources = ~0;
     tt_int_op(OTTERY_ERR_INIT_STRONG_RNG, ==, OTTERY_ADD_SEED(NULL, 0));
   }
 
@@ -648,8 +648,8 @@ test_fatal(void *arg)
   tt_int_op(0, ==, ottery_st_init(&st, NULL));
   ottery_st_rand_unsigned(&st);
   st.pid = getpid() + 100; /* force a postfork reseed. */
-  st.osrng_config.urandom_fname = "/dev/null"; /* make reseed impossible */
-  st.osrng_config.disabled_sources = OTTERY_ENTROPY_ALL_SOURCES & ~OTTERY_ENTROPY_SRC_RANDOMDEV;
+  st.entropy_config.urandom_fname = "/dev/null"; /* make reseed impossible */
+  st.entropy_config.disabled_sources = OTTERY_ENTROPY_ALL_SOURCES & ~OTTERY_ENTROPY_SRC_RANDOMDEV;
   tt_int_op(got_fatal_err, ==, 0);
   ottery_st_rand_unsigned(&st);
   tt_int_op(got_fatal_err, ==,
@@ -659,8 +659,8 @@ test_fatal(void *arg)
   tt_int_op(0, ==, ottery_st_init_nolock(&st_nl, NULL));
   ottery_st_rand_unsigned_nolock(&st_nl);
   st_nl.pid = getpid() + 100; /* force a postfork reseed. */
-  st_nl.osrng_config.urandom_fname = "/dev/null"; /* make reseed impossible */
-  st_nl.osrng_config.disabled_sources = OTTERY_ENTROPY_ALL_SOURCES & ~OTTERY_ENTROPY_SRC_RANDOMDEV;
+  st_nl.entropy_config.urandom_fname = "/dev/null"; /* make reseed impossible */
+  st_nl.entropy_config.disabled_sources = OTTERY_ENTROPY_ALL_SOURCES & ~OTTERY_ENTROPY_SRC_RANDOMDEV;
   tt_int_op(got_fatal_err, ==, 0);
   ottery_st_rand_unsigned_nolock(&st_nl);
   tt_int_op(got_fatal_err, ==,

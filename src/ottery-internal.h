@@ -218,11 +218,11 @@ struct __attribute__((aligned(16))) ottery_state {
   /**
    * flags_out result from our last call to the entropy source.
    */
-  uint32_t last_osrng_flags;
+  uint32_t last_entropy_flags;
   /**
    * Configuration and state for the entropy source.
    */
-  struct ottery_entropy_config osrng_config;
+  struct ottery_entropy_config entropy_config;
   /**
    * @brief Locks for this structure.
    *

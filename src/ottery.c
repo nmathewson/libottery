@@ -288,7 +288,7 @@ ottery_st_initialize(struct ottery_state *st,
       (sizeof(struct ottery_config) > OTTERY_CONFIG_DUMMY_SIZE_))
     return OTTERY_ERR_INTERNAL;
 
-  memcpy(&st->osrng_config, &config->entropy_config,
+  memcpy(&st->entropy_config, &config->entropy_config,
          sizeof(struct ottery_entropy_config));
 
   /* Copy the PRF into place. */
@@ -319,7 +319,7 @@ ottery_st_reseed(struct ottery_state *st)
   if (!buf)
     return OTTERY_ERR_INIT_STRONG_RNG;
 
-  if ((err = ottery_get_entropy_(&st->osrng_config, 0,
+  if ((err = ottery_get_entropy_(&st->entropy_config, 0,
                                   buf, st->prf.state_bytes,
                                   &buflen,
                                   &flags)))
@@ -334,7 +334,7 @@ ottery_st_reseed(struct ottery_state *st)
                             0,
                             0);
   ottery_memclear_(buf, buflen);
-  st->last_osrng_flags = flags;
+  st->last_entropy_flags = flags;
   st->entropy_src_flags = flags;
 
   /* Generate the first block of output. */
@@ -380,7 +380,7 @@ ottery_st_add_seed_impl(struct ottery_state *st, const uint8_t *seed, size_t n, 
     if (!tmp_seed)
       return OTTERY_ERR_INIT_STRONG_RNG;
     n = tmp_seed_len;
-    if ((err = ottery_get_entropy_(&st->osrng_config, 0,
+    if ((err = ottery_get_entropy_(&st->entropy_config, 0,
                                     tmp_seed, st->prf.state_bytes,
                                     &n,
                                     &flags)))
@@ -414,7 +414,7 @@ ottery_st_add_seed_impl(struct ottery_state *st, const uint8_t *seed, size_t n, 
   ottery_st_nextblock_nolock(st);
 
   st->entropy_src_flags |= flags;
-  st->last_osrng_flags = flags;
+  st->last_entropy_flags = flags;
 
   if (locking)
     UNLOCK(st);
