@@ -393,7 +393,9 @@ ottery_st_reseed(struct ottery_state *st)
     return err;
   if (buflen < st->prf.state_bytes)
     return OTTERY_ERR_ACCESS_STRONG_RNG;
+  /* The first state_bytes bytes become the initial key. */
   st->prf.setup(st->state, buf);
+  /* If there are more bytes, we mix them into the key with add_seed */
   if (buflen > st->prf.state_bytes)
     ottery_st_add_seed_impl(st,
                             buf + st->prf.state_bytes,
