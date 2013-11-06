@@ -177,7 +177,7 @@ we can go faster and more secure, why wouldn't we?
 
 The cipher might have been a good choice back in the mid-90s, when
 OpenBSD first added arc4random.  But nowadays, we can do better, and
-should.
+should. In fact OpenBSD replaced rc4 with ChaCha20 in the last version.
 
 Digression: What's wrong with libc's random()/rand() calls?
 -----------------------------------------------------------
