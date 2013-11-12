@@ -177,7 +177,9 @@ we can go faster and more secure, why wouldn't we?
 
 The cipher might have been a good choice back in the mid-90s, when
 OpenBSD first added arc4random.  But nowadays, we can do better, and
-should.
+should. (OpenBSD, for example, has switched its arc4random
+implementation to a construction more or less identical to the one
+Libottery uses.)
 
 Digression: What's wrong with libc's random()/rand() calls?
 -----------------------------------------------------------
