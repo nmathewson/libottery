@@ -15,6 +15,11 @@
 #define OTTERY_NOLOCK_H_HEADER_INCLUDED_
 #include <stdint.h>
 #include <sys/types.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "ottery_common.h"
 
 /** @file */
@@ -177,5 +182,9 @@ unsigned ottery_st_rand_range_nolock(struct ottery_state_nolock *st, unsigned to
  *   chosen uniformly.
  */
 uint64_t ottery_st_rand_range64_nolock(struct ottery_state_nolock *st, uint64_t top);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

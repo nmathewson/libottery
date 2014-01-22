@@ -15,6 +15,11 @@
 #define OTTERY_H_HEADER_INCLUDED_
 #include <stdint.h>
 #include <sys/types.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "ottery_common.h"
 
 /** @file */
@@ -130,5 +135,9 @@ void ottery_wipe(void);
  * implicitly "stirred" every 1k or so.
  */
 void ottery_prevent_backtracking(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
