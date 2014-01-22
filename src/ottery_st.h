@@ -15,6 +15,11 @@
 #define OTTERY_ST_H_HEADER_INCLUDED_
 #include <stdint.h>
 #include <sys/types.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "ottery_common.h"
 
 /** @file */
@@ -171,5 +176,9 @@ unsigned ottery_st_rand_range(struct ottery_state *st, unsigned top);
  *   chosen uniformly.
  */
 uint64_t ottery_st_rand_range64(struct ottery_state *st, uint64_t top);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
