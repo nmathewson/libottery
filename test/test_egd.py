@@ -14,6 +14,9 @@
 #      <http://creativecommons.org/publicdomain/zero/1.0/>.
 #
 
+from __future__ import print_function
+import sys
+
 import atexit
 from binascii import b2a_hex
 import os
@@ -25,10 +28,10 @@ TEST_EGD = "./test/test_egd"
 SOCKNAME = "./test-socket-%s" % os.getpid()
 
 o_fortuna = (
-  "Sors immanis et inanis rota tu volubilis status malus vana salus "
-  "semper dissolubilis obumbrata et velata michi quoque niteris nunc "
-  "per ludum dorsum nudum fero tui sceleris Sors salutis et virtutis "
-  "michi nunc contraria est affectus et defectus semper in angaria")
+  b"Sors immanis et inanis rota tu volubilis status malus vana salus "
+  b"semper dissolubilis obumbrata et velata michi quoque niteris nunc "
+  b"per ludum dorsum nudum fero tui sceleris Sors salutis et virtutis "
+  b"michi nunc contraria est affectus et defectus semper in angaria")
 
 class TestEGDDied(Exception):
     pass
@@ -52,7 +55,7 @@ def run_egd(tst_args, egd_args):
     test_egd.wait()
     fake_egd.wait()
     if fake_egd.returncode != 0:
-        print fe_output
+        print(fe_output)
         raise FakeEGDDied(fake_egd.returncode)
     if test_egd.returncode != 0:
         raise TestEGDDied(fake_egd.returncode)
@@ -61,7 +64,8 @@ def run_egd(tst_args, egd_args):
 
 def parse_output(te_output):
     res = {}
-    for line in te_output.strip().split("\n"):
+    te_str = te_output if sys.version < '3' else str(te_output, 'ISO-8859-1')
+    for line in te_str.strip().split("\n"):
         k,v = line.split(":")
         res[k] = v
     return res
@@ -76,17 +80,17 @@ class EGDTests(unittest.TestCase):
     def test_succeed_16(self):
         d = run_egd(["16", SOCKNAME], [SOCKNAME])
         self.assertEquals(d['FLAGS'], '80401')
-        self.assertEquals(d['BYTES'], b2a_hex(o_fortuna[:16]))
+        self.assertEquals(d['BYTES'], b2a_hex(o_fortuna[:16]).decode())
 
     def test_succeed_0(self):
         d = run_egd(["0", SOCKNAME], [SOCKNAME])
         self.assertEquals(d['FLAGS'], '80401')
-        self.assertEquals(d['BYTES'], b2a_hex(o_fortuna[:0]))
+        self.assertEquals(d['BYTES'], b2a_hex(o_fortuna[:0]).decode())
 
     def test_succeed_255(self):
         d = run_egd(["255", SOCKNAME], [SOCKNAME])
         self.assertEquals(d['FLAGS'], '80401')
-        self.assertEquals(d['BYTES'], b2a_hex(o_fortuna[:255]))
+        self.assertEquals(d['BYTES'], b2a_hex(o_fortuna[:255]).decode())
 
     def test_fail_noegd(self):
         cleanup()

@@ -17,6 +17,9 @@
 # Python.  Its only purpose here is to validate the output of the C
 # implementation.  If you use this for crypto, you're a bad person.
 
+from __future__ import print_function
+import sys
+
 import struct
 import binascii
 
@@ -34,7 +37,7 @@ def chacha_block(position, nonce, key, nRounds):
     assert len(key) == 32
     assert nRounds in (8,12,20)
 
-    STATE = list(struct.unpack("<LLLL", "expand 32-byte k"))
+    STATE = list(struct.unpack("<LLLL", b"expand 32-byte k"))
     STATE += struct.unpack("<LLLLLLLL", key)
     STATE.append(position & 0xffffffff)
     STATE.append(position >> 32)
@@ -42,7 +45,7 @@ def chacha_block(position, nonce, key, nRounds):
 
     ORIG = STATE[:]
 
-    for _ in xrange(nRounds//2):
+    for _ in range(nRounds//2):
         qround(STATE, 0, 4, 8,12)
         qround(STATE, 1, 5, 9,13)
         qround(STATE, 2, 6,10,14)
@@ -57,15 +60,15 @@ def chacha_block(position, nonce, key, nRounds):
     return struct.pack("<16L", *OUT)
 
 def experiment(key, nonce, skip, rounds=20):
-    print "================================================================"
+    print("================================================================")
     p = skip//64
-    out = "".join(chacha_block(p+r, nonce, key, rounds) for r in xrange(8) )
-    print "cipher: CHACHA%s"%rounds
-    print "   key: %s"%binascii.b2a_hex(key)
-    print " nonce: %s"%binascii.b2a_hex(nonce)
-    print "offset: %s"%skip
-    for i in xrange(0, len(out), 32):
-        print binascii.b2a_hex(out[i:i+32])
+    out = b"".join(chacha_block(p+r, nonce, key, rounds) for r in range(8) )
+    print("cipher: CHACHA%s"%rounds)
+    print("   key: %s"%binascii.b2a_hex(key).decode())
+    print(" nonce: %s"%binascii.b2a_hex(nonce).decode())
+    print("offset: %s"%skip)
+    for i in range(0, len(out), 32):
+        print(binascii.b2a_hex(out[i:i+32]).decode())
 
 def X(key,nonce,skip):
     experiment(key,nonce,skip,8)
@@ -73,16 +76,16 @@ def X(key,nonce,skip):
     experiment(key,nonce,skip,20)
 
 if 1:
-  X("helloworld!helloworld!helloworld",
-    "!hellowo", 0);
-  X("\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0",
-    "\0\0\0\0\0\0\0\0", 0);
-  X("helloworld!helloworld!helloworld",
-    "!hellowo", 8192);
-  X("\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0",
-    "\0\0\0\0\0\0\0\0", 8192);
-  X("Zombie ipsum reversus ab viral i", "nferno, ", 128)
-  X("nam rick grimes malum cerebro. D", "e carne ", 512)
-  X("lumbering animata corpora quaeri", "tis. Sum", 640)
-  X("mus brains sit, morbo vel malefi", "cia? De ", 704)
+  X(b"helloworld!helloworld!helloworld",
+    b"!hellowo", 0);
+  X(b"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0",
+    b"\0\0\0\0\0\0\0\0", 0);
+  X(b"helloworld!helloworld!helloworld",
+    b"!hellowo", 8192);
+  X(b"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0",
+    b"\0\0\0\0\0\0\0\0", 8192);
+  X(b"Zombie ipsum reversus ab viral i", b"nferno, ", 128)
+  X(b"nam rick grimes malum cerebro. D", b"e carne ", 512)
+  X(b"lumbering animata corpora quaeri", b"tis. Sum", 640)
+  X(b"mus brains sit, morbo vel malefi", b"cia? De ", 704)
 
