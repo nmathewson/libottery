@@ -162,6 +162,16 @@ uint32_t ottery_st_rand_uint32_nolock(struct ottery_state_nolock *st);
  *   chosen uniformly.
  */
 uint64_t ottery_st_rand_uint64_nolock(struct ottery_state_nolock *st);
+
+/**
+ * Use an ottery_state_nolock structure to generate a random number of type double.
+ *
+ * @param st The state structure to use.
+ * @return A random number between [0 and 1.0),
+ *   chosen uniformly.
+ */
+double ottery_st_rand_double_nolock(struct ottery_state_nolock *st);
+
 /**
  * Use an ottery_state_nolock structure to generate a random number of type unsigned
  * in a given range.

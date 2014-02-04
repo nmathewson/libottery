@@ -97,6 +97,12 @@ ottery_rand_uint64(void)
   CHECK_INIT(0);
   return ottery_st_rand_uint64(&ottery_global_state_);
 }
+double
+ottery_rand_double(void)
+{
+	CHECK_INIT(0);
+	return ottery_st_rand_double(&ottery_global_state_);
+}
 unsigned
 ottery_rand_range(unsigned top)
 {
