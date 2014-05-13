@@ -114,7 +114,7 @@ rdrand(void)
 {
   unsigned therand;
   unsigned char status;
-  asm volatile(".byte 0x0F, 0xC7, 0xF0 ; setc %1"
+  __asm volatile(".byte 0x0F, 0xC7, 0xF0 ; setc %1"
                : "=a" (therand), "=qm" (status));
   assert(status);
   return therand;

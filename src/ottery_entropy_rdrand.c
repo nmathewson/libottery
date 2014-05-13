@@ -24,7 +24,7 @@
 static int
 rdrand(uint32_t *therand) {
  unsigned char status;
- asm volatile(".byte 0x0F, 0xC7, 0xF0 ; setc %1"
+ __asm volatile(".byte 0x0F, 0xC7, 0xF0 ; setc %1"
  : "=a" (*therand), "=qm" (status));
  return (status)==1 ? 0 : OTTERY_ERR_INIT_STRONG_RNG;
 }
