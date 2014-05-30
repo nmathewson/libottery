@@ -13,6 +13,14 @@
 
 # Macros specific to libottery configuration.
 
+AC_DEFUN([otter_map_args_sep],
+[m4_if([$#], [0], [m4_fatal([$0: too few arguments: $#])],
+       [$#], [1], [],
+       [$#], [2], [],
+       [$#], [3], [],
+       [$#], [4], [$1[$4]$2[]],
+       [$1[$4]$2[]_m4_foreach([$3[]$1], [$2], m4_shift3($@))])])
+
 # Factoring out boilerplate for configuration-time options:
 AC_DEFUN([OTTERY_ARG_DISABLE],
 [_OTTERY_ARG_DISABLE([$1],
@@ -41,7 +49,7 @@ AC_DEFUN([_OTTERY_CHECK_SIMD_SPECIFIC],
 [AC_CACHE_CHECK([for $1], [ac_cv_cpu_$2],
   [ac_cv_cpu_$2=no
   save_CFLAGS="$CFLAGS"
-  for opts in m4_map_args_sep(["], ["], [ ], $4); do
+  for opts in otter_map_args_sep(["], ["], [ ], $4); do
     CFLAGS="$save_CFLAGS $opts"
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([$5], [$6])],
       [ac_cv_cpu_$2="$opts"
