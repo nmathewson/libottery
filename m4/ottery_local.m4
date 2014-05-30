@@ -13,7 +13,9 @@
 
 # Macros specific to libottery configuration.
 
-AC_DEFUN([otter_map_args_sep],
+# Alias for m4_map_args_sep on platforms that lack it. Definition taken
+# straight from autoconf
+AC_DEFUN([ottery_map_args_sep],
 [m4_if([$#], [0], [m4_fatal([$0: too few arguments: $#])],
        [$#], [1], [],
        [$#], [2], [],
@@ -49,7 +51,7 @@ AC_DEFUN([_OTTERY_CHECK_SIMD_SPECIFIC],
 [AC_CACHE_CHECK([for $1], [ac_cv_cpu_$2],
   [ac_cv_cpu_$2=no
   save_CFLAGS="$CFLAGS"
-  for opts in otter_map_args_sep(["], ["], [ ], $4); do
+  for opts in ottery_map_args_sep(["], ["], [ ], $4); do
     CFLAGS="$save_CFLAGS $opts"
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([$5], [$6])],
       [ac_cv_cpu_$2="$opts"
