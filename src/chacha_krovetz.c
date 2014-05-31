@@ -193,7 +193,7 @@ ottery_blocks_chacha_krovetz(
         x2 = chacha_const[2]; x3 = chacha_const[3];
         x4 = kp[0]; x5 = kp[1]; x6  = kp[2]; x7  = kp[3];
         x8 = kp[4]; x9 = kp[5]; x10 = kp[6]; x11 = kp[7];
-        const uint64_t x_ctr = block_idx + BPI*iters+(BPI-1);
+        const uint64_t x_ctr = block_idx + BPI*j+(BPI-1);
         x12 = x_ctr & 0xffffffff; x13 = x_ctr>>32; x14 = np[0]; x15 = np[1];
         #endif
         for (i = chacha_rounds/2; i; i--) {
