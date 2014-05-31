@@ -119,6 +119,12 @@ rdrand(void)
   assert(status);
   return therand;
 }
+#else
+static unsigned
+rdrand(void)
+{
+  return 0;
+}
 #endif
 
 
