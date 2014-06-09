@@ -14,9 +14,15 @@ The RNG you are using today is probably horrible because:
   - If it's secure, it's probably slow.  So you probably have an
     insecure one that you use when you need random numbers fast.
 
-  - If it's arc4random, then you probably think it's secure, but it
-    isn't, really.  Even after you do the "discard the first N bytes"
-    trick, RC4 still has detectable statistical biases.
+  - If it's arc4random from an older OpenBSD (before October 2013), or
+    any of the dozens of copies of the old arc4random() that have
+    found their ways into other codebases, then you probably think
+    it's secure, but it isn't, really.  Even after you do the "discard
+    the first N bytes" trick, RC4 still has detectable statistical
+    biases.  See also "What's wrong with RC4-based arcreandom() below.
+
+    (The arc4random() from newer OpenBSDs is better, and doesn't use
+    RC4 any more.  The architecture there seems basically sound.)
 
 This tool aims to be a speed-competitive replacement for arc4random, for
 your libc's random() or rand() function.  It aims to be so fast that you
@@ -143,15 +149,14 @@ Speed comparison
 ----------------
 
 On my Core i7 laptop running OSX: If you're only generating a 4-byte
-unsigned, the ChaCha8 implementation is currently 8% slower than
-arc4random(), and the ChaCha20 implementation is 25% slower.  We're
-faster than arc4random() once you're generating at least 8 bytes per go.
-We're faster than libc random() once you're generating at least 16 bytes
-per go.
+unsigned, all the ChaCha implementations are now faster than OSX's
+RC4-based arc4random(), even when you're only generating 4 bytes at a
+time.  We're about as fast than libc random() once you're generating at
+least 16 bytes per go, depending on how many ChaCha rounds you're using.
 
-In one test, I turned off all the safety features for a laugh (NOT
-RECOMMENDED!), and libottery was faster than libc random() even for 4-
-byte requests.
+In single-threaded code with locks turned off (NOT RECOMMENDED!),
+libottery with ChaCha8 is faster than libc random() even for 8- byte
+requests.
 
 At this point, I'm not sweating performance too badly.  Eventually, I'll
 add a section about how to get better performance with compiler choices
@@ -162,20 +167,29 @@ high-contention scenarios where the PRNG is getting used by many threads
 at once.
 
 
-Digression: What's wrong with arc4random()?
--------------------------------------------
+Digression: What's wrong with RC4-based arc4random()?
+-----------------------------------------------------
 
-It's a broken old cipher: Go read the wikipedia page.  Discarding the
+RC4 is a broken old cipher: Go read the wikipedia page.  Discarding the
 first N bytes of its output mitigates the very worst attacks against it,
 but it still has detectable statistical biases.
 
 Also, nearly any implementation of it does secret-dependent data
-lookups. That's a big no-no in modern cryptographic design.
+lookups. That's a big no-no in modern cryptographic design.  It can
+enable timing side-channels under some circumstances.
 
-Least of all, it's not really performance-competitive any more. But if
+Furthermore, the way that it used RC4 provided only limited
+backtracking-resistance.  Any attacker who managed to read the PRNG
+state -- via something like the Heartbleed attack, or whatever --
+could reconstruct all previous updates of the PRNG back to the last
+time that it was reseeded.  While arc4random() _did_ try to re-seed
+every N bytes, N was in practice so large that compromising the
+arc4random() state would compromise a huge amount of secret outputs.
+
+Least of all, RC4 not really performance-competitive any more. But if
 we can go faster and more secure, why wouldn't we?
 
-The cipher might have been a good choice back in the mid-90s, when
+The RC4 cipher might have been a good choice back in the mid-90s, when
 OpenBSD first added arc4random.  But nowadays, we can do better, and
 should. (OpenBSD, for example, has switched its arc4random
 implementation to a construction more or less identical to the one
