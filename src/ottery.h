@@ -56,6 +56,15 @@ uint32_t ottery_rand_uint32(void);
  *   chosen uniformly.
  */
 uint64_t ottery_rand_uint64(void);
+
+/**
+ * Generate a random namber of type double.
+ *
+ * @return A random floating point number from [0.0 to 1.0),
+ *  chosen uniformly
+ */
+double ottery_rand_double(void);
+
 /**
  * Generate a random number of type unsigned in a given range.
  *

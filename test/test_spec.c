@@ -77,6 +77,11 @@ get_hex(const char *hex_, uint8_t *out)
     printf("%llu\n", (unsigned long long) u);               \
   } while (0);
 #endif
+#define dbl                                                 \
+  do {                                                      \
+    double u = ottery_st_rand_double(&state);               \
+    printf("%f\n", u);                                      \
+  } while (0);
 #define stir                                    \
   do {                                          \
     ottery_st_stir(&state);                     \
@@ -117,6 +122,9 @@ demo(void)
 	nBytes (256)
 	u64
 	u32
+	dbl
+	dbl
+	dbl
 	nBytes (1)
 	u64
         replicateM_ (33) /*$*/ nBytes (31)

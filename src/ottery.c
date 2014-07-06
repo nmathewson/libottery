@@ -791,6 +791,30 @@ ottery_st_rand_uint64_nolock(struct ottery_state_nolock *st)
   OTTERY_RETURN_RAND_INTTYPE_NOLOCK(st, uint64_t);
 }
 
+#define OTTERY_RETURN_RAND_DOUBLE(st, func) do {                          \
+    uint64_t rnd_int;                                                     \
+    double res;                                                           \
+    const double transform_bias = 2.2204460492503130808472633361816e-16;  \
+    rnd_int = ottery_st_rand_uint64(st) >> 12;                            \
+    res = rnd_int;                                                        \
+    res *= transform_bias;                                                \
+    if (res >= 1.0)                                                       \
+      return (func)(st);                                                  \
+    return res;                                                           \
+} while(0)
+
+double
+ottery_st_rand_double(struct ottery_state *st)
+{
+  OTTERY_RETURN_RAND_DOUBLE(st, ottery_st_rand_double);
+}
+
+double
+ottery_st_rand_double_nolock(struct ottery_state_nolock *st)
+{
+  OTTERY_RETURN_RAND_DOUBLE(st, ottery_st_rand_double_nolock);
+}
+
 unsigned
 ottery_st_rand_range_nolock(struct ottery_state_nolock *st, unsigned upper)
 {
